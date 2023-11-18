@@ -5,6 +5,7 @@ import makeModelData from "/oemData/makeModelData";
 const initialState = {
   selectedMake: "",
   models: [],
+  selectedModel: "",
 };
 
 const vehicleSlice = createSlice({
@@ -18,9 +19,12 @@ const vehicleSlice = createSlice({
       );
       state.models = selectedMakeData ? selectedMakeData.models : [];
     },
-    // You can add more reducers here if needed
+    selectModel: (state, action) => {
+      state.selectedModel = action.payload;
+      //I havce to add code here to retrieve model options & accessories
+    },
   },
 });
 
-export const { selectMake } = vehicleSlice.actions;
+export const { selectMake, selectModel } = vehicleSlice.actions;
 export default vehicleSlice.reducer;
