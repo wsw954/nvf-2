@@ -1,0 +1,28 @@
+﻿\---features
+|   \---vehicle
+|   |   |   vehicleSlice.js
+\---oemData
+|   |   makeModelData.js
+\---pages
+|   \---api
+|   |   |   hello.js
+|   |   index.js
+|   |   _app.js
+|   |   _document.js
+\---public
+|   |   favicon.ico
+|   |   next.svg
+|   |   vercel.svg
+\---store
+|   |   store.js
+\---styles
+|   |   globals.css
+|   |   Home.module.css
+|   .eslintrc.json
+|   .gitignore
+|   folder-structure.txt
+|   jsconfig.json
+|   next.config.js
+|   package-lock.json
+|   package.json
+|   README.md
