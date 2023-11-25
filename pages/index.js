@@ -8,6 +8,7 @@ import {
 } from "/features/vehicle/vehicleSlice";
 import makeModelData from "/oemData/makeModelData";
 import Dropdown from "../components/Dropdown";
+import CheckBoxGroup from "@/components/CheckBoxGroup";
 
 const IndexPage = () => {
   const dispatch = useDispatch();
@@ -32,8 +33,46 @@ const IndexPage = () => {
     const model = event.target.value;
     dispatch(selectModel(model)); // Dispatch the selectModel action
     if (selectedMake && model) {
+      console.log("line 36 in index");
       dispatch(fetchModelData({ make: selectedMake, model }));
     }
+  };
+
+  const renderOptions = () => {
+    // Check if a model is selected before rendering additional options
+    if (selectedModel && optionsAvailable) {
+      return Object.entries(optionsAvailable).map(([key, option]) => {
+        switch (option.type) {
+          case "Dropdown":
+            return (
+              <div key={key}>
+                <label htmlFor={key}>{option.displayName}:</label>
+                <Dropdown
+                  id={key}
+                  value={""} // You need to manage state for each of these dynamically
+                  onChange={(event) => {
+                    /* Handle change */
+                  }}
+                  options={option.choices}
+                />
+              </div>
+            );
+          case "CheckBoxGroup":
+            return (
+              <div key={key}>
+                <label>{option.displayName}:</label>
+                <CheckBoxGroup
+                  choices={option.choices}
+                  // Add any other props needed for CheckBoxGroup
+                />
+              </div>
+            );
+          default:
+            return null;
+        }
+      });
+    }
+    return null;
   };
 
   return (
@@ -49,6 +88,7 @@ const IndexPage = () => {
             options={makeOptions}
           />
         </div>
+        <br></br>
         <div>
           <label htmlFor="model">Model:</label>
           <Dropdown
@@ -59,6 +99,8 @@ const IndexPage = () => {
             disabled={!selectedMake}
           />
         </div>
+        <br></br>
+        <div>{renderOptions()}</div>
       </form>
     </div>
   );

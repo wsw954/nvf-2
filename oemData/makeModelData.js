@@ -1,17 +1,11 @@
 const makeModeldata = [
   {
     make: "Honda",
-    models: [
-      { name: "Accord" },
-      { name: "Civic" },
-      { name: "CR-V" },
-      { name: "Ridgeline" },
-      { name: "Pilot" },
-    ],
+    models: [{ name: "Accord" }, { name: "Civic" }, { name: "Ridgeline" }],
   },
   {
     make: "Toyota",
-    models: [{ name: "Camry" }, { name: "Corolla" }, { name: "Rav-4" }],
+    models: [{ name: "Camry" }, { name: "Corolla" }, { name: "Supra" }],
   },
 ];
 

@@ -1,4 +1,4 @@
-// Civic.js
+// Ridgeline.js
 
 // ------------------------------
 // OPTIONS AVAILABLE SECTION
@@ -8,9 +8,9 @@ const OptionsAvailable = {
     displayName: "Trim",
     type: "Dropdown",
     choices: [
-      { id: "LX", name: "Sedan LX", price: 23750 },
-      { id: "Sport", name: "Sedan Sport", price: 25050 },
-      { id: "TypeR", name: "Type R", price: 42895 },
+      { id: "LX", name: "Ridgeline Trim 1", price: 23750 },
+      { id: "Sport", name: "Sport", price: 25050 },
+      { id: "Hybrid", name: "Hybrid", price: 42895 },
       // ... other trims
     ],
   },
@@ -18,7 +18,7 @@ const OptionsAvailable = {
     displayName: "Powertrain",
     type: "Dropdown",
     choices: [
-      { id: "Standard", name: "Civic Powertrain", price: 0 },
+      { id: "Standard", name: "Ridgeline Powertrain", price: 0 },
       { id: "Turbo", name: "Turbo Powertrain", price: 2500 },
     ],
   },
@@ -41,7 +41,6 @@ const OptionsAvailable = {
     ],
   },
 };
-
 // ------------------------------
 // DEPENDENCIES SECTION
 // ------------------------------
@@ -67,37 +66,6 @@ const Dependencies = {
     PK1: {},
   },
 };
-
-// ------------------------------
-// FUNCTIONS SECTION
-// ------------------------------
-function initializeForm() {
-  // ... function to initialize the form ...
-  //Present only list of trims available
-}
-
-function handleSelection(category, selection, currentConfig) {
-  // Use switch statement to handle all categories
-  switch (category) {
-    case trim:
-    // code block
-    case powertrain:
-      // code block
-      break;
-    case exteriorColor:
-      //code block
-      break;
-    case packages:
-      //code block
-      break;
-    default:
-    // code block
-  }
-}
-
-function handleDeselection(category, currentConfig) {
-  // ... function to handle deselection ...
-}
 
 // ------------------------------
 // EXPORTS SECTION

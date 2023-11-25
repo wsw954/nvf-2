@@ -19,7 +19,7 @@ export const fetchModelData = createAsyncThunk(
       const makeLower = make.toLowerCase();
       const modelLower = model.toLowerCase();
       const modelData = await import(`/oemData/${makeLower}/${modelLower}.js`);
-
+      console.log("line 22 in vehicleSlice");
       return modelData;
     } catch (error) {
       return rejectWithValue(error.message);
