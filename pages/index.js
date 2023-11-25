@@ -1,13 +1,17 @@
 // pages/index.js
 import React from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { selectMake, selectModel } from "/features/vehicle/vehicleSlice";
+import {
+  selectMake,
+  selectModel,
+  fetchModelData,
+} from "/features/vehicle/vehicleSlice";
 import makeModelData from "/oemData/makeModelData";
 import Dropdown from "../components/Dropdown";
 
 const IndexPage = () => {
   const dispatch = useDispatch();
-  const { selectedMake, models, selectedModel } = useSelector(
+  const { selectedMake, models, selectedModel, optionsAvailable } = useSelector(
     (state) => state.vehicle
   );
 
@@ -25,8 +29,11 @@ const IndexPage = () => {
   };
 
   const handleModelChange = (event) => {
-    console.log(event.target.value);
-    dispatch(selectModel(event.target.value));
+    const model = event.target.value;
+    dispatch(selectModel(model)); // Dispatch the selectModel action
+    if (selectedMake && model) {
+      dispatch(fetchModelData({ make: selectedMake, model }));
+    }
   };
 
   return (
