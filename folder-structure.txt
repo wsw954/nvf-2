@@ -1,10 +1,20 @@
-﻿\---features
+﻿\---components
+|   |   CheckBoxGroup.js
+|   |   Dropdown.js
+\---features
 |   \---vehicle
 |   |   |   vehicleSlice.js
 \---oemData
+|   \---honda
+|   |   |   accord.js
+|   |   |   civic.js
+|   |   |   civic2.js
+|   |   |   ridgeline.js
+|   \---toyota
+|   |   |   camry.js
+|   |   |   corolla.js
+|   |   |   supra.js
 |   |   makeModelData.js
-|   \honda
-|   |   | civic.js
 \---pages
 |   \---api
 |   |   |   hello.js

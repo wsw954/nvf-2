@@ -35,7 +35,7 @@ const OptionsAvailable = {
     displayName: "Packages",
     type: "CheckBoxGroup",
     choices: [
-      { id: "PK1", name: "All Season Protection Package I", price: 500 },
+      { id: "PK1", name: "Ridgeline Package I", price: 500 },
       { id: "PK2", name: "All Season Protection Package II", price: 500 },
       { id: "PK3", name: "Package III", price: 500 },
     ],

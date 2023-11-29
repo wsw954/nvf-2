@@ -35,7 +35,7 @@ const OptionsAvailable = {
     displayName: "Packages",
     type: "CheckBoxGroup",
     choices: [
-      { id: "PK1", name: "All Season Protection Package I", price: 500 },
+      { id: "PK1", name: "Supra I", price: 500 },
       { id: "PK2", name: "All Season Protection Package II", price: 500 },
       { id: "PK3", name: "Package III", price: 500 },
     ],
@@ -50,11 +50,11 @@ const Dependencies = {
   trim: {
     LX: {
       powertrain: ["Standard", "Premium"],
-      exteriorColor: ["Blue", "Black", "Silver"],
+      exteriorColor: ["Blue", "Black"],
     },
     Sport: {
       powertrain: ["Standard", "Premium", "Turbo"],
-      exteriorColor: ["Blue", "Black", "Silver", "Red"],
+      exteriorColor: ["Blue", "Black", "Silver"],
     },
     TypeR: {
       powertrain: ["Turbo"], // Assuming only Turbo is available for Type R

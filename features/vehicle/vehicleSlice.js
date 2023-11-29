@@ -6,7 +6,8 @@ const initialState = {
   selectedMake: "",
   models: [],
   selectedModel: "",
-  optionsAvailable: null, // To store data for the selected model
+  optionsAvailable: null,
+  optionsSelected: null,
   loading: false,
   error: null,
 };
@@ -19,8 +20,34 @@ export const fetchModelData = createAsyncThunk(
       const makeLower = make.toLowerCase();
       const modelLower = model.toLowerCase();
       const modelData = await import(`/oemData/${makeLower}/${modelLower}.js`);
-      console.log("line 22 in vehicleSlice");
-      return modelData;
+      // Extract only the serializable parts of the module
+      const { InitialOptionsAvailable } = modelData;
+      return { InitialOptionsAvailable };
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+// New async thunk for handling option changes
+export const updateOptions = createAsyncThunk(
+  "vehicle/updateOptions",
+  async (
+    { make, model, category, selection },
+    { getState, rejectWithValue }
+  ) => {
+    try {
+      const { optionsAvailable, optionsSelected } = getState().vehicle;
+      const makeLower = make.toLowerCase();
+      const modelLower = model.toLowerCase();
+      const modelData = await import(`/oemData/${makeLower}/${modelLower}.js`);
+      const updatedState = modelData.handleOptionChanged(
+        category,
+        selection,
+        optionsAvailable,
+        optionsSelected
+      );
+      return updatedState;
     } catch (error) {
       return rejectWithValue(error.message);
     }
@@ -38,6 +65,7 @@ const vehicleSlice = createSlice({
       );
       state.models = selectedMakeData ? selectedMakeData.models : [];
       state.selectedModel = ""; // Reset selected model when make changes
+      state.optionsSelected = null; //Reset all selected options when make changes
     },
     selectModel: (state, action) => {
       state.selectedModel = action.payload; //Update the state for model selected
@@ -49,12 +77,16 @@ const vehicleSlice = createSlice({
         state.loading = true;
       })
       .addCase(fetchModelData.fulfilled, (state, action) => {
-        state.optionsAvailable = action.payload.OptionsAvailable;
+        state.optionsAvailable = action.payload.InitialOptionsAvailable;
         state.loading = false;
       })
       .addCase(fetchModelData.rejected, (state, action) => {
         state.error = action.payload;
         state.loading = false;
+      })
+      .addCase(updateOptions.fulfilled, (state, action) => {
+        // Update the state based on the returned value from handleOptionChanged
+        return { ...state, ...action.payload };
       });
   },
 });

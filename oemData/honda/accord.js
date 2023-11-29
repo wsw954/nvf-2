@@ -8,9 +8,8 @@ const OptionsAvailable = {
     displayName: "Trim",
     type: "Dropdown",
     choices: [
-      { id: "LX", name: "LX", price: 23750 },
-      { id: "Sport", name: "Sport", price: 25050 },
-      { id: "Hybrid", name: "Hybrid", price: 42895 },
+      { id: "LX", name: "Accord LX", price: 23750 },
+      { id: "Sport", name: "Accord  Sport", price: 25050 },
       // ... other trims
     ],
   },
@@ -69,6 +68,62 @@ const Dependencies = {
 };
 
 // ------------------------------
+// FUNCTIONS SECTION
+// ------------------------------
+
+const InitialOptionsAvailable = {
+  trim: {
+    displayName: "Trim",
+    type: "Dropdown",
+    choices: [
+      { id: "LX", name: "Sedan LX", price: 23750 },
+      { id: "Sport", name: "Sedan Sport", price: 25050 },
+      { id: "TypeR", name: "Type R", price: 42895 },
+      // ... other trims
+    ],
+  },
+};
+
+export function handleOptionChanged(
+  category,
+  selection,
+  optionsAvailable,
+  optionsSelected
+) {
+  // Use switch statement to handle all categories
+  let updatedState = { optionsAvailable, optionsSelected };
+  switch (category) {
+    case "trim":
+      //add code block to update state
+      console.log("Line 97 in oemData/honda/civic");
+      console.log(category);
+      console.log(selection);
+      console.log(optionsAvailable);
+      console.log(optionsSelected);
+      // console.log(optionsAvailable)
+      return updatedState;
+    case "powertrain":
+      //add code block to update state
+      return state;
+    case "exteriorColor":
+      //add code block to update state
+      return state;
+    case "powertrain":
+      //add code block to update state
+      return state;
+    case "packages":
+      //add code block to update state
+      return state;
+    default:
+      return state;
+  }
+}
+
+function handleDeselection(category, currentConfig) {
+  // ... function to handle deselection ...
+}
+
+// ------------------------------
 // EXPORTS SECTION
 // ------------------------------
-export { OptionsAvailable, Dependencies };
+export { OptionsAvailable, InitialOptionsAvailable, Dependencies };

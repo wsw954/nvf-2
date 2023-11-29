@@ -5,6 +5,7 @@ import {
   selectMake,
   selectModel,
   fetchModelData,
+  updateOptions,
 } from "/features/vehicle/vehicleSlice";
 import makeModelData from "/oemData/makeModelData";
 import Dropdown from "../components/Dropdown";
@@ -12,9 +13,13 @@ import CheckBoxGroup from "@/components/CheckBoxGroup";
 
 const IndexPage = () => {
   const dispatch = useDispatch();
-  const { selectedMake, models, selectedModel, optionsAvailable } = useSelector(
-    (state) => state.vehicle
-  );
+  const {
+    selectedMake,
+    models,
+    selectedModel,
+    optionsAvailable,
+    optionsSelected,
+  } = useSelector((state) => state.vehicle);
 
   const makeOptions = makeModelData.map((item) => ({
     id: item.make,
@@ -33,8 +38,20 @@ const IndexPage = () => {
     const model = event.target.value;
     dispatch(selectModel(model)); // Dispatch the selectModel action
     if (selectedMake && model) {
-      console.log("line 36 in index");
       dispatch(fetchModelData({ make: selectedMake, model }));
+    }
+  };
+
+  const handleOptionChange = (category, selection) => {
+    if (selectedMake && selectedModel) {
+      dispatch(
+        updateOptions({
+          make: selectedMake,
+          model: selectedModel,
+          category,
+          selection,
+        })
+      );
     }
   };
 
@@ -50,11 +67,12 @@ const IndexPage = () => {
                 <Dropdown
                   id={key}
                   value={""} // You need to manage state for each of these dynamically
-                  onChange={(event) => {
-                    /* Handle change */
-                  }}
+                  onChange={(event) =>
+                    handleOptionChange(key, event.target.value)
+                  }
                   options={option.choices}
                 />
+                <br></br>
               </div>
             );
           case "CheckBoxGroup":
@@ -63,8 +81,9 @@ const IndexPage = () => {
                 <label>{option.displayName}:</label>
                 <CheckBoxGroup
                   choices={option.choices}
-                  // Add any other props needed for CheckBoxGroup
+                  onChange={(selection) => handleOptionChange(key, selection)}
                 />
+                <br></br>
               </div>
             );
           default:
