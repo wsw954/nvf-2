@@ -93,7 +93,9 @@ const vehicleSlice = createSlice({
       })
       .addCase(updateOptions.fulfilled, (state, action) => {
         // Update the state based on the returned value from handleOptionChanged
-        return { ...state, ...action.payload };
+        state.optionsAvailable = action.payload.optionsAvailable;
+        state.optionsSelected = action.payload.optionsSelected;
+        state.loading = false;
       });
   },
 });

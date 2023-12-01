@@ -99,10 +99,33 @@ export function handleOptionChanged(
   };
   switch (category) {
     case "trim":
-      updatedState.optionsSelected[category] =
-        OptionsAvailable.trim.choices[selection];
-      //add code block to update state
-      console.log(updatedState);
+      // Find the selected trim in optionsAvailable
+      const selectedTrim = optionsAvailable.trim.choices.find(
+        (choice) => choice.id === selection
+      );
+
+      // Update optionsSelected with the selected trim
+      updatedState.optionsSelected = {
+        ...updatedState.optionsSelected,
+        trim: {
+          displayName: "Trim",
+          type: "Dropdown",
+          choices: [selectedTrim],
+        },
+      };
+
+      // Update optionsAvailable based on Dependencies
+      const trimDependencies = Dependencies.trim[selection];
+      if (trimDependencies) {
+        Object.keys(trimDependencies).forEach((key) => {
+          updatedState.optionsAvailable[key] = {
+            ...OptionsAvailable[key],
+            choices: OptionsAvailable[key].choices.filter((choice) =>
+              trimDependencies[key].includes(choice.id)
+            ),
+          };
+        });
+      }
       return updatedState;
     case "powertrain":
       //add code block to update state
