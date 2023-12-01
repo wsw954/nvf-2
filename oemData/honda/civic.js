@@ -18,7 +18,8 @@ const OptionsAvailable = {
     displayName: "Powertrain",
     type: "Dropdown",
     choices: [
-      { id: "Standard", name: "Civic Powertrain", price: 0 },
+      { id: "Standard", name: "Standard Powertrain", price: 0 },
+      { id: "Premium", name: "Premium Powertrain", price: 0 },
       { id: "Turbo", name: "Turbo Powertrain", price: 2500 },
     ],
   },
@@ -49,23 +50,23 @@ const Dependencies = {
   // ... your dependencies JSON ...
   trim: {
     LX: {
-      powertrain: ["Standard", "Premium"],
-      exteriorColor: ["Blue", "Black", "Silver"],
+      powertrain: ["Standard"],
+      exteriorColor: ["Blue", "Black"],
+      packages: ["PK1", "PK2"],
     },
     Sport: {
       powertrain: ["Standard", "Premium", "Turbo"],
       exteriorColor: ["Blue", "Black", "Silver", "Red"],
+      packages: ["PK1", "PK2"],
     },
     TypeR: {
       powertrain: ["Turbo"], // Assuming only Turbo is available for Type R
       exteriorColor: ["Red", "Black"],
+      packages: ["PK1", "PK2", "PK3"],
     },
     // ... dependencies for other trims
   },
   //..package dependencies
-  packages: {
-    PK1: {},
-  },
 };
 
 // ------------------------------
@@ -92,16 +93,16 @@ export function handleOptionChanged(
   optionsSelected
 ) {
   // Use switch statement to handle all categories
-  let updatedState = { optionsAvailable, optionsSelected };
+  let updatedState = {
+    optionsAvailable: { ...optionsAvailable },
+    optionsSelected: { ...optionsSelected },
+  };
   switch (category) {
     case "trim":
+      updatedState.optionsSelected[category] =
+        OptionsAvailable.trim.choices[selection];
       //add code block to update state
-      console.log("Line 97 in oemData/honda/civic");
-      console.log(category);
-      console.log(selection);
-      console.log(optionsAvailable);
-      console.log(optionsSelected);
-      // console.log(optionsAvailable)
+      console.log(updatedState);
       return updatedState;
     case "powertrain":
       //add code block to update state

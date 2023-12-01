@@ -61,12 +61,17 @@ const IndexPage = () => {
       return Object.entries(optionsAvailable).map(([key, option]) => {
         switch (option.type) {
           case "Dropdown":
+            // Find the selected option for this category
+            const selectedOption =
+              optionsSelected && optionsSelected[key]
+                ? optionsSelected[key].choices[0].id
+                : "";
             return (
               <div key={key}>
                 <label htmlFor={key}>{option.displayName}:</label>
                 <Dropdown
                   id={key}
-                  value={""} // You need to manage state for each of these dynamically
+                  value={selectedOption} // Set the selected option here
                   onChange={(event) =>
                     handleOptionChange(key, event.target.value)
                   }
@@ -76,11 +81,20 @@ const IndexPage = () => {
               </div>
             );
           case "CheckBoxGroup":
+            // Determine which options are selected
+            const selectedCheckBoxes =
+              optionsSelected && optionsSelected[key]
+                ? optionsSelected[key].choices.map((c) => c.id)
+                : [];
+
             return (
               <div key={key}>
                 <label>{option.displayName}:</label>
                 <CheckBoxGroup
-                  choices={option.choices}
+                  choices={option.choices.map((choice) => ({
+                    ...choice,
+                    checked: selectedCheckBoxes.includes(choice.id), // Set checked status
+                  }))}
                   onChange={(selection) => handleOptionChange(key, selection)}
                 />
                 <br></br>

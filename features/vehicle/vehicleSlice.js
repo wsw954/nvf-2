@@ -12,6 +12,13 @@ const initialState = {
   error: null,
 };
 
+// Utility function for dynamic import
+async function importModelData(make, model) {
+  const makeLower = make.toLowerCase();
+  const modelLower = model.toLowerCase();
+  return await import(`/oemData/${makeLower}/${modelLower}.js`);
+}
+
 // Async thunk action
 export const fetchModelData = createAsyncThunk(
   "vehicle/fetchModelData",
@@ -19,7 +26,7 @@ export const fetchModelData = createAsyncThunk(
     try {
       const makeLower = make.toLowerCase();
       const modelLower = model.toLowerCase();
-      const modelData = await import(`/oemData/${makeLower}/${modelLower}.js`);
+      const modelData = await importModelData(make, model);
       // Extract only the serializable parts of the module
       const { InitialOptionsAvailable } = modelData;
       return { InitialOptionsAvailable };
@@ -40,7 +47,7 @@ export const updateOptions = createAsyncThunk(
       const { optionsAvailable, optionsSelected } = getState().vehicle;
       const makeLower = make.toLowerCase();
       const modelLower = model.toLowerCase();
-      const modelData = await import(`/oemData/${makeLower}/${modelLower}.js`);
+      const modelData = await importModelData(make, model);
       const updatedState = modelData.handleOptionChanged(
         category,
         selection,
