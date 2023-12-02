@@ -8,8 +8,9 @@ const OptionsAvailable = {
     displayName: "Trim",
     type: "Dropdown",
     choices: [
-      { id: "LX", name: "Accord LX", price: 23750 },
-      { id: "Sport", name: "Accord  Sport", price: 25050 },
+      { id: "LX", name: "LX", price: 23750 },
+      { id: "EX", name: "EX", price: 25050 },
+      { id: "SportH", name: "Sport Hybrid", price: 42895 },
       // ... other trims
     ],
   },
@@ -17,8 +18,9 @@ const OptionsAvailable = {
     displayName: "Powertrain",
     type: "Dropdown",
     choices: [
-      { id: "Standard", name: "Accord Powertrain", price: 0 },
-      { id: "Turbo", name: "Turbo Powertrain", price: 2500 },
+      { id: "Standard", name: "Standard Transmission", price: 0 },
+      { id: "Premium", name: "Premium Transmission", price: 0 },
+      { id: "Turbo", name: "Turbo Transmission", price: 2500 },
     ],
   },
   exteriorColor: {
@@ -49,22 +51,22 @@ const Dependencies = {
   trim: {
     LX: {
       powertrain: ["Standard", "Premium"],
-      exteriorColor: ["Blue", "Black", "Silver"],
+      exteriorColor: ["Blue", "Black"],
+      packages: ["PK1", "PK2"],
     },
-    Sport: {
+    EX: {
       powertrain: ["Standard", "Premium", "Turbo"],
       exteriorColor: ["Blue", "Black", "Silver", "Red"],
+      packages: ["PK1", "PK2"],
     },
-    TypeR: {
+    SportH: {
       powertrain: ["Turbo"], // Assuming only Turbo is available for Type R
       exteriorColor: ["Red", "Black"],
+      packages: ["PK1", "PK2", "PK3"],
     },
     // ... dependencies for other trims
   },
   //..package dependencies
-  packages: {
-    PK1: {},
-  },
 };
 
 // ------------------------------
@@ -76,9 +78,9 @@ const InitialOptionsAvailable = {
     displayName: "Trim",
     type: "Dropdown",
     choices: [
-      { id: "LX", name: "Sedan LX", price: 23750 },
-      { id: "Sport", name: "Sedan Sport", price: 25050 },
-      { id: "TypeR", name: "Type R", price: 42895 },
+      { id: "LX", name: "LX", price: 23750 },
+      { id: "EX", name: "EX", price: 25050 },
+      { id: "SportH", name: "Sport Hybrid", price: 42895 },
       // ... other trims
     ],
   },
@@ -91,36 +93,102 @@ export function handleOptionChanged(
   optionsSelected
 ) {
   // Use switch statement to handle all categories
-  let updatedState = { optionsAvailable, optionsSelected };
+  let updatedState = {
+    optionsAvailable: { ...optionsAvailable },
+    optionsSelected: { ...optionsSelected },
+  };
   switch (category) {
     case "trim":
-      //add code block to update state
-      console.log("Line 97 in oemData/honda/civic");
-      console.log(category);
-      console.log(selection);
-      console.log(optionsAvailable);
-      console.log(optionsSelected);
-      // console.log(optionsAvailable)
+      // Find the selected trim in optionsAvailable
+      const selectedTrim = optionsAvailable.trim.choices.find(
+        (choice) => choice.id === selection
+      );
+
+      // Update optionsSelected with ONLY the selected trim
+      updatedState.optionsSelected = {
+        trim: {
+          displayName: "Trim",
+          type: "Dropdown",
+          choices: [selectedTrim],
+        },
+      };
+
+      // Update optionsAvailable based on Dependencies
+      const trimDependencies = Dependencies.trim[selection];
+      if (trimDependencies) {
+        Object.keys(trimDependencies).forEach((key) => {
+          updatedState.optionsAvailable[key] = {
+            ...OptionsAvailable[key],
+            choices: OptionsAvailable[key].choices.filter((choice) =>
+              trimDependencies[key].includes(choice.id)
+            ),
+          };
+        });
+      }
       return updatedState;
     case "powertrain":
-      //add code block to update state
-      return state;
+      // Find the selected trim in optionsAvailable
+      const selectedPowertrain = optionsAvailable.powertrain.choices.find(
+        (choice) => choice.id === selection
+      );
+
+      // Update optionsSelected with the selected trim
+      updatedState.optionsSelected = {
+        ...updatedState.optionsSelected,
+        powertrain: {
+          displayName: "Powertrain",
+          type: "Dropdown",
+          choices: [selectedPowertrain],
+        },
+      };
+      return updatedState;
     case "exteriorColor":
-      //add code block to update state
-      return state;
-    case "powertrain":
-      //add code block to update state
-      return state;
+      // Find the selected trim in optionsAvailable
+      const selectedExteriorColor = optionsAvailable.exteriorColor.choices.find(
+        (choice) => choice.id === selection
+      );
+      // Update optionsSelected with the selected trim
+      updatedState.optionsSelected = {
+        ...updatedState.optionsSelected,
+        exteriorColor: {
+          displayName: "Exterior Color",
+          type: "Dropdown",
+          choices: [selectedExteriorColor],
+        },
+      };
+      return updatedState;
     case "packages":
-      //add code block to update state
-      return state;
+      // Check if the package is already selected
+      const isPackageSelected = optionsSelected.packages?.choices.some(
+        (choice) => choice.id === selection.id
+      );
+
+      // If the package is not already selected, add it to the choices array
+      if (!isPackageSelected) {
+        const selectedPackage = optionsAvailable.packages.choices.find(
+          (choice) => choice.id === selection.id
+        );
+
+        updatedState.optionsSelected.packages = {
+          displayName: "Packages",
+          type: "CheckBoxGroup",
+          choices: optionsSelected.packages
+            ? [...optionsSelected.packages.choices, selectedPackage]
+            : [selectedPackage],
+        };
+      } else {
+        // If the package is already selected, remove it from the choices array
+        updatedState.optionsSelected.packages = {
+          ...optionsSelected.packages,
+          choices: optionsSelected.packages.choices.filter(
+            (choice) => choice.id !== selection.id
+          ),
+        };
+      }
+      return updatedState;
     default:
       return state;
   }
-}
-
-function handleDeselection(category, currentConfig) {
-  // ... function to handle deselection ...
 }
 
 // ------------------------------

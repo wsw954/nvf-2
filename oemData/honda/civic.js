@@ -18,9 +18,9 @@ const OptionsAvailable = {
     displayName: "Powertrain",
     type: "Dropdown",
     choices: [
-      { id: "Standard", name: "Standard Powertrain", price: 0 },
-      { id: "Premium", name: "Premium Powertrain", price: 0 },
-      { id: "Turbo", name: "Turbo Powertrain", price: 2500 },
+      { id: "Standard", name: "Standard Transmission", price: 0 },
+      { id: "Premium", name: "Premium Transmission", price: 0 },
+      { id: "Turbo", name: "Turbo Transmission", price: 2500 },
     ],
   },
   exteriorColor: {
@@ -50,7 +50,7 @@ const Dependencies = {
   // ... your dependencies JSON ...
   trim: {
     LX: {
-      powertrain: ["Standard"],
+      powertrain: ["Standard", "Premium"],
       exteriorColor: ["Blue", "Black"],
       packages: ["PK1", "PK2"],
     },
@@ -104,9 +104,8 @@ export function handleOptionChanged(
         (choice) => choice.id === selection
       );
 
-      // Update optionsSelected with the selected trim
+      // Update optionsSelected with ONLY the selected trim
       updatedState.optionsSelected = {
-        ...updatedState.optionsSelected,
         trim: {
           displayName: "Trim",
           type: "Dropdown",
@@ -128,24 +127,68 @@ export function handleOptionChanged(
       }
       return updatedState;
     case "powertrain":
-      //add code block to update state
-      return state;
+      // Find the selected trim in optionsAvailable
+      const selectedPowertrain = optionsAvailable.powertrain.choices.find(
+        (choice) => choice.id === selection
+      );
+
+      // Update optionsSelected with the selected trim
+      updatedState.optionsSelected = {
+        ...updatedState.optionsSelected,
+        powertrain: {
+          displayName: "Powertrain",
+          type: "Dropdown",
+          choices: [selectedPowertrain],
+        },
+      };
+      return updatedState;
     case "exteriorColor":
-      //add code block to update state
-      return state;
-    case "powertrain":
-      //add code block to update state
-      return state;
+      // Find the selected trim in optionsAvailable
+      const selectedExteriorColor = optionsAvailable.exteriorColor.choices.find(
+        (choice) => choice.id === selection
+      );
+      // Update optionsSelected with the selected trim
+      updatedState.optionsSelected = {
+        ...updatedState.optionsSelected,
+        exteriorColor: {
+          displayName: "Exterior Color",
+          type: "Dropdown",
+          choices: [selectedExteriorColor],
+        },
+      };
+      return updatedState;
     case "packages":
-      //add code block to update state
-      return state;
+      // Check if the package is already selected
+      const isPackageSelected = optionsSelected.packages?.choices.some(
+        (choice) => choice.id === selection.id
+      );
+
+      // If the package is not already selected, add it to the choices array
+      if (!isPackageSelected) {
+        const selectedPackage = optionsAvailable.packages.choices.find(
+          (choice) => choice.id === selection.id
+        );
+
+        updatedState.optionsSelected.packages = {
+          displayName: "Packages",
+          type: "CheckBoxGroup",
+          choices: optionsSelected.packages
+            ? [...optionsSelected.packages.choices, selectedPackage]
+            : [selectedPackage],
+        };
+      } else {
+        // If the package is already selected, remove it from the choices array
+        updatedState.optionsSelected.packages = {
+          ...optionsSelected.packages,
+          choices: optionsSelected.packages.choices.filter(
+            (choice) => choice.id !== selection.id
+          ),
+        };
+      }
+      return updatedState;
     default:
       return state;
   }
-}
-
-function handleDeselection(category, currentConfig) {
-  // ... function to handle deselection ...
 }
 
 // ------------------------------

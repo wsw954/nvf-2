@@ -6,8 +6,8 @@ const initialState = {
   selectedMake: "",
   models: [],
   selectedModel: "",
-  optionsAvailable: null,
-  optionsSelected: null,
+  optionsAvailable: {},
+  optionsSelected: {},
   loading: false,
   error: null,
 };
@@ -72,10 +72,11 @@ const vehicleSlice = createSlice({
       );
       state.models = selectedMakeData ? selectedMakeData.models : [];
       state.selectedModel = ""; // Reset selected model when make changes
-      state.optionsSelected = null; //Reset all selected options when make changes
+      state.optionsSelected = {}; //Reset all selected options when make changes
     },
     selectModel: (state, action) => {
       state.selectedModel = action.payload; //Update the state for model selected
+      state.optionsSelected = {}; //Reset all selected options when model changes
     },
   },
   extraReducers: (builder) => {

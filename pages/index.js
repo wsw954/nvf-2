@@ -56,6 +56,10 @@ const IndexPage = () => {
   };
 
   const renderOptions = () => {
+    const handleCheckBoxChange = (key, id, isChecked) => {
+      // Call handleOptionChange with the checkbox id and its new checked status
+      handleOptionChange(key, { id, isChecked });
+    };
     // Check if a model is selected before rendering additional options
     if (selectedModel && optionsAvailable) {
       return Object.entries(optionsAvailable).map(([key, option]) => {
@@ -95,7 +99,9 @@ const IndexPage = () => {
                     ...choice,
                     checked: selectedCheckBoxes.includes(choice.id), // Set checked status
                   }))}
-                  onChange={(selection) => handleOptionChange(key, selection)}
+                  onChange={(id, isChecked) =>
+                    handleCheckBoxChange(key, id, isChecked)
+                  }
                 />
                 <br></br>
               </div>

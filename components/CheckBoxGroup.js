@@ -2,6 +2,10 @@
 import React from "react";
 
 const CheckBoxGroup = ({ choices, onChange }) => {
+  const handleChange = (event) => {
+    onChange(event.target.id, event.target.checked);
+  };
+
   return (
     <div>
       {choices.map((choice) => (
@@ -12,7 +16,7 @@ const CheckBoxGroup = ({ choices, onChange }) => {
             name={choice.name}
             value={choice.id}
             checked={choice.checked}
-            onChange={onChange} // You can handle change to update the state or do something else
+            onChange={handleChange}
           />
           <label htmlFor={choice.id}>{choice.name}</label>
         </div>
