@@ -41,6 +41,24 @@ const OptionsAvailable = {
       { id: "PK3", name: "Package III", price: 500 },
     ],
   },
+  exteriorAccessories: {
+    displayName: "Exterior Accessories",
+    type: "CheckBoxGroup",
+    choices: [
+      { id: "BSM", name: "Body Side Moulding", price: 500 },
+      { id: "DLS", name: "Decklid Spoiler", price: 500 },
+      { id: "SGS", name: "Splash Guard Set", price: 500 },
+    ],
+  },
+  interiorAccessories: {
+    displayName: "Interior Accessories",
+    type: "CheckBoxGroup",
+    choices: [
+      { id: "ASF", name: "All Season Floor Mats", price: 500 },
+      { id: "CH", name: "Cargo Hook", price: 500 },
+      { id: "CN", name: "Cargo Net", price: 500 },
+    ],
+  },
 };
 
 // ------------------------------
@@ -53,16 +71,22 @@ const Dependencies = {
       powertrain: ["Standard", "Premium"],
       exteriorColor: ["Blue", "Black"],
       packages: ["PK1", "PK2"],
+      exteriorAccessories: ["BSM", "DLS", "SGS"],
+      interiorAccessories: ["ASF", "CH", "CN"],
     },
     Sport: {
       powertrain: ["Standard", "Premium", "Turbo"],
       exteriorColor: ["Blue", "Black", "Silver", "Red"],
       packages: ["PK1", "PK2"],
+      exteriorAccessories: ["BSM", "DLS", "SGS"],
+      interiorAccessories: ["ASF", "CH", "CN"],
     },
     TypeR: {
       powertrain: ["Turbo"], // Assuming only Turbo is available for Type R
       exteriorColor: ["Red", "Black"],
       packages: ["PK1", "PK2", "PK3"],
+      exteriorAccessories: ["BSM", "DLS", "SGS"],
+      interiorAccessories: ["ASF", "CH", "CN"],
     },
     // ... dependencies for other trims
   },
@@ -92,103 +116,260 @@ export function handleOptionChanged(
   optionsAvailable,
   optionsSelected
 ) {
-  // Use switch statement to handle all categories
   let updatedState = {
     optionsAvailable: { ...optionsAvailable },
     optionsSelected: { ...optionsSelected },
   };
+
   switch (category) {
     case "trim":
-      // Find the selected trim in optionsAvailable
-      const selectedTrim = optionsAvailable.trim.choices.find(
-        (choice) => choice.id === selection
+      console.log("Trim Selected");
+      return handleTrim(
+        selection,
+        optionsAvailable,
+        optionsSelected,
+        updatedState
       );
-
-      // Update optionsSelected with ONLY the selected trim
-      updatedState.optionsSelected = {
-        trim: {
-          displayName: "Trim",
-          type: "Dropdown",
-          choices: [selectedTrim],
-        },
-      };
-
-      // Update optionsAvailable based on Dependencies
-      const trimDependencies = Dependencies.trim[selection];
-      if (trimDependencies) {
-        Object.keys(trimDependencies).forEach((key) => {
-          updatedState.optionsAvailable[key] = {
-            ...OptionsAvailable[key],
-            choices: OptionsAvailable[key].choices.filter((choice) =>
-              trimDependencies[key].includes(choice.id)
-            ),
-          };
-        });
-      }
-      return updatedState;
     case "powertrain":
-      // Find the selected trim in optionsAvailable
-      const selectedPowertrain = optionsAvailable.powertrain.choices.find(
-        (choice) => choice.id === selection
+      console.log("Powertrain Selected");
+      return handlePowertrain(
+        selection,
+        optionsAvailable,
+        optionsSelected,
+        updatedState
       );
-
-      // Update optionsSelected with the selected trim
-      updatedState.optionsSelected = {
-        ...updatedState.optionsSelected,
-        powertrain: {
-          displayName: "Powertrain",
-          type: "Dropdown",
-          choices: [selectedPowertrain],
-        },
-      };
-      return updatedState;
     case "exteriorColor":
-      // Find the selected trim in optionsAvailable
-      const selectedExteriorColor = optionsAvailable.exteriorColor.choices.find(
-        (choice) => choice.id === selection
+      console.log("Exterior  Selected");
+      return handleExteriorColor(
+        selection,
+        optionsAvailable,
+        optionsSelected,
+        updatedState
       );
-      // Update optionsSelected with the selected trim
-      updatedState.optionsSelected = {
-        ...updatedState.optionsSelected,
-        exteriorColor: {
-          displayName: "Exterior Color",
-          type: "Dropdown",
-          choices: [selectedExteriorColor],
-        },
-      };
-      return updatedState;
     case "packages":
-      // Check if the package is already selected
-      const isPackageSelected = optionsSelected.packages?.choices.some(
+      console.log("Packages Selected");
+      return handlePackages(
+        selection,
+        optionsAvailable,
+        optionsSelected,
+        updatedState
+      );
+    case "exteriorAccessories":
+      console.log("Exterior Acc Selected");
+      return handleExteriorAccessories(
+        selection,
+        optionsAvailable,
+        optionsSelected,
+        updatedState
+      );
+    case "interiorAccessories":
+      console.log("Interior Acc Selected");
+      return handleInteriorAccessories(
+        selection,
+        optionsAvailable,
+        optionsSelected,
+        updatedState
+      );
+    default:
+      return updatedState;
+  }
+}
+
+//Callback functions for handleOptionChange
+//.....................
+//Handle trim change
+function handleTrim(
+  selection,
+  optionsAvailable,
+  optionsSelected,
+  updatedState
+) {
+  // Find the selected trim in optionsAvailable
+  const selectedTrim = optionsAvailable.trim.choices.find(
+    (choice) => choice.id === selection
+  );
+
+  // Update optionsSelected with ONLY the selected trim
+  updatedState.optionsSelected = {
+    trim: {
+      displayName: "Trim",
+      type: "Dropdown",
+      choices: [selectedTrim],
+    },
+  };
+
+  // Update optionsAvailable based on Dependencies
+  const trimDependencies = Dependencies.trim[selection];
+  if (trimDependencies) {
+    Object.keys(trimDependencies).forEach((key) => {
+      updatedState.optionsAvailable[key] = {
+        ...OptionsAvailable[key],
+        choices: OptionsAvailable[key].choices.filter((choice) =>
+          trimDependencies[key].includes(choice.id)
+        ),
+      };
+    });
+  }
+  return updatedState;
+}
+
+//.....................
+//Handle powertrain change
+function handlePowertrain(
+  selection,
+  optionsAvailable,
+  optionsSelected,
+  updatedState
+) {
+  // Find the selected trim in optionsAvailable
+  const selectedPowertrain = optionsAvailable.powertrain.choices.find(
+    (choice) => choice.id === selection
+  );
+
+  // Update optionsSelected with the selected powertrain
+  updatedState.optionsSelected = {
+    ...updatedState.optionsSelected,
+    powertrain: {
+      displayName: "Powertrain",
+      type: "Dropdown",
+      choices: [selectedPowertrain],
+    },
+  };
+  return updatedState;
+}
+
+//.....................
+//Handle exteriorColor change
+function handleExteriorColor(
+  selection,
+  optionsAvailable,
+  optionsSelected,
+  updatedState
+) {
+  // Find the selected trim in optionsAvailable
+  const selectedExteriorColor = optionsAvailable.exteriorColor.choices.find(
+    (choice) => choice.id === selection
+  );
+  // Update optionsSelected with the selected exteriorColor
+  updatedState.optionsSelected = {
+    ...updatedState.optionsSelected,
+    exteriorColor: {
+      displayName: "Exterior Color",
+      type: "Dropdown",
+      choices: [selectedExteriorColor],
+    },
+  };
+  return updatedState;
+}
+
+function handlePackages(
+  selection,
+  optionsAvailable,
+  optionsSelected,
+  updatedState
+) {
+  const isPackageSelected = optionsSelected.packages?.choices.some(
+    (choice) => choice.id === selection.id
+  );
+
+  // If the package is not already selected, add it to the choices array
+  if (!isPackageSelected) {
+    const selectedPackage = optionsAvailable.packages.choices.find(
+      (choice) => choice.id === selection.id
+    );
+
+    updatedState.optionsSelected.packages = {
+      displayName: "Packages",
+      type: "CheckBoxGroup",
+      choices: optionsSelected.packages
+        ? [...optionsSelected.packages.choices, selectedPackage]
+        : [selectedPackage],
+    };
+  } else {
+    // If the package is already selected, remove it from the choices array
+    updatedState.optionsSelected.packages = {
+      ...optionsSelected.packages,
+      choices: optionsSelected.packages.choices.filter(
+        (choice) => choice.id !== selection.id
+      ),
+    };
+  }
+  return updatedState;
+}
+
+function handleExteriorAccessories(
+  selection,
+  optionsAvailable,
+  optionsSelected,
+  updatedState
+) {
+  // Check if the exteriorAccessory is already selected
+  const isExteriorAccSelected =
+    optionsSelected.exteriorAccessories?.choices.some(
+      (choice) => choice.id === selection.id
+    );
+
+  // If the exteriorAccessory is not already selected, add it to the choices array
+  if (!isExteriorAccSelected) {
+    const selectedExteriorAcc =
+      optionsAvailable.exteriorAccessories.choices.find(
         (choice) => choice.id === selection.id
       );
 
-      // If the package is not already selected, add it to the choices array
-      if (!isPackageSelected) {
-        const selectedPackage = optionsAvailable.packages.choices.find(
-          (choice) => choice.id === selection.id
-        );
-
-        updatedState.optionsSelected.packages = {
-          displayName: "Packages",
-          type: "CheckBoxGroup",
-          choices: optionsSelected.packages
-            ? [...optionsSelected.packages.choices, selectedPackage]
-            : [selectedPackage],
-        };
-      } else {
-        // If the package is already selected, remove it from the choices array
-        updatedState.optionsSelected.packages = {
-          ...optionsSelected.packages,
-          choices: optionsSelected.packages.choices.filter(
-            (choice) => choice.id !== selection.id
-          ),
-        };
-      }
-      return updatedState;
-    default:
-      return state;
+    updatedState.optionsSelected.exteriorAccessories = {
+      displayName: "Exterior Accessories",
+      type: "CheckBoxGroup",
+      choices: optionsSelected.exteriorAccessories
+        ? [...optionsSelected.exteriorAccessories.choices, selectedExteriorAcc]
+        : [selectedExteriorAcc],
+    };
+  } else {
+    // If the exteriorAccessory is already selected, remove it from the choices array
+    updatedState.optionsSelected.exteriorAccessories = {
+      ...optionsSelected.exteriorAccessories,
+      choices: optionsSelected.exteriorAccessories.choices.filter(
+        (choice) => choice.id !== selection.id
+      ),
+    };
   }
+  return updatedState;
+}
+
+function handleInteriorAccessories(
+  selection,
+  optionsAvailable,
+  optionsSelected,
+  updatedState
+) {
+  // Check if the interiorAccessory is already selected
+  const isInteriorAccSelected =
+    optionsSelected.interiorAccessories?.choices.some(
+      (choice) => choice.id === selection.id
+    );
+
+  // If the interiorAccessory is not already selected, add it to the choices array
+  if (!isInteriorAccSelected) {
+    const selectedInteriorAcc =
+      optionsAvailable.interiorAccessories.choices.find(
+        (choice) => choice.id === selection.id
+      );
+    updatedState.optionsSelected.interiorAccessories = {
+      displayName: "Interior Accessories",
+      type: "CheckBoxGroup",
+      choices: optionsSelected.interiorAccessories
+        ? [...optionsSelected.interiorAccessories.choices, selectedInteriorAcc]
+        : [selectedInteriorAcc],
+    };
+  } else {
+    // If the interiorAccessory is already selected, remove it from the choices array
+    updatedState.optionsSelected.interiorAccessories = {
+      ...optionsSelected.interiorAccessories,
+      choices: optionsSelected.interiorAccessories.choices.filter(
+        (choice) => choice.id !== selection.id
+      ),
+    };
+  }
+  return updatedState;
 }
 
 // ------------------------------
