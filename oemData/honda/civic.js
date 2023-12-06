@@ -36,9 +36,9 @@ const OptionsAvailable = {
     displayName: "Packages",
     type: "CheckBoxGroup",
     choices: [
-      { id: "PK1", name: "All Season Protection Package I", price: 500 },
-      { id: "PK2", name: "All Season Protection Package II", price: 500 },
-      { id: "PK3", name: "Package III", price: 500 },
+      { id: "ASP1", name: "All Season Protection Package I", price: 500 },
+      { id: "ASP2", name: "All Season Protection Package II", price: 500 },
+      { id: "PP3", name: "Package III", price: 500 },
     ],
   },
   exteriorAccessories: {
@@ -48,6 +48,9 @@ const OptionsAvailable = {
       { id: "BSM", name: "Body Side Moulding", price: 500 },
       { id: "DLS", name: "Decklid Spoiler", price: 500 },
       { id: "SGS", name: "Splash Guard Set", price: 500 },
+      { id: "EAC1", name: "EA-Component1", price: 500 },
+      { id: "EAC2", name: "EA-Component2", price: 500 },
+      { id: "EAC3", name: "EA-Component3", price: 500 },
     ],
   },
   interiorAccessories: {
@@ -57,6 +60,9 @@ const OptionsAvailable = {
       { id: "ASF", name: "All Season Floor Mats", price: 500 },
       { id: "CH", name: "Cargo Hook", price: 500 },
       { id: "CN", name: "Cargo Net", price: 500 },
+      { id: "IAC1", name: "EA-Component1", price: 500 },
+      { id: "IAC2", name: "EA-Component2", price: 500 },
+      { id: "IAC3", name: "EA-Component3", price: 500 },
     ],
   },
 };
@@ -65,32 +71,44 @@ const OptionsAvailable = {
 // DEPENDENCIES SECTION
 // ------------------------------
 const Dependencies = {
-  // ... your dependencies JSON ...
+  // ... trim dependencies- Each trim is effectively a main ancestor to all other options
   trim: {
     LX: {
       powertrain: ["Standard", "Premium"],
       exteriorColor: ["Blue", "Black"],
-      packages: ["PK1", "PK2"],
-      exteriorAccessories: ["BSM", "DLS", "SGS"],
-      interiorAccessories: ["ASF", "CH", "CN"],
+      packages: ["ASP1", "ASP2", "PP3"],
+      exteriorAccessories: ["BSM", "DLS", "SGS", "EAC1", "EAC2", "EAC3"],
+      interiorAccessories: ["ASF", "CH", "CN", "IAC1", "IAC2", "IAC3"],
     },
     Sport: {
       powertrain: ["Standard", "Premium", "Turbo"],
       exteriorColor: ["Blue", "Black", "Silver", "Red"],
-      packages: ["PK1", "PK2"],
-      exteriorAccessories: ["BSM", "DLS", "SGS"],
-      interiorAccessories: ["ASF", "CH", "CN"],
+      packages: ["ASP1", "ASP2", "PP3"],
+      exteriorAccessories: ["BSM", "DLS", "SGS", "EAC1", "EAC2", "EAC3"],
+      interiorAccessories: ["ASF", "CH", "CN", "IAC1", "IAC2", "IAC3"],
     },
     TypeR: {
       powertrain: ["Turbo"], // Assuming only Turbo is available for Type R
       exteriorColor: ["Red", "Black"],
-      packages: ["PK1", "PK2", "PK3"],
-      exteriorAccessories: ["BSM", "DLS", "SGS"],
-      interiorAccessories: ["ASF", "CH", "CN"],
+      packages: ["ASP1", "ASP2", "PP3"],
+      exteriorAccessories: ["BSM", "DLS", "SGS", "EAC1", "EAC2", "EAC3"],
+      interiorAccessories: ["ASF", "CH", "CN", "IAC1", "IAC2", "IAC3"],
     },
     // ... dependencies for other trims
   },
-  //..package dependencies
+  //..package dependencies-These are the individual components for each package
+  packages: {
+    ASP1: {
+      exteriorAccessories: ["EAC1", "EAC2"],
+    },
+    ASP2: {
+      exteriorAccessories: ["EAC3"],
+      interiorAccessories: ["IAC3"],
+    },
+    PP3: {
+      interiorAccessories: ["IAC1", "IAC2"],
+    },
+  },
 };
 
 // ------------------------------
@@ -110,6 +128,7 @@ const InitialOptionsAvailable = {
   },
 };
 
+//Main option change function
 export function handleOptionChanged(
   category,
   selection,
@@ -123,7 +142,6 @@ export function handleOptionChanged(
 
   switch (category) {
     case "trim":
-      console.log("Trim Selected");
       return handleTrim(
         selection,
         optionsAvailable,
@@ -131,7 +149,6 @@ export function handleOptionChanged(
         updatedState
       );
     case "powertrain":
-      console.log("Powertrain Selected");
       return handlePowertrain(
         selection,
         optionsAvailable,
@@ -139,7 +156,6 @@ export function handleOptionChanged(
         updatedState
       );
     case "exteriorColor":
-      console.log("Exterior  Selected");
       return handleExteriorColor(
         selection,
         optionsAvailable,
@@ -147,7 +163,6 @@ export function handleOptionChanged(
         updatedState
       );
     case "packages":
-      console.log("Packages Selected");
       return handlePackages(
         selection,
         optionsAvailable,
@@ -155,7 +170,6 @@ export function handleOptionChanged(
         updatedState
       );
     case "exteriorAccessories":
-      console.log("Exterior Acc Selected");
       return handleExteriorAccessories(
         selection,
         optionsAvailable,
@@ -163,7 +177,6 @@ export function handleOptionChanged(
         updatedState
       );
     case "interiorAccessories":
-      console.log("Interior Acc Selected");
       return handleInteriorAccessories(
         selection,
         optionsAvailable,
@@ -262,6 +275,8 @@ function handleExteriorColor(
   return updatedState;
 }
 
+//.....................
+//Handle packages change
 function handlePackages(
   selection,
   optionsAvailable,
@@ -285,6 +300,24 @@ function handlePackages(
         ? [...optionsSelected.packages.choices, selectedPackage]
         : [selectedPackage],
     };
+
+    // Add package dependencies to optionsSelected
+    const packageDependencies = Dependencies.packages[selection.id];
+    if (packageDependencies) {
+      Object.keys(packageDependencies).forEach((dependencyKey) => {
+        const dependencyChoices = packageDependencies[dependencyKey].map(
+          (depId) =>
+            optionsAvailable[dependencyKey].choices.find(
+              (choice) => choice.id === depId
+            )
+        );
+
+        updatedState.optionsSelected[dependencyKey] = {
+          ...optionsAvailable[dependencyKey],
+          choices: dependencyChoices,
+        };
+      });
+    }
   } else {
     // If the package is already selected, remove it from the choices array
     updatedState.optionsSelected.packages = {
@@ -293,10 +326,27 @@ function handlePackages(
         (choice) => choice.id !== selection.id
       ),
     };
+    // Remove the package dependencies from optionsSelected
+    const packageDependencies = Dependencies.packages[selection.id];
+    if (packageDependencies) {
+      Object.keys(packageDependencies).forEach((dependencyKey) => {
+        if (updatedState.optionsSelected[dependencyKey]) {
+          const dependencyIds = packageDependencies[dependencyKey];
+          updatedState.optionsSelected[dependencyKey] = {
+            ...updatedState.optionsSelected[dependencyKey],
+            choices: updatedState.optionsSelected[dependencyKey].choices.filter(
+              (choice) => !dependencyIds.includes(choice.id)
+            ),
+          };
+        }
+      });
+    }
   }
   return updatedState;
 }
 
+//.....................
+//Handle exteriorAccessories change
 function handleExteriorAccessories(
   selection,
   optionsAvailable,
@@ -335,6 +385,8 @@ function handleExteriorAccessories(
   return updatedState;
 }
 
+//.....................
+//Handle interiorAccessories change
 function handleInteriorAccessories(
   selection,
   optionsAvailable,
