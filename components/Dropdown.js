@@ -9,7 +9,10 @@ const Dropdown = ({ id, value, onChange, options, disabled }) => {
       }`}</option>
       {options.map((option) => (
         <option key={option.id} value={option.id}>
-          {option.name}
+          {option.name}{" "}
+          {option.price !== undefined && option.price !== null
+            ? ` - $${option.price}`
+            : ""}
         </option>
       ))}
     </select>

@@ -18,7 +18,12 @@ const CheckBoxGroup = ({ choices, onChange }) => {
             checked={choice.checked}
             onChange={handleChange}
           />
-          <label htmlFor={choice.id}>{choice.name}</label>
+          <label htmlFor={choice.id}>
+            {choice.name}
+            {choice.price !== undefined && choice.price !== null
+              ? ` - $${choice.price}`
+              : ""}
+          </label>
         </div>
       ))}
     </div>

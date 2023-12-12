@@ -18,7 +18,7 @@ async function importModelData(make, model) {
   const formattedModel = formatName(model);
   return await import(`/oemData/${formattedMake}/${formattedModel}.js`);
 }
-
+//Utility function
 function formatName(name) {
   return name.toLowerCase().replace(/[\s-]+/g, "_");
 }
