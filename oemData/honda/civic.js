@@ -192,7 +192,7 @@ function handleTrim(category, selection, optionsAvailable, optionsSelected) {
 
   // Initialize newOptionsAvailable based on trimDependencies
   let newOptionsAvailable = produce(optionsAvailable, (draft) => {
-    const trimDependencies = Dependencies.trim[selection];
+    const trimDependencies = Dependencies.trim[selection.id];
     if (trimDependencies) {
       Object.keys(trimDependencies).forEach((dependencyKey) => {
         draft[dependencyKey] = {
@@ -214,54 +214,48 @@ function handleTrim(category, selection, optionsAvailable, optionsSelected) {
 //.....................
 //Handle powertrain change
 function handlePowertrain(
+  category,
   selection,
   optionsAvailable,
-  optionsSelected,
-  updatedState
+  optionsSelected
 ) {
-  // Find the selected trim in optionsAvailable
-  const selectedPowertrain = optionsAvailable.powertrain.choices.find(
-    (choice) => choice.id === selection
-  );
-  // Update optionsSelected with the selected powertrain
-  updatedState.optionsSelected = {
-    ...updatedState.optionsSelected,
-    powertrain: {
-      displayName: "Powertrain",
-      type: "Dropdown",
-      choices: [selectedPowertrain],
-    },
+  // Initialize newOptionsSelected by calling addToOptionsSelected
+  let newOptionsSelected = produce(optionsSelected, (draft) => {
+    addToOptionsSelected(category, selection, optionsAvailable, draft);
+  });
+
+  let newOptionsAvailable = produce(optionsAvailable, (draft) => {});
+
+  return {
+    optionsAvailable: newOptionsAvailable,
+    optionsSelected: newOptionsSelected,
   };
-  return updatedState;
 }
 
 //.....................
 //Handle exteriorColor change
 function handleExteriorColor(
+  category,
   selection,
   optionsAvailable,
-  optionsSelected,
-  updatedState
+  optionsSelected
 ) {
-  // Find the selected trim in optionsAvailable
-  const selectedExteriorColor = optionsAvailable.exteriorColor.choices.find(
-    (choice) => choice.id === selection
-  );
-  // Update optionsSelected with the selected exteriorColor
-  updatedState.optionsSelected = {
-    ...updatedState.optionsSelected,
-    exteriorColor: {
-      displayName: "Exterior Color",
-      type: "Dropdown",
-      choices: [selectedExteriorColor],
-    },
+  // Initialize newOptionsSelected by calling addToOptionsSelected
+  let newOptionsSelected = produce(optionsSelected, (draft) => {
+    addToOptionsSelected(category, selection, optionsAvailable, draft);
+  });
+
+  let newOptionsAvailable = produce(optionsAvailable, (draft) => {});
+
+  return {
+    optionsAvailable: newOptionsAvailable,
+    optionsSelected: newOptionsSelected,
   };
-  return updatedState;
 }
 
 //.....................
 //Handle packages change
-function handlePackages(
+function handlePackages2(
   selection,
   optionsAvailable,
   optionsSelected,
@@ -332,6 +326,63 @@ function handlePackages(
     }
   }
   return updatedState;
+}
+
+function handlePackages(
+  category,
+  selection,
+  optionsAvailable,
+  optionsSelected
+) {
+  let newOptionsSelected = produce(optionsSelected, (draft) => {
+    addToOptionsSelected(category, selection, optionsAvailable, draft);
+  });
+
+  let newOptionsAvailable = produce(optionsAvailable, (draft) => {
+    // Your existing logic for updating newOptionsAvailable
+  });
+  let updatedOptionsSelected = produce(newOptionsSelected, (draft) => {
+    const packageDependencies = Dependencies.packages[selection.id];
+    if (packageDependencies) {
+      Object.keys(packageDependencies).forEach((dependencyKey) => {
+        packageDependencies[dependencyKey].forEach((depId) => {
+          if (selection.isChecked) {
+            // Add dependencies when the package is selected
+            const choice = newOptionsAvailable[dependencyKey].choices.find(
+              (choice) => choice.id === depId
+            );
+            if (choice) {
+              const choiceWithComponent = {
+                ...choice,
+                component: selection.id,
+              };
+              if (!draft[dependencyKey]) {
+                draft[dependencyKey] = {
+                  type: optionsAvailable[dependencyKey].type,
+                  choices: [],
+                };
+              }
+              draft[dependencyKey].choices.push(choiceWithComponent);
+            }
+          } else {
+            // Remove dependencies when the package is unselected
+            if (draft[dependencyKey]) {
+              draft[dependencyKey].choices = draft[
+                dependencyKey
+              ].choices.filter(
+                (choice) =>
+                  choice.id !== depId || choice.component !== selection.id
+              );
+            }
+          }
+        });
+      });
+    }
+  });
+  return {
+    optionsAvailable: newOptionsAvailable,
+    optionsSelected: updatedOptionsSelected,
+  };
 }
 
 //.....................
@@ -490,9 +541,8 @@ function addToOptionsSelected(category, selection, optionsAvailable, draft) {
 
   // Find the selected option in optionsAvailable
   const selectedOption = optionsAvailable[category].choices.find(
-    (choice) => choice.id === selection
+    (choice) => choice.id === selection.id
   );
-
   // Update draft based on the option type
   if (optionsAvailable[category].type === "Dropdown") {
     draft[category].choices = [selectedOption];

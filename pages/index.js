@@ -77,7 +77,7 @@ const IndexPage = () => {
                   id={key}
                   value={selectedOption} // Set the selected option here
                   onChange={(event) =>
-                    handleOptionChange(key, event.target.value)
+                    handleOptionChange(key, { id: event.target.value })
                   }
                   options={option.choices}
                 />
