@@ -254,80 +254,8 @@ function handleExteriorColor(
 }
 
 //.....................
+
 //Handle packages change
-function handlePackages2(
-  selection,
-  optionsAvailable,
-  optionsSelected,
-  updatedState
-) {
-  const isPackageSelected = optionsSelected.packages?.choices.some(
-    (choice) => choice.id === selection.id
-  );
-
-  // If the package is not already selected, add it to the choices array
-  if (!isPackageSelected) {
-    const selectedPackage = optionsAvailable.packages.choices.find(
-      (choice) => choice.id === selection.id
-    );
-
-    updatedState.optionsSelected.packages = {
-      displayName: "Packages",
-      type: "CheckBoxGroup",
-      choices: optionsSelected.packages
-        ? [...optionsSelected.packages.choices, selectedPackage]
-        : [selectedPackage],
-    };
-
-    // Add package dependencies to optionsSelected
-    const packageDependencies = Dependencies.packages[selection.id];
-    if (packageDependencies) {
-      Object.keys(packageDependencies).forEach((dependencyKey) => {
-        const dependencyChoices = packageDependencies[dependencyKey].map(
-          (depId) => {
-            const choice = optionsAvailable[dependencyKey].choices.find(
-              (choice) => choice.id === depId
-            );
-            // Add the 'component' key to each dependency choice
-            return {
-              ...choice,
-              component: selection.id,
-            };
-          }
-        );
-        updatedState.optionsSelected[dependencyKey] = {
-          ...optionsAvailable[dependencyKey],
-          choices: dependencyChoices,
-        };
-      });
-    }
-  } else {
-    // If the package is already selected, remove it from the choices array
-    updatedState.optionsSelected.packages = {
-      ...optionsSelected.packages,
-      choices: optionsSelected.packages.choices.filter(
-        (choice) => choice.id !== selection.id
-      ),
-    };
-    // Remove the package dependencies from optionsSelected
-    const packageDependencies = Dependencies.packages[selection.id];
-    if (packageDependencies) {
-      Object.keys(packageDependencies).forEach((dependencyKey) => {
-        if (updatedState.optionsSelected[dependencyKey]) {
-          const dependencyIds = packageDependencies[dependencyKey];
-          updatedState.optionsSelected[dependencyKey] = {
-            ...updatedState.optionsSelected[dependencyKey],
-            choices: updatedState.optionsSelected[dependencyKey].choices.filter(
-              (choice) => !dependencyIds.includes(choice.id)
-            ),
-          };
-        }
-      });
-    }
-  }
-  return updatedState;
-}
-
 function handlePackages(
   category,
   selection,
@@ -341,44 +269,11 @@ function handlePackages(
   let newOptionsAvailable = produce(optionsAvailable, (draft) => {
     // Your existing logic for updating newOptionsAvailable
   });
-  let updatedOptionsSelected = produce(newOptionsSelected, (draft) => {
-    const packageDependencies = Dependencies.packages[selection.id];
-    if (packageDependencies) {
-      Object.keys(packageDependencies).forEach((dependencyKey) => {
-        packageDependencies[dependencyKey].forEach((depId) => {
-          if (selection.isChecked) {
-            // Add dependencies when the package is selected
-            const choice = newOptionsAvailable[dependencyKey].choices.find(
-              (choice) => choice.id === depId
-            );
-            if (choice) {
-              const choiceWithComponent = {
-                ...choice,
-                component: selection.id,
-              };
-              if (!draft[dependencyKey]) {
-                draft[dependencyKey] = {
-                  type: optionsAvailable[dependencyKey].type,
-                  choices: [],
-                };
-              }
-              draft[dependencyKey].choices.push(choiceWithComponent);
-            }
-          } else {
-            // Remove dependencies when the package is unselected
-            if (draft[dependencyKey]) {
-              draft[dependencyKey].choices = draft[
-                dependencyKey
-              ].choices.filter(
-                (choice) =>
-                  choice.id !== depId || choice.component !== selection.id
-              );
-            }
-          }
-        });
-      });
-    }
-  });
+  let updatedOptionsSelected = handlePackageComponents(
+    selection,
+    newOptionsAvailable,
+    newOptionsSelected
+  );
   return {
     optionsAvailable: newOptionsAvailable,
     optionsSelected: updatedOptionsSelected,
@@ -556,6 +451,52 @@ function addToOptionsSelected(category, selection, optionsAvailable, draft) {
       draft[category].choices.splice(index, 1);
     }
   }
+}
+
+function handlePackageComponents(
+  selection,
+  newOptionsAvailable,
+  newOptionsSelected
+) {
+  return produce(newOptionsSelected, (draft) => {
+    const packageDependencies = Dependencies.packages[selection.id];
+    if (packageDependencies) {
+      Object.keys(packageDependencies).forEach((dependencyKey) => {
+        packageDependencies[dependencyKey].forEach((depId) => {
+          if (selection.isChecked) {
+            // Add dependencies when the package is selected
+            const choice = newOptionsAvailable[dependencyKey].choices.find(
+              (choice) => choice.id === depId
+            );
+            if (choice) {
+              const choiceWithComponent = {
+                ...choice,
+                name: choice.name + " - Included in Package",
+                component: selection.id,
+              };
+              if (!draft[dependencyKey]) {
+                draft[dependencyKey] = {
+                  type: newOptionsAvailable[dependencyKey].type,
+                  choices: [],
+                };
+              }
+              draft[dependencyKey].choices.push(choiceWithComponent);
+            }
+          } else {
+            // Remove dependencies when the package is unselected
+            if (draft[dependencyKey]) {
+              draft[dependencyKey].choices = draft[
+                dependencyKey
+              ].choices.filter(
+                (choice) =>
+                  choice.id !== depId || choice.component !== selection.id
+              );
+            }
+          }
+        });
+      });
+    }
+  });
 }
 
 // ------------------------------
