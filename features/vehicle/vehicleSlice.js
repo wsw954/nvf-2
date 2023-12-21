@@ -68,8 +68,9 @@ const vehicleSlice = createSlice({
     selectMake: (state, action) => {
       state.selectedMake = action.payload;
       const selectedMakeData = makeModelData.find(
-        (make) => make.make === action.payload
+        (make) => make.id === action.payload
       );
+      console.log(action.payload);
       state.models = selectedMakeData ? selectedMakeData.models : [];
       state.selectedModel = ""; // Reset selected model when make changes
       state.optionsSelected = {}; //Reset all selected options when make changes

@@ -22,8 +22,8 @@ const IndexPage = () => {
   } = useSelector((state) => state.vehicle);
 
   const makeOptions = makeModelData.map((item) => ({
-    id: item.make,
-    name: item.make,
+    id: item.id,
+    name: item.name,
   }));
   const modelOptions = models.map((model) => ({
     id: model.name,
