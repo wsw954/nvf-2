@@ -25,10 +25,6 @@ const IndexPage = () => {
     id: item.id,
     name: item.name,
   }));
-  const modelOptions = models.map((model) => ({
-    id: model.name,
-    name: model.name,
-  }));
 
   const handleMakeChange = (event) => {
     dispatch(selectMake(event.target.value));
@@ -66,7 +62,7 @@ const IndexPage = () => {
         switch (option.type) {
           case "Dropdown":
             // Find the selected option for this category
-            const selectedOption =
+            const selectedOptionID =
               optionsSelected && optionsSelected[key]
                 ? optionsSelected[key].choices[0].id
                 : "";
@@ -75,7 +71,7 @@ const IndexPage = () => {
                 <label htmlFor={key}>{option.displayName}:</label>
                 <Dropdown
                   id={key}
-                  value={selectedOption} // Set the selected option here
+                  value={selectedOptionID} // Set the selected option here
                   onChange={(event) =>
                     handleOptionChange(key, { id: event.target.value })
                   }
@@ -134,7 +130,7 @@ const IndexPage = () => {
             id="model"
             value={selectedModel} // Adjust as needed
             onChange={handleModelChange}
-            options={modelOptions}
+            options={models}
             disabled={!selectedMake}
           />
         </div>

@@ -100,6 +100,7 @@ const Dependencies = {
   packages: {
     ASP1: {
       exteriorAccessories: ["EAC1", "EAC2"],
+      powertrain: ["Premium"],
     },
     ASP2: {
       exteriorAccessories: ["EAC3"],
@@ -262,18 +263,29 @@ function handlePackages(
   optionsAvailable,
   optionsSelected
 ) {
-  let newOptionsSelected = produce(optionsSelected, (draft) => {
-    addToOptionsSelected(category, selection, optionsAvailable, draft);
+  // Step 1: Update optionsAvailable with package components marked
+  let newOptionsAvailable = produce(optionsAvailable, (draft) => {
+    if (selection.isChecked) {
+      // Update newOptionsAvailable as needed
+      updateOptionsAvailableWithPackageComponents(selection, draft);
+    }
   });
 
-  let newOptionsAvailable = produce(optionsAvailable, (draft) => {
-    // Your existing logic for updating newOptionsAvailable
+  // Step 2: Update optionsSelected with the package and its components
+  // Note: Using the original optionsAvailable, not newOptionsAvailable
+  let updatedOptionsSelected = produce(optionsSelected, (draft) => {
+    if (selection.isChecked) {
+      // Add the actual package option
+      addToOptionsSelected(category, selection, optionsAvailable, draft);
+
+      // Add the package 'component' options
+      addPackageComponents(selection, optionsAvailable, draft);
+    } else {
+      removeFromOptionsSelected(category, selection, optionsAvailable, draft);
+      // removePackageComponents(selection, optionsAvailable, draft);
+    }
   });
-  let updatedOptionsSelected = handlePackageComponents(
-    selection,
-    newOptionsAvailable,
-    newOptionsSelected
-  );
+
   return {
     optionsAvailable: newOptionsAvailable,
     optionsSelected: updatedOptionsSelected,
@@ -282,7 +294,7 @@ function handlePackages(
 
 //.....................
 //Handle exteriorAccessories change
-function handleExteriorAccessories(
+function handleExteriorAccessories2(
   selection,
   optionsAvailable,
   optionsSelected,
@@ -358,6 +370,23 @@ function handleExteriorAccessories(
   return updatedState;
 }
 
+function handleExteriorAccessories(
+  category,
+  selection,
+  optionsAvailable,
+  optionsSelected
+) {
+  console.log(category);
+  let newOptionsSelected = produce(optionsSelected, (draft) => {});
+  if (selection.isChecked) {
+    newOptionsSelected = produce(optionsSelected, (draft) => {
+      addToOptionsSelected(category, selection, optionsAvailable, draft);
+    });
+  }
+  console.log(selection);
+  return { optionsAvailable, newOptionsSelected };
+}
+
 //.....................
 //Handle interiorAccessories change
 function handleInteriorAccessories(
@@ -429,27 +458,85 @@ function addToOptionsAvailable(
 }
 
 function addToOptionsSelected(category, selection, optionsAvailable, draft) {
-  // Ensure the category exists in the draft
   if (!draft[category]) {
-    draft[category] = { type: optionsAvailable[category].type, choices: [] };
+    draft[category] = {
+      displayName: optionsAvailable[category].displayName,
+      type: optionsAvailable[category].type,
+      choices: [],
+    };
   }
 
-  // Find the selected option in optionsAvailable
   const selectedOption = optionsAvailable[category].choices.find(
     (choice) => choice.id === selection.id
   );
-  // Update draft based on the option type
+
   if (optionsAvailable[category].type === "Dropdown") {
     draft[category].choices = [selectedOption];
   } else if (optionsAvailable[category].type === "CheckBoxGroup") {
-    const index = draft[category].choices.findIndex(
-      (choice) => choice.id === selectedOption.id
-    );
-    if (index === -1) {
+    //If selectedOption not in draft, add to draft
+    if (
+      !draft[category].choices.some((choice) => choice.id === selectedOption.id)
+    ) {
       draft[category].choices.push(selectedOption);
-    } else {
-      draft[category].choices.splice(index, 1);
     }
+  }
+}
+
+function removeFromOptionsSelected(category, selection, draft) {
+  const index = draft[category].choices.findIndex(
+    (choice) => choice.id === selection.id
+  );
+  if (index !== -1) {
+    draft[category].choices.splice(index, 1);
+  }
+}
+
+function addPackageComponents(selection, newOptionsAvailable, draft) {
+  const packageDependencies = Dependencies.packages[selection.id];
+  if (packageDependencies) {
+    Object.keys(packageDependencies).forEach((dependencyKey) => {
+      packageDependencies[dependencyKey].forEach((depId) => {
+        const choice = newOptionsAvailable[dependencyKey].choices.find(
+          (choice) => choice.id === depId
+        );
+        if (choice) {
+          const choiceWithComponent = {
+            ...choice,
+            name: choice.name + " - Included in Package",
+            component: selection.id,
+          };
+          if (!draft[dependencyKey]) {
+            draft[dependencyKey] = {
+              type: newOptionsAvailable[dependencyKey].type,
+              choices: [],
+            };
+          }
+          draft[dependencyKey].choices.push(choiceWithComponent);
+        }
+      });
+    });
+  }
+}
+
+function updateOptionsAvailableWithPackageComponents(selection, draft) {
+  const packageDependencies = Dependencies.packages[selection.id];
+  if (packageDependencies) {
+    Object.keys(packageDependencies).forEach((dependencyKey) => {
+      packageDependencies[dependencyKey].forEach((depId) => {
+        // Find the index of the choice in the draft
+        const choiceIndex = draft[dependencyKey].choices.findIndex(
+          (choice) => choice.id === depId
+        );
+
+        if (choiceIndex !== -1) {
+          // Directly update the properties of the found choice in the draft
+          draft[dependencyKey].choices[choiceIndex].name +=
+            " - Included in Package";
+          draft[dependencyKey].choices[choiceIndex].component = selection.id;
+          draft[dependencyKey].choices[choiceIndex].price = 0; // Set price to 0 or as required
+        }
+      });
+    });
   }
 }
 
@@ -458,7 +545,7 @@ function handlePackageComponents(
   newOptionsAvailable,
   newOptionsSelected
 ) {
-  return produce(newOptionsSelected, (draft) => {
+  let updatedOptionsSelected = produce(newOptionsSelected, (draft) => {
     const packageDependencies = Dependencies.packages[selection.id];
     if (packageDependencies) {
       Object.keys(packageDependencies).forEach((dependencyKey) => {
@@ -497,6 +584,12 @@ function handlePackageComponents(
       });
     }
   });
+
+  let updatedOptionsAvailable = produce(newOptionsAvailable, (draft) => {
+    // TODO: Insert logic here to adjust newOptionsAvailable
+  });
+
+  return { updatedOptionsSelected, updatedOptionsAvailable };
 }
 
 // ------------------------------
