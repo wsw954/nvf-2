@@ -266,8 +266,11 @@ function handlePackages(
   // Step 1: Update optionsAvailable with package components marked
   let newOptionsAvailable = produce(optionsAvailable, (draft) => {
     if (selection.isChecked) {
-      // Update newOptionsAvailable as needed
+      // Update the package'components'  optionsAvailable as needed
       updateOptionsAvailableWithPackageComponents(selection, draft);
+    } else {
+      //Reset the package 'components' in  optionsAvailable to default
+      resetOptionsAvailableWithPackageComponents(selection, draft);
     }
   });
 
@@ -277,12 +280,13 @@ function handlePackages(
     if (selection.isChecked) {
       // Add the actual package option
       addToOptionsSelected(category, selection, optionsAvailable, draft);
-
-      // Add the package 'component' options
+      // Add the package 'components' options
       addPackageComponents(selection, optionsAvailable, draft);
     } else {
+      //Remove the actual package selected
       removeFromOptionsSelected(category, selection, optionsAvailable, draft);
-      // removePackageComponents(selection, optionsAvailable, draft);
+      //Remove the package 'components'
+      removePackageComponents(selection, optionsAvailable, draft);
     }
   });
 
@@ -482,12 +486,23 @@ function addToOptionsSelected(category, selection, optionsAvailable, draft) {
   }
 }
 
-function removeFromOptionsSelected(category, selection, draft) {
-  const index = draft[category].choices.findIndex(
-    (choice) => choice.id === selection.id
-  );
-  if (index !== -1) {
-    draft[category].choices.splice(index, 1);
+function removeFromOptionsSelected(
+  category,
+  selection,
+  optionsAvailable,
+  draft
+) {
+  if (draft[category]) {
+    if (optionsAvailable[category].type === "Dropdown") {
+      console.log("draft");
+      // For Dropdown, clear the choices array
+      draft[category].choices = [];
+    } else if (optionsAvailable[category].type === "CheckBoxGroup") {
+      // For CheckBoxGroup, filter out the specific choice
+      draft[category].choices = draft[category].choices.filter(
+        (choice) => choice.id !== selection.id
+      );
+    }
   }
 }
 
@@ -518,6 +533,27 @@ function addPackageComponents(selection, newOptionsAvailable, draft) {
   }
 }
 
+function removePackageComponents(selection, optionsAvailable, draft) {
+  const packageDependencies = Dependencies.packages[selection.id];
+  if (packageDependencies) {
+    Object.keys(packageDependencies).forEach((dependencyKey) => {
+      packageDependencies[dependencyKey].forEach((depId) => {
+        if (draft[dependencyKey]) {
+          if (optionsAvailable[dependencyKey].type === "Dropdown") {
+            // For Dropdown, clear the choices array
+            // draft[dependencyKey].choices = [];
+          } else if (optionsAvailable[dependencyKey].type === "CheckBoxGroup") {
+            // For CheckBoxGroup, filter out the specific choice
+            draft[dependencyKey].choices = draft[dependencyKey].choices.filter(
+              (choice) => choice.id !== depId
+            );
+          }
+        }
+      });
+    });
+  }
+}
+
 function updateOptionsAvailableWithPackageComponents(selection, draft) {
   const packageDependencies = Dependencies.packages[selection.id];
   if (packageDependencies) {
@@ -534,6 +570,29 @@ function updateOptionsAvailableWithPackageComponents(selection, draft) {
             " - Included in Package";
           draft[dependencyKey].choices[choiceIndex].component = selection.id;
           draft[dependencyKey].choices[choiceIndex].price = 0; // Set price to 0 or as required
+        }
+      });
+    });
+  }
+}
+
+function resetOptionsAvailableWithPackageComponents(selection, draft) {
+  const packageDependencies = Dependencies.packages[selection.id];
+  if (packageDependencies) {
+    Object.keys(packageDependencies).forEach((dependencyKey) => {
+      packageDependencies[dependencyKey].forEach((depId) => {
+        // Find the index of the choice in the draft
+        const choiceIndex = draft[dependencyKey].choices.findIndex(
+          (choice) => choice.id === depId
+        );
+        if (choiceIndex !== -1) {
+          const defaultOption = AllOptions[dependencyKey].choices.find(
+            (choice) => choice.id === depId
+          );
+          // Reset to default
+          draft[dependencyKey].choices[choiceIndex].name = defaultOption.name;
+          draft[dependencyKey].choices[choiceIndex].price = defaultOption.price;
+          delete draft[dependencyKey].choices[choiceIndex].component;
         }
       });
     });
