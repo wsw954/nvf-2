@@ -8,7 +8,6 @@
 |   \---honda
 |   |   |   accord.js
 |   |   |   civic.js
-|   |   |   civic2.js
 |   |   |   ridgeline.js
 |   \---toyota
 |   |   |   camry.js

@@ -8,6 +8,12 @@ const initialState = {
   selectedModel: "",
   optionsAvailable: {},
   optionsSelected: {},
+  popup: {
+    show: false,
+    message: "",
+    confirmAction: null,
+    cancelAction: null,
+  },
   loading: false,
   error: null,
 };
@@ -46,13 +52,37 @@ export const updateOptions = createAsyncThunk(
     { getState, rejectWithValue }
   ) => {
     try {
-      const { optionsAvailable, optionsSelected } = getState().vehicle;
+      const { optionsAvailable, optionsSelected, popup } = getState().vehicle;
       const modelData = await importModelData(make, model);
       const updatedState = modelData.handleOptionChanged(
         category,
         selection,
         optionsAvailable,
-        optionsSelected
+        optionsSelected,
+        popup
+      );
+      return updatedState;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+//Async thunk for handling popup
+export const popupConfirm = createAsyncThunk(
+  "vehicle/popupConfirm",
+  async (
+    { make, model, category, selection },
+    { getState, rejectWithValue }
+  ) => {
+    try {
+      const { optionsAvailable, optionsSelected, popup } = getState().vehicle;
+      const modelData = await importModelData(make, model);
+      const updatedState = modelData.handlePopupConfirm(
+        category,
+        selection,
+        optionsAvailable,
+        optionsSelected,
+        popup
       );
       return updatedState;
     } catch (error) {
@@ -78,6 +108,9 @@ const vehicleSlice = createSlice({
       state.selectedModel = action.payload; //Update the state for model selected
       state.optionsSelected = {}; //Reset all selected options when model changes
     },
+    popupCancel: (state, action) => {
+      state.popup = initialState.popup; //Reset all selected options when model changes
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -96,10 +129,24 @@ const vehicleSlice = createSlice({
         // Update the state based on the returned value from handleOptionChanged
         state.optionsAvailable = action.payload.optionsAvailable;
         state.optionsSelected = action.payload.optionsSelected;
+        state.popup = action.payload.popup;
+        state.loading = false;
+      })
+      .addCase(popupConfirm.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(popupConfirm.fulfilled, (state, action) => {
+        // Update the state with the result of the popupConfirm logic
+        state.optionsAvailable = action.payload.optionsAvailable;
+        state.optionsSelected = action.payload.optionsSelected;
+        state.popup = action.payload.popup;
+        state.loading = false;
+      })
+      .addCase(popupConfirm.rejected, (state, action) => {
+        state.error = action.payload;
         state.loading = false;
       });
   },
 });
-
 export const { selectMake, selectModel } = vehicleSlice.actions;
 export default vehicleSlice.reducer;

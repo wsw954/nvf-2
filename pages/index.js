@@ -6,10 +6,13 @@ import {
   selectModel,
   fetchModelData,
   updateOptions,
+  popupConfirm,
+  popupCancel,
 } from "/features/vehicle/vehicleSlice";
 import makeModelData from "/oemData/makeModelData";
 import Dropdown from "../components/Dropdown";
 import CheckBoxGroup from "@/components/CheckBoxGroup";
+import Popup from "../components/Popup";
 
 const IndexPage = () => {
   const dispatch = useDispatch();
@@ -19,6 +22,7 @@ const IndexPage = () => {
     selectedModel,
     optionsAvailable,
     optionsSelected,
+    popup,
   } = useSelector((state) => state.vehicle);
 
   const makeOptions = makeModelData.map((item) => ({
@@ -49,6 +53,21 @@ const IndexPage = () => {
         })
       );
     }
+  };
+
+  const handlePopupConfirm = (category, selection) => {
+    dispatch(
+      popupConfirm({
+        make: selectedMake,
+        model: selectedModel,
+        category,
+        selection,
+      })
+    );
+  };
+
+  const handlePopupCancel = (category, selection) => {
+    dispatch(popupCancel());
   };
 
   const renderOptions = () => {
@@ -136,6 +155,16 @@ const IndexPage = () => {
         </div>
         <br></br>
         <div>{renderOptions()}</div>
+        <br></br>
+        <div>
+          {popup.show && (
+            <Popup
+              message={popup.message}
+              confirmAction={handlePopupConfirm}
+              cancelAction={handlePopupCancel}
+            />
+          )}
+        </div>
       </form>
     </div>
   );
