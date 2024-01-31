@@ -361,19 +361,15 @@ function handleExteriorAccessories(
 ) {
   let newOptionsAvailable = produce(optionsAvailable, (draft) => {});
 
-  let rivalSelected = checkIfRivalSelected(
-    category,
-    selection,
-    optionsSelected
-  );
+  let rivalStatus = checkIfRivalSelected(category, selection, optionsSelected);
 
   let newOptionsSelected;
   let newPopup;
 
-  if (selection.isChecked && rivalSelected) {
+  if (selection.isChecked && rivalStatus.selected) {
     // Create new popup, but leave optionsSelected unchanged
     newPopup = produce(popup, (draft) => {
-      return createPopupMessage(selection.id, popup);
+      createPopupMessage(selection.id, draft, rivalStatus.actionDetails);
     });
     newOptionsSelected = produce(optionsSelected, (draft) => {}); // Keep optionsSelected unchanged
   } else {
@@ -385,12 +381,8 @@ function handleExteriorAccessories(
         removeFromOptionsSelected(category, selection, optionsAvailable, draft);
       }
     });
-
-    // Handle popup logic when not creating a new popup
-    newPopup = produce(popup, (draft) => {
-      // Add any necessary logic here
-      return draft;
-    });
+    //Keep the popup unchanged
+    newPopup = produce(popup, (draft) => {});
   }
 
   return {
@@ -538,7 +530,6 @@ function removeFromOptionsSelected(
 ) {
   if (draft[category]) {
     if (optionsAvailable[category].type === "Dropdown") {
-      console.log("draft");
       // For Dropdown, clear the choices array
       draft[category].choices = [];
     } else if (optionsAvailable[category].type === "CheckBoxGroup") {
@@ -647,40 +638,94 @@ function resetOptionsAvailableWithPackageComponents(selection, draft) {
   }
 }
 
-//Helper function
 function checkIfRivalSelected(category, selection, optionsSelected) {
-  let rivalSelected = false;
-  let rivalExist =
-    category === "exteriorAccessories" &&
-    Dependencies.exteriorAccessories.rivals[selection.id] !== undefined;
-  if (rivalExist) {
-    let rivalObject = Dependencies.exteriorAccessories.rivals[selection.id];
-    let rivalID = rivalObject[category];
-    console.log(rivalID);
-    if (optionsSelected[category] && optionsSelected[category].choices) {
-      optionsSelected[category].choices.forEach((choice) => {
-        if (rivalID.includes(choice.id)) {
-          console.log(`Found rival choice with id: ${choice.name}`);
-          rivalSelected = true;
+  let rivalStatus = { selected: false, actionDetails: {} };
+
+  if (Dependencies[category] && Dependencies[category].rivals) {
+    let rivalExist = Dependencies[category].rivals[selection.id] !== undefined;
+    if (rivalExist) {
+      let rivalObject = Dependencies[category].rivals[selection.id];
+
+      // Iterate over the keys in the rivalObject to find the deselectCategory
+      for (let deselectCategory in rivalObject) {
+        let rivalID = rivalObject[deselectCategory];
+
+        if (
+          optionsSelected[deselectCategory] &&
+          optionsSelected[deselectCategory].choices
+        ) {
+          optionsSelected[deselectCategory].choices.forEach((choice) => {
+            if (rivalID && rivalID.includes(choice.id)) {
+              console.log(`Found rival choice with id: ${choice.name}`);
+              rivalStatus.selected = true;
+              // Prepare actionDetails for the popup
+              rivalStatus.actionDetails = createPopupConfirmDetails(
+                category,
+                selection.id,
+                deselectCategory,
+                choice.id
+              );
+            }
+          });
         }
-      });
+      }
     }
   }
-  return rivalSelected;
+  return rivalStatus;
 }
 
-// Example implementation of createPopupMessage (modify as needed)
-function createPopupMessage(selectionId, currentPopup) {
-  // Logic to create a new popup message
-  let newPopup = {
-    ...currentPopup,
-    show: true,
-    message: `Message for ${selectionId}`,
+function createPopupConfirmDetails(
+  selectCategory,
+  selectId,
+  deselectCategory,
+  deselectId
+) {
+  return {
+    select: {
+      category: selectCategory,
+      choices: [{ id: selectId }],
+    },
+    deselect: {
+      category: deselectCategory,
+      choices: [{ id: deselectId }],
+    },
   };
-  return newPopup;
+}
+
+// Main popup creator function
+function createPopupMessage(selectionId, draft, actionDetails) {
+  draft.show = true;
+  draft.message = `Selecting ${selectionId} will change other selections.`;
+  draft.action = actionDetails; // Add action details to the popup
 }
 
 // ------------------------------
 // EXPORTS SECTION
 // ------------------------------
 export { AllOptions, InitialOptionsAvailable, Dependencies };
+
+let actionDetails = {
+  select: {
+    category: "exteriorAccessories",
+    choices: [{ id: "EAC5" }],
+  },
+  deselect: {
+    category: "exteriorAccessories",
+    choices: [{ id: "EAC4" }],
+  },
+};
+let testObject = {
+  exteriorAccessories: {
+    rivals: {
+      EAC4: {
+        exteriorAccessories: ["EAC5"],
+      },
+      EAC5: {
+        exteriorAccessories: ["EAC4"],
+      },
+      EAC6: {
+        interiorColor: ["IC1"],
+      },
+    },
+  },
+};

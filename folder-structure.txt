@@ -1,6 +1,7 @@
 ﻿\---components
 |   |   CheckBoxGroup.js
 |   |   Dropdown.js
+|   |   Popup.js
 \---features
 |   \---vehicle
 |   |   |   vehicleSlice.js
