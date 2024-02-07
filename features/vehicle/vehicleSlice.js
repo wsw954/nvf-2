@@ -66,19 +66,15 @@ export const updateOptions = createAsyncThunk(
     }
   }
 );
+
 //Async thunk for handling popup
 export const popupConfirm = createAsyncThunk(
   "vehicle/popupConfirm",
-  async (
-    { make, model, category, selection },
-    { getState, rejectWithValue }
-  ) => {
+  async ({ make, model }, { getState, rejectWithValue }) => {
     try {
       const { optionsAvailable, optionsSelected, popup } = getState().vehicle;
       const modelData = await importModelData(make, model);
       const updatedState = modelData.handlePopupConfirm(
-        category,
-        selection,
         optionsAvailable,
         optionsSelected,
         popup
@@ -138,7 +134,7 @@ const vehicleSlice = createSlice({
         // Update the state with the result of the popupConfirm logic
         state.optionsAvailable = action.payload.optionsAvailable;
         state.optionsSelected = action.payload.optionsSelected;
-        state.popup = action.payload.popup;
+        state.popup = initialState.popup; //Reset popup object
         state.loading = false;
       })
       .addCase(popupConfirm.rejected, (state, action) => {
@@ -147,5 +143,5 @@ const vehicleSlice = createSlice({
       });
   },
 });
-export const { selectMake, selectModel } = vehicleSlice.actions;
+export const { selectMake, selectModel, popupCancel } = vehicleSlice.actions;
 export default vehicleSlice.reducer;

@@ -36,7 +36,7 @@ const IndexPage = () => {
 
   const handleModelChange = (event) => {
     const model = event.target.value;
-    dispatch(selectModel(model)); // Dispatch the selectModel action
+    dispatch(selectModel(model));
     if (selectedMake && model) {
       dispatch(fetchModelData({ make: selectedMake, model }));
     }
@@ -55,18 +55,18 @@ const IndexPage = () => {
     }
   };
 
-  const handlePopupConfirm = (category, selection) => {
+  const handlePopupConfirm = (event) => {
+    event.preventDefault(); // Prevent form submission or any default action
     dispatch(
       popupConfirm({
         make: selectedMake,
         model: selectedModel,
-        category,
-        selection,
       })
     );
   };
 
-  const handlePopupCancel = (category, selection) => {
+  const handlePopupCancel = (event) => {
+    event.preventDefault(); // Prevent form submission or any default action
     dispatch(popupCancel());
   };
 

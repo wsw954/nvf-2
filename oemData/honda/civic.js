@@ -215,6 +215,7 @@ export function handleOptionChanged(
       return {
         optionsAvailable,
         optionsSelected,
+        popup,
       };
   }
 }
@@ -445,18 +446,29 @@ function handleInteriorAccessories(
 }
 
 //Handle PopupConfirm
-export function handlePopupConfirm(
-  category,
-  selection,
-  optionsAvailable,
-  optionsSelected,
-  popup
-) {
+export function handlePopupConfirm(optionsAvailable, optionsSelected, popup) {
   let newPopup = produce(popup, (draft) => {});
   let newOptionsAvailable = produce(optionsAvailable, (draft) => {});
 
-  let newOptionsSelected = produce(optionsSelected, (draft) => {});
+  // Update the optionsSelected object
+  let newOptionsSelected = produce(optionsSelected, (draft) => {
+    // Check if 'select' action exists and has choices to process
+    if (popup.action.select && popup.action.select.choices.length > 0) {
+      const { category, choices } = popup.action.select;
+      choices.forEach((choice) => {
+        addToOptionsSelected(category, choice, optionsAvailable, draft);
+      });
+    }
 
+    // Check if 'deselect' action exists and has choices to process
+    if (popup.action.deselect && popup.action.deselect.choices.length > 0) {
+      const { category, choices } = popup.action.deselect;
+      choices.forEach((choice) => {
+        removeFromOptionsSelected(category, choice, optionsAvailable, draft);
+      });
+    }
+    // If neither 'select' nor 'deselect' are present, draft remains unchanged
+  });
   return {
     optionsAvailable: newOptionsAvailable,
     optionsSelected: newOptionsSelected,
@@ -656,7 +668,6 @@ function checkIfRivalSelected(category, selection, optionsSelected) {
         ) {
           optionsSelected[deselectCategory].choices.forEach((choice) => {
             if (rivalID && rivalID.includes(choice.id)) {
-              console.log(`Found rival choice with id: ${choice.name}`);
               rivalStatus.selected = true;
               // Prepare actionDetails for the popup
               rivalStatus.actionDetails = createPopupConfirmDetails(
