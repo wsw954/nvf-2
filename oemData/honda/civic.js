@@ -327,7 +327,7 @@ function handlePackages(
 
   // Step 2: Update optionsSelected with the package and its components
   // Note: Using the original optionsAvailable, not newOptionsAvailable
-  let updatedOptionsSelected = produce(optionsSelected, (draft) => {
+  let newOptionsSelected = produce(optionsSelected, (draft) => {
     if (selection.isChecked) {
       // Add the actual package option
       addToOptionsSelected(category, selection, optionsAvailable, draft);
@@ -340,12 +340,12 @@ function handlePackages(
       removePackageComponents(selection, optionsAvailable, draft);
     }
   });
-
-  let newPopup = produce(popup, (draft) => {});
+  console.log(newOptionsSelected);
+  let newPopup = produce(popup, (draft) => {}); //Leave popup unchanged
 
   return {
     optionsAvailable: newOptionsAvailable,
-    optionsSelected: updatedOptionsSelected,
+    optionsSelected: newOptionsSelected,
     popup: newPopup,
   };
 }
@@ -360,7 +360,7 @@ function handleExteriorAccessories(
   optionsSelected,
   popup
 ) {
-  let newOptionsAvailable = produce(optionsAvailable, (draft) => {});
+  let newOptionsAvailable = produce(optionsAvailable, (draft) => {}); //Options available unchanged
 
   let rivalStatus = checkIfRivalSelected(category, selection, optionsSelected);
 
@@ -554,6 +554,76 @@ function removeFromOptionsSelected(
 }
 
 //Add to optionsSelected components of a package selected
+function addPackageComponents1(selection, newOptionsAvailable, draft) {
+  const packageDependencies = Dependencies.packages.components[selection.id];
+  if (packageDependencies) {
+    Object.keys(packageDependencies).forEach((dependencyKey) => {
+      packageDependencies[dependencyKey].forEach((depId) => {
+        const choice = newOptionsAvailable[dependencyKey].choices.find(
+          (choice) => choice.id === depId
+        );
+        console.log(dependencyKey);
+        console.log(newOptionsAvailable);
+        if (choice) {
+          const choiceWithComponent = {
+            ...choice,
+            name: choice.name + " - Included in Package",
+            component: selection.id,
+          };
+          if (!draft[dependencyKey]) {
+            draft[dependencyKey] = {
+              type: newOptionsAvailable[dependencyKey].type,
+              choices: [],
+            };
+          }
+          draft[dependencyKey].choices.push(choiceWithComponent);
+        }
+      });
+    });
+  }
+}
+
+function addPackageComponents2(selection, optionsAvailable, draft) {
+  const packageDependencies = Dependencies.packages.components[selection.id];
+  if (packageDependencies) {
+    Object.keys(packageDependencies).forEach((dependencyKey) => {
+      packageDependencies[dependencyKey].forEach((depId) => {
+        const choice = optionsAvailable[dependencyKey].choices.find(
+          (choice) => choice.id === depId
+        );
+        console.log(dependencyKey);
+        console.log(optionsAvailable);
+        if (choice) {
+          const choiceWithComponent = {
+            ...choice,
+            name: choice.name + " - Included in Package",
+            component: selection.id,
+          };
+          // Determine the type of the option to decide how to update the draft
+          const optionType = AllOptions[dependencyKey].type;
+          switch (optionType) {
+            case "CheckBoxGroup":
+              console.log("case CheckBoxGroup");
+              // Ensure the choices array exists
+              draft[dependencyKey].choices = draft[dependencyKey].choices || [];
+              // Add the choiceWithComponent to the choices array
+              draft[dependencyKey].choices.push(choiceWithComponent);
+              break;
+            case "Dropdown":
+              console.log("case Dropdown");
+              // Replace the choices array with the choiceWithComponent
+              draft[dependencyKey].choices = [choiceWithComponent];
+              break;
+            default:
+              // Handle other types or log an error/warning if needed
+              console.warn(`Unhandled option type: ${optionType}`);
+          }
+        }
+      });
+    });
+  }
+}
+
 function addPackageComponents(selection, newOptionsAvailable, draft) {
   const packageDependencies = Dependencies.packages.components[selection.id];
   if (packageDependencies) {
@@ -568,13 +638,21 @@ function addPackageComponents(selection, newOptionsAvailable, draft) {
             name: choice.name + " - Included in Package",
             component: selection.id,
           };
+          // Check if the option type is CheckBoxGroup or Dropdown
+          const optionType = AllOptions[dependencyKey].type;
           if (!draft[dependencyKey]) {
             draft[dependencyKey] = {
-              type: newOptionsAvailable[dependencyKey].type,
+              type: optionType,
               choices: [],
             };
           }
-          draft[dependencyKey].choices.push(choiceWithComponent);
+          if (optionType === "CheckBoxGroup") {
+            // Add to choices array for CheckBoxGroup
+            draft[dependencyKey].choices.push(choiceWithComponent);
+          } else if (optionType === "Dropdown") {
+            // Replace choices array for Dropdown
+            draft[dependencyKey].choices = [choiceWithComponent];
+          }
         }
       });
     });
