@@ -43,6 +43,7 @@ const IndexPage = () => {
   };
 
   const handleOptionChange = (category, selection) => {
+    console.log(optionsSelected);
     if (selectedMake && selectedModel) {
       dispatch(
         updateOptions({
@@ -81,10 +82,18 @@ const IndexPage = () => {
         switch (option.type) {
           case "Dropdown":
             // Find the selected option for this category
+            // const selectedOptionID =
+            //   optionsSelected && optionsSelected[key]
+            //     ? optionsSelected[key].choices[0].id
+            //     : "";
             const selectedOptionID =
-              optionsSelected && optionsSelected[key]
+              optionsSelected &&
+              optionsSelected[key] &&
+              optionsSelected[key].choices &&
+              optionsSelected[key].choices.length > 0
                 ? optionsSelected[key].choices[0].id
                 : "";
+
             return (
               <div key={key}>
                 <label htmlFor={key}>{option.displayName}:</label>

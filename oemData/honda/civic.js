@@ -668,13 +668,29 @@ function removePackageComponents(selection, optionsAvailable, draft) {
         if (draft[dependencyKey]) {
           if (optionsAvailable[dependencyKey].type === "Dropdown") {
             // For Dropdown, clear the choices array
-            // draft[dependencyKey].choices = [];
+            draft[dependencyKey].choices = [];
           } else if (optionsAvailable[dependencyKey].type === "CheckBoxGroup") {
+            console.log(draft[dependencyKey].choices);
             // For CheckBoxGroup, filter out the specific choice
             draft[dependencyKey].choices = draft[dependencyKey].choices.filter(
               (choice) => choice.id !== depId
             );
           }
+        }
+      });
+    });
+  }
+}
+
+function removePackageComponents2(selection, optionsAvailable, draft) {
+  const packageDependencies = Dependencies.packages.components[selection.id];
+  if (packageDependencies) {
+    Object.keys(packageDependencies).forEach((dependencyKey) => {
+      packageDependencies[dependencyKey].forEach((depId) => {
+        if (draft[dependencyKey]) {
+          draft[dependencyKey].choices = draft[dependencyKey].choices.filter(
+            (choice) => choice.id !== depId
+          );
         }
       });
     });
