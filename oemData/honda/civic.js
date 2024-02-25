@@ -329,18 +329,17 @@ function handlePackages(
   // Note: Using the original optionsAvailable, not newOptionsAvailable
   let newOptionsSelected = produce(optionsSelected, (draft) => {
     if (selection.isChecked) {
-      // Add the actual package option
+      // Add the actual 'parent'  package option
       addToOptionsSelected(category, selection, optionsAvailable, draft);
       // Add the package 'components' options
       addPackageComponents(selection, optionsAvailable, draft);
     } else {
-      //Remove the actual package selected
+      //Remove the actual 'parent' package selected
       removeFromOptionsSelected(category, selection, optionsAvailable, draft);
-      //Remove the package 'components'
+      //Remove the package 'components' options
       removePackageComponents(selection, optionsAvailable, draft);
     }
   });
-  console.log(newOptionsSelected);
   let newPopup = produce(popup, (draft) => {}); //Leave popup unchanged
 
   return {
@@ -353,7 +352,7 @@ function handlePackages(
 //.....................
 
 //Handle Exterior Accessory selection
-function handleExteriorAccessories(
+function handleExteriorAccessories2(
   category,
   selection,
   optionsAvailable,
@@ -384,6 +383,56 @@ function handleExteriorAccessories(
     });
     //Keep the popup unchanged
     newPopup = produce(popup, (draft) => {});
+  }
+
+  return {
+    optionsAvailable: newOptionsAvailable,
+    optionsSelected: newOptionsSelected,
+    popup: newPopup,
+  };
+}
+
+function handleExteriorAccessories(
+  category,
+  selection,
+  optionsAvailable,
+  optionsSelected,
+  popup
+) {
+  let newOptionsAvailable = produce(optionsAvailable, (draft) => {}); //Options available unchanged
+
+  let rivalStatus = checkIfRivalSelected(category, selection, optionsSelected);
+
+  let newOptionsSelected;
+  let newPopup;
+
+  if (selection.isChecked && rivalStatus.selected) {
+    // Create new popup, but leave optionsSelected unchanged
+    newPopup = produce(popup, (draft) => {
+      createPopupMessage(selection.id, draft, rivalStatus.actionDetails);
+    });
+    newOptionsSelected = produce(optionsSelected, (draft) => {}); // Keep optionsSelected unchanged
+  }
+  if (selection.isChecked && !rivalStatus.selected) {
+    //Add just the selection checked
+    newOptionsSelected = produce(optionsSelected, (draft) => {
+      addToOptionsSelected(category, selection, optionsAvailable, draft);
+    });
+    //Keep the popup unchanged
+    newPopup = produce(popup, (draft) => {});
+  }
+  if (!selection.isChecked) {
+    let componentStatus = checkIfPackageComponent(
+      category,
+      selection,
+      optionsSelected
+    );
+    if (componentStatus.selected) {
+      newPopup = produce(popup, (draft) => {
+        createPopupMessage(selection.id, draft, componentStatus);
+      });
+      newOptionsSelected = produce(optionsSelected, (draft) => {}); // Keep optionsSelected unchanged for now
+    }
   }
 
   return {
@@ -445,30 +494,43 @@ function handleInteriorAccessories(
   };
 }
 
-//Handle PopupConfirm
 export function handlePopupConfirm(optionsAvailable, optionsSelected, popup) {
   let newPopup = produce(popup, (draft) => {});
   let newOptionsAvailable = produce(optionsAvailable, (draft) => {});
 
   // Update the optionsSelected object
   let newOptionsSelected = produce(optionsSelected, (draft) => {
-    // Check if 'select' action exists and has choices to process
-    if (popup.action.select && popup.action.select.choices.length > 0) {
-      const { category, choices } = popup.action.select;
-      choices.forEach((choice) => {
-        addToOptionsSelected(category, choice, optionsAvailable, draft);
+    // Process 'select' actions if they exist and have choices to process
+    if (popup.action.select && popup.action.select.length > 0) {
+      popup.action.select.forEach((action) => {
+        const { category, choices } = action;
+        if (choices && choices.length > 0) {
+          choices.forEach((choice) => {
+            addToOptionsSelected(category, choice, optionsAvailable, draft);
+          });
+        }
       });
     }
 
-    // Check if 'deselect' action exists and has choices to process
-    if (popup.action.deselect && popup.action.deselect.choices.length > 0) {
-      const { category, choices } = popup.action.deselect;
-      choices.forEach((choice) => {
-        removeFromOptionsSelected(category, choice, optionsAvailable, draft);
+    // Process 'deselect' actions if they exist and have choices to process
+    if (popup.action.deselect && popup.action.deselect.length > 0) {
+      popup.action.deselect.forEach((action) => {
+        const { category, choices } = action;
+        if (choices && choices.length > 0) {
+          choices.forEach((choice) => {
+            removeFromOptionsSelected(
+              category,
+              choice,
+              optionsAvailable,
+              draft
+            );
+          });
+        }
       });
     }
-    // If neither 'select' nor 'deselect' are present, draft remains unchanged
+    // If neither 'select' nor 'deselect' actions are present, draft remains unchanged
   });
+
   return {
     optionsAvailable: newOptionsAvailable,
     optionsSelected: newOptionsSelected,
@@ -682,21 +744,6 @@ function removePackageComponents(selection, optionsAvailable, draft) {
   }
 }
 
-function removePackageComponents2(selection, optionsAvailable, draft) {
-  const packageDependencies = Dependencies.packages.components[selection.id];
-  if (packageDependencies) {
-    Object.keys(packageDependencies).forEach((dependencyKey) => {
-      packageDependencies[dependencyKey].forEach((depId) => {
-        if (draft[dependencyKey]) {
-          draft[dependencyKey].choices = draft[dependencyKey].choices.filter(
-            (choice) => choice.id !== depId
-          );
-        }
-      });
-    });
-  }
-}
-
 //Changes the optionsAvailable to account for being part of package selected
 function updateOptionsAvailableWithPackageComponents(selection, draft) {
   const packageDependencies = Dependencies.packages.components[selection.id];
@@ -779,6 +826,28 @@ function checkIfRivalSelected(category, selection, optionsSelected) {
   return rivalStatus;
 }
 
+function checkIfPackageComponent(category, selection, optionsSelected) {
+  let componentStatus = { selected: false, component: {}, package: {} };
+
+  //Find the matching choice in the choices array
+  //Note only the 'choice' objects in the optionsSelected have stored the 'component' property
+  const choice = optionsSelected[category].choices.find(
+    (c) => c.id === selection.id
+  );
+
+  // Check if the found choice has a 'component' property
+  if (choice && choice.hasOwnProperty("component")) {
+    componentStatus.selected = true;
+    const parentPackage = AllOptions.packages.choices.find(
+      (p) => p.id === choice.component
+    );
+    componentStatus.component = choice;
+    componentStatus.package = parentPackage;
+  }
+
+  return componentStatus;
+}
+
 function createPopupConfirmDetails(
   selectCategory,
   selectId,
@@ -786,14 +855,18 @@ function createPopupConfirmDetails(
   deselectId
 ) {
   return {
-    select: {
-      category: selectCategory,
-      choices: [{ id: selectId }],
-    },
-    deselect: {
-      category: deselectCategory,
-      choices: [{ id: deselectId }],
-    },
+    select: [
+      {
+        category: selectCategory,
+        choices: [{ id: selectId }],
+      },
+    ],
+    deselect: [
+      {
+        category: deselectCategory,
+        choices: [{ id: deselectId }],
+      },
+    ],
   };
 }
 
@@ -808,29 +881,3 @@ function createPopupMessage(selectionId, draft, actionDetails) {
 // EXPORTS SECTION
 // ------------------------------
 export { AllOptions, InitialOptionsAvailable, Dependencies };
-
-let actionDetails = {
-  select: {
-    category: "exteriorAccessories",
-    choices: [{ id: "EAC5" }],
-  },
-  deselect: {
-    category: "exteriorAccessories",
-    choices: [{ id: "EAC4" }],
-  },
-};
-let testObject = {
-  exteriorAccessories: {
-    rivals: {
-      EAC4: {
-        exteriorAccessories: ["EAC5"],
-      },
-      EAC5: {
-        exteriorAccessories: ["EAC4"],
-      },
-      EAC6: {
-        interiorColor: ["IC1"],
-      },
-    },
-  },
-};

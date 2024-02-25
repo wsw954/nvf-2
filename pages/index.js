@@ -43,7 +43,6 @@ const IndexPage = () => {
   };
 
   const handleOptionChange = (category, selection) => {
-    console.log(optionsSelected);
     if (selectedMake && selectedModel) {
       dispatch(
         updateOptions({
