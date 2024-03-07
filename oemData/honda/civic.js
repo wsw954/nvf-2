@@ -220,6 +220,49 @@ export function handleOptionChanged(
   }
 }
 
+export function handlePopupConfirm(optionsAvailable, optionsSelected, popup) {
+  let newPopup = produce(popup, (draft) => {});
+  let newOptionsAvailable = produce(optionsAvailable, (draft) => {});
+  // Update the optionsSelected object
+  let newOptionsSelected = produce(optionsSelected, (draft) => {
+    // Process 'select' actions if they exist and have choices to process
+    if (popup.action.select && popup.action.select.length > 0) {
+      popup.action.select.forEach((action) => {
+        const { category, choices } = action;
+        if (choices && choices.length > 0) {
+          choices.forEach((choice) => {
+            addToOptionsSelected(category, choice, optionsAvailable, draft);
+          });
+        }
+      });
+    }
+
+    // Process 'deselect' actions if they exist and have choices to process
+    if (popup.action.deselect && popup.action.deselect.length > 0) {
+      popup.action.deselect.forEach((action) => {
+        const { category, choices } = action;
+        if (choices && choices.length > 0) {
+          choices.forEach((choice) => {
+            removeFromOptionsSelected(
+              category,
+              choice,
+              optionsAvailable,
+              draft
+            );
+          });
+        }
+      });
+    }
+    // If neither 'select' nor 'deselect' actions are present, draft remains unchanged
+  });
+
+  return {
+    optionsAvailable: newOptionsAvailable,
+    optionsSelected: newOptionsSelected,
+    popup: newPopup,
+  };
+}
+
 //Callback functions for handleOptionChange
 //.....................
 
@@ -307,6 +350,49 @@ function handleExteriorColor(
 //.....................
 
 //Handle packages change
+// function handlePackages2(
+//   category,
+//   selection,
+//   optionsAvailable,
+//   optionsSelected,
+//   popup
+// ) {
+//   // Step 1: Update optionsAvailable with package components marked
+//   let newOptionsAvailable = produce(optionsAvailable, (draft) => {
+//     if (selection.isChecked) {
+//       // Update the package'components'  optionsAvailable as needed
+//       updateOptionsAvailableWithPackageComponents(selection, draft);
+//     } else {
+//       //Reset the package 'components' in  optionsAvailable to default
+//       resetOptionsAvailableWithPackageComponents(selection, draft);
+//     }
+//   });
+
+//   // Step 2: Update optionsSelected with the package and its components
+//   // Note: Using the original optionsAvailable, not newOptionsAvailable
+//   let newOptionsSelected = produce(optionsSelected, (draft) => {
+//     if (selection.isChecked) {
+//       // Add the actual 'parent'  package option
+//       addToOptionsSelected(category, selection, optionsAvailable, draft);
+//       // Add the package 'components' options
+//       addPackageComponents(selection, optionsAvailable, draft);
+//     } else {
+//       //Remove the actual 'parent' package selected
+//       removeFromOptionsSelected(category, selection, optionsAvailable, draft);
+//       //Remove the package 'components' options
+//       removePackageComponents(selection, optionsAvailable, draft);
+//     }
+//   });
+//   let newPopup = produce(popup, (draft) => {}); //Leave popup unchanged
+
+//   return {
+//     optionsAvailable: newOptionsAvailable,
+//     optionsSelected: newOptionsSelected,
+//     popup: newPopup,
+//   };
+// }
+
+//Handle packages change
 function handlePackages(
   category,
   selection,
@@ -351,47 +437,6 @@ function handlePackages(
 
 //.....................
 
-//Handle Exterior Accessory selection
-function handleExteriorAccessories2(
-  category,
-  selection,
-  optionsAvailable,
-  optionsSelected,
-  popup
-) {
-  let newOptionsAvailable = produce(optionsAvailable, (draft) => {}); //Options available unchanged
-
-  let rivalStatus = checkIfRivalSelected(category, selection, optionsSelected);
-
-  let newOptionsSelected;
-  let newPopup;
-
-  if (selection.isChecked && rivalStatus.selected) {
-    // Create new popup, but leave optionsSelected unchanged
-    newPopup = produce(popup, (draft) => {
-      createPopupMessage(selection.id, draft, rivalStatus.actionDetails);
-    });
-    newOptionsSelected = produce(optionsSelected, (draft) => {}); // Keep optionsSelected unchanged
-  } else {
-    // Update optionsSelected based on the selection
-    newOptionsSelected = produce(optionsSelected, (draft) => {
-      if (selection.isChecked) {
-        addToOptionsSelected(category, selection, optionsAvailable, draft);
-      } else {
-        removeFromOptionsSelected(category, selection, optionsAvailable, draft);
-      }
-    });
-    //Keep the popup unchanged
-    newPopup = produce(popup, (draft) => {});
-  }
-
-  return {
-    optionsAvailable: newOptionsAvailable,
-    optionsSelected: newOptionsSelected,
-    popup: newPopup,
-  };
-}
-
 function handleExteriorAccessories(
   category,
   selection,
@@ -399,30 +444,34 @@ function handleExteriorAccessories(
   optionsSelected,
   popup
 ) {
-  let newOptionsAvailable = produce(optionsAvailable, (draft) => {}); //Options available unchanged
+  const newOptionsAvailable = produce(optionsAvailable, (draft) => {}); //Options available unchanged
+  let newOptionsSelected = produce(optionsSelected, (draft) => {}); // Keep optionsSelected unchanged for now
+  let newPopup = produce(popup, (draft) => {}); // Default to unchanged, modify conditionally
 
-  let rivalStatus = checkIfRivalSelected(category, selection, optionsSelected);
+  const rivalStatus = checkIfRivalSelected(
+    category,
+    selection,
+    optionsSelected
+  );
 
-  let newOptionsSelected;
-  let newPopup;
-
-  if (selection.isChecked && rivalStatus.selected) {
-    // Create new popup, but leave optionsSelected unchanged
-    newPopup = produce(popup, (draft) => {
-      createPopupMessage(selection.id, draft, rivalStatus.actionDetails);
-    });
-    newOptionsSelected = produce(optionsSelected, (draft) => {}); // Keep optionsSelected unchanged
-  }
-  if (selection.isChecked && !rivalStatus.selected) {
-    //Add just the selection checked
-    newOptionsSelected = produce(optionsSelected, (draft) => {
-      addToOptionsSelected(category, selection, optionsAvailable, draft);
-    });
-    //Keep the popup unchanged
-    newPopup = produce(popup, (draft) => {});
-  }
-  if (!selection.isChecked) {
-    let componentStatus = checkIfPackageComponent(
+  if (selection.isChecked) {
+    if (rivalStatus.selected) {
+      newPopup = produce(popup, (draft) => {
+        rivalPopupMessage(
+          category,
+          selection,
+          draft,
+          rivalStatus.actionDetails
+        );
+      });
+    } else {
+      newOptionsSelected = produce(optionsSelected, (draft) => {
+        addToOptionsSelected(category, selection, optionsAvailable, draft);
+      });
+    }
+  } else {
+    // Option unchecked
+    const componentStatus = checkIfPackageComponent(
       category,
       selection,
       optionsSelected
@@ -431,7 +480,10 @@ function handleExteriorAccessories(
       newPopup = produce(popup, (draft) => {
         createPopupMessage(selection.id, draft, componentStatus);
       });
-      newOptionsSelected = produce(optionsSelected, (draft) => {}); // Keep optionsSelected unchanged for now
+    } else {
+      newOptionsSelected = produce(optionsSelected, (draft) => {
+        removeFromOptionsSelected(category, selection, optionsAvailable, draft);
+      });
     }
   }
 
@@ -494,50 +546,6 @@ function handleInteriorAccessories(
   };
 }
 
-export function handlePopupConfirm(optionsAvailable, optionsSelected, popup) {
-  let newPopup = produce(popup, (draft) => {});
-  let newOptionsAvailable = produce(optionsAvailable, (draft) => {});
-
-  // Update the optionsSelected object
-  let newOptionsSelected = produce(optionsSelected, (draft) => {
-    // Process 'select' actions if they exist and have choices to process
-    if (popup.action.select && popup.action.select.length > 0) {
-      popup.action.select.forEach((action) => {
-        const { category, choices } = action;
-        if (choices && choices.length > 0) {
-          choices.forEach((choice) => {
-            addToOptionsSelected(category, choice, optionsAvailable, draft);
-          });
-        }
-      });
-    }
-
-    // Process 'deselect' actions if they exist and have choices to process
-    if (popup.action.deselect && popup.action.deselect.length > 0) {
-      popup.action.deselect.forEach((action) => {
-        const { category, choices } = action;
-        if (choices && choices.length > 0) {
-          choices.forEach((choice) => {
-            removeFromOptionsSelected(
-              category,
-              choice,
-              optionsAvailable,
-              draft
-            );
-          });
-        }
-      });
-    }
-    // If neither 'select' nor 'deselect' actions are present, draft remains unchanged
-  });
-
-  return {
-    optionsAvailable: newOptionsAvailable,
-    optionsSelected: newOptionsSelected,
-    popup: newPopup,
-  };
-}
-
 //.....................
 //Helper functions
 function addToOptionsAvailable(
@@ -571,21 +579,22 @@ function addToOptionsAvailable(
 
 //Add to oprionsSelected a selected 'option'
 function addToOptionsSelected(category, selection, optionsAvailable, draft) {
+  //If category doesn't already exists, add it
   if (!draft[category]) {
     draft[category] = {
-      displayName: optionsAvailable[category].displayName,
-      type: optionsAvailable[category].type,
+      displayName: AllOptions[category].displayName,
+      type: AllOptions[category].type,
       choices: [],
     };
   }
 
-  const selectedOption = optionsAvailable[category].choices.find(
+  const selectedOption = AllOptions[category].choices.find(
     (choice) => choice.id === selection.id
   );
 
-  if (optionsAvailable[category].type === "Dropdown") {
+  if (AllOptions[category].type === "Dropdown") {
     draft[category].choices = [selectedOption];
-  } else if (optionsAvailable[category].type === "CheckBoxGroup") {
+  } else if (AllOptions[category].type === "CheckBoxGroup") {
     //If selectedOption not in draft, add to draft
     if (
       !draft[category].choices.some((choice) => choice.id === selectedOption.id)
@@ -615,77 +624,7 @@ function removeFromOptionsSelected(
   }
 }
 
-//Add to optionsSelected components of a package selected
-function addPackageComponents1(selection, newOptionsAvailable, draft) {
-  const packageDependencies = Dependencies.packages.components[selection.id];
-  if (packageDependencies) {
-    Object.keys(packageDependencies).forEach((dependencyKey) => {
-      packageDependencies[dependencyKey].forEach((depId) => {
-        const choice = newOptionsAvailable[dependencyKey].choices.find(
-          (choice) => choice.id === depId
-        );
-        console.log(dependencyKey);
-        console.log(newOptionsAvailable);
-        if (choice) {
-          const choiceWithComponent = {
-            ...choice,
-            name: choice.name + " - Included in Package",
-            component: selection.id,
-          };
-          if (!draft[dependencyKey]) {
-            draft[dependencyKey] = {
-              type: newOptionsAvailable[dependencyKey].type,
-              choices: [],
-            };
-          }
-          draft[dependencyKey].choices.push(choiceWithComponent);
-        }
-      });
-    });
-  }
-}
-
-function addPackageComponents2(selection, optionsAvailable, draft) {
-  const packageDependencies = Dependencies.packages.components[selection.id];
-  if (packageDependencies) {
-    Object.keys(packageDependencies).forEach((dependencyKey) => {
-      packageDependencies[dependencyKey].forEach((depId) => {
-        const choice = optionsAvailable[dependencyKey].choices.find(
-          (choice) => choice.id === depId
-        );
-        console.log(dependencyKey);
-        console.log(optionsAvailable);
-        if (choice) {
-          const choiceWithComponent = {
-            ...choice,
-            name: choice.name + " - Included in Package",
-            component: selection.id,
-          };
-          // Determine the type of the option to decide how to update the draft
-          const optionType = AllOptions[dependencyKey].type;
-          switch (optionType) {
-            case "CheckBoxGroup":
-              console.log("case CheckBoxGroup");
-              // Ensure the choices array exists
-              draft[dependencyKey].choices = draft[dependencyKey].choices || [];
-              // Add the choiceWithComponent to the choices array
-              draft[dependencyKey].choices.push(choiceWithComponent);
-              break;
-            case "Dropdown":
-              console.log("case Dropdown");
-              // Replace the choices array with the choiceWithComponent
-              draft[dependencyKey].choices = [choiceWithComponent];
-              break;
-            default:
-              // Handle other types or log an error/warning if needed
-              console.warn(`Unhandled option type: ${optionType}`);
-          }
-        }
-      });
-    });
-  }
-}
-
+//Helper function
 function addPackageComponents(selection, newOptionsAvailable, draft) {
   const packageDependencies = Dependencies.packages.components[selection.id];
   if (packageDependencies) {
@@ -732,7 +671,6 @@ function removePackageComponents(selection, optionsAvailable, draft) {
             // For Dropdown, clear the choices array
             draft[dependencyKey].choices = [];
           } else if (optionsAvailable[dependencyKey].type === "CheckBoxGroup") {
-            console.log(draft[dependencyKey].choices);
             // For CheckBoxGroup, filter out the specific choice
             draft[dependencyKey].choices = draft[dependencyKey].choices.filter(
               (choice) => choice.id !== depId
@@ -792,7 +730,11 @@ function resetOptionsAvailableWithPackageComponents(selection, draft) {
 }
 
 function checkIfRivalSelected(category, selection, optionsSelected) {
-  let rivalStatus = { selected: false, actionDetails: {} };
+  let rivalStatus = {
+    dependencyType: "rival",
+    selected: false,
+    actionDetails: {},
+  };
 
   if (Dependencies[category] && Dependencies[category].rivals) {
     let rivalExist = Dependencies[category].rivals[selection.id] !== undefined;
@@ -871,9 +813,125 @@ function createPopupConfirmDetails(
 }
 
 // Main popup creator function
-function createPopupMessage(selectionId, draft, actionDetails) {
+function createPopupMessage(
+  dependencyType,
+  category,
+  selection,
+  draft,
+  actionDetails
+) {
   draft.show = true;
-  draft.message = `Selecting ${selectionId} will change other selections.`;
+
+  draft.action = actionDetails; // Add action details to the popup
+
+  switch (dependencyType) {
+    case "rival":
+      let selectedOption = AllOptions[category].choices.find(
+        (choice) => choice.id === selection.id
+      );
+      // Initialize the message with the selected option part
+      let message = `Selecting ${selectedOption.name} will unselect `;
+
+      // Initialize an empty array to hold the options to deselect
+      let optionsToDeselect = [];
+
+      // Iterate over each category in the deselect array of actionDetails
+      actionDetails.deselect.forEach((deselectAction) => {
+        // Get the category from AllOptions that matches the category in actionDetails
+        const categoryOptions = AllOptions[deselectAction.category].choices;
+
+        // Iterate over each choice in the deselectAction
+        deselectAction.choices.forEach((choice) => {
+          // Find the matching choice in the categoryOptions by id
+          const matchingChoice = categoryOptions.find(
+            (categoryChoice) => categoryChoice.id === choice.id
+          );
+
+          // If a matching choice is found, add it to the optionsToDeselect array
+          if (matchingChoice) {
+            optionsToDeselect.push(matchingChoice);
+          }
+        });
+      });
+
+      // Construct the deselection part of the message
+      if (optionsToDeselect.length > 0) {
+        const deselectionNames = optionsToDeselect
+          .map((option) => option.name)
+          .join(", ");
+        const lastCommaIndex = deselectionNames.lastIndexOf(", ");
+        const finalDeselectionNames =
+          lastCommaIndex > 0
+            ? deselectionNames.substring(0, lastCommaIndex) +
+              " and" +
+              deselectionNames.substring(lastCommaIndex + 1)
+            : deselectionNames;
+
+        message += finalDeselectionNames;
+      } else {
+        message += "no options"; // Fallback text in case there are no options to deselect
+      }
+      draft.message = message;
+
+      break;
+    case "component":
+      console.log("component unselected");
+      break;
+    case "parent":
+      console.log("sibling selected");
+      break;
+    case "child":
+      console.log("child selected");
+      break;
+  }
+}
+
+function rivalPopupMessage(category, selection, draft, actionDetails) {
+  let selectedOption = AllOptions[category].choices.find(
+    (choice) => choice.id === selection.id
+  );
+
+  // Initialize the message with the selected option part
+  let message = `Selecting ${selectedOption.name} will unselect `;
+
+  // Initialize an empty array to hold the options to deselect
+  let optionsToDeselect = [];
+
+  // Iterate over each category in the deselect array of actionDetails
+  actionDetails.deselect.forEach((deselectAction) => {
+    // Get the category from AllOptions that matches the category in actionDetails
+    const categoryOptions = AllOptions[deselectAction.category].choices;
+
+    // Iterate over each choice in the deselectAction
+    deselectAction.choices.forEach((choice) => {
+      // Find the matching choice in the categoryOptions by id
+      const matchingChoice = categoryOptions.find(
+        (categoryChoice) => categoryChoice.id === choice.id
+      );
+
+      // If a matching choice is found, add it to the optionsToDeselect array
+      if (matchingChoice) {
+        optionsToDeselect.push(matchingChoice);
+      }
+    });
+  });
+
+  if (optionsToDeselect.length > 0) {
+    const deselectionNames = optionsToDeselect
+      .map((option) => option.name)
+      .join(", ");
+    const lastCommaIndex = deselectionNames.lastIndexOf(", ");
+    const finalDeselectionNames =
+      lastCommaIndex > 0
+        ? deselectionNames.substring(0, lastCommaIndex) +
+          " and" +
+          deselectionNames.substring(lastCommaIndex + 1)
+        : deselectionNames;
+
+    message += finalDeselectionNames;
+  }
+  draft.show = true;
+  draft.message = message;
   draft.action = actionDetails; // Add action details to the popup
 }
 
