@@ -450,13 +450,29 @@ function handlePowertrain(
   optionsSelected,
   popup
 ) {
-  // Initialize newOptionsSelected by calling addToOptionsSelected
-  let newOptionsSelected = produce(optionsSelected, (draft) => {
-    addToOptionsSelected(category, selection, optionsAvailable, draft);
-  });
-
+  // Keep optionsAvailable unchanged
   let newOptionsAvailable = produce(optionsAvailable, (draft) => {});
+  // Initialize newOptionsSelected with the current state to be modified conditionally
+  let newOptionsSelected = produce(optionsSelected, (draft) => {});
+  // Default popup to unchanged, modify conditionally
   let newPopup = produce(popup, (draft) => {});
+
+  // Check if optionsSelected[category] and its first choice exist
+  if (optionsSelected[category]?.choices?.[0]?.component !== undefined) {
+    // If the first choice has a 'component' property, update the popup
+    let componentOptionUnselected = optionsSelected[category].choices[0];
+    newPopup = produce(popup, (draft) => {
+      componentPopupMessage(category, componentOptionUnselected, draft);
+    });
+  } else {
+    // If the conditions are not met, update optionsSelected
+    // This also covers the case where optionsSelected[category] does not exist,
+    // optionsSelected[category].choices is empty, or choices[0] has no 'component'
+    newOptionsSelected = produce(optionsSelected, (draft) => {
+      addToOptionsSelected(category, selection, optionsAvailable, draft);
+    });
+  }
+
   return {
     optionsAvailable: newOptionsAvailable,
     optionsSelected: newOptionsSelected,
@@ -486,49 +502,6 @@ function handleExteriorColor(
     popup: newPopup,
   };
 }
-
-//Handle packages change
-// function handlePackages2(
-//   category,
-//   selection,
-//   optionsAvailable,
-//   optionsSelected,
-//   popup
-// ) {
-//   // Step 1: Update optionsAvailable with package components marked
-//   let newOptionsAvailable = produce(optionsAvailable, (draft) => {
-//     if (selection.isChecked) {
-//       // Update the package'components'  optionsAvailable as needed
-//       updateOptionsAvailableWithPackageComponents(selection, draft);
-//     } else {
-//       //Reset the package 'components' in  optionsAvailable to default
-//       resetOptionsAvailableWithPackageComponents(selection, draft);
-//     }
-//   });
-
-//   // Step 2: Update optionsSelected with the package and its components
-//   // Note: Using the original optionsAvailable, not newOptionsAvailable
-//   let newOptionsSelected = produce(optionsSelected, (draft) => {
-//     if (selection.isChecked) {
-//       // Add the actual 'parent'  package option
-//       addToOptionsSelected(category, selection, optionsAvailable, draft);
-//       // Add the package 'components' options
-//       addPackageComponents(selection, optionsAvailable, draft);
-//     } else {
-//       //Remove the actual 'parent' package selected
-//       removeFromOptionsSelected(category, selection, optionsAvailable, draft);
-//       //Remove the package 'components' options
-//       removePackageComponents(selection, optionsAvailable, draft);
-//     }
-//   });
-//   let newPopup = produce(popup, (draft) => {}); //Leave popup unchanged
-
-//   return {
-//     optionsAvailable: newOptionsAvailable,
-//     optionsSelected: newOptionsSelected,
-//     popup: newPopup,
-//   };
-// }
 
 function handlePackages(
   category,
@@ -1077,6 +1050,27 @@ function rivalPopupMessage(category, selection, draft, details) {
   draft.show = true;
   draft.message = message;
   draft.details = details; // Add action details to the popup
+}
+
+function componentPopupMessage(category, selection, draft) {
+  let packageOption = AllOptions.packages.choices.find(
+    (choice) => choice.id === selection.component
+  );
+
+  let confirmDetails = createPopupConfirmDetails(
+    category,
+    selection.id,
+    "packages",
+    selection.component
+  );
+
+  let truncatedSelectionName = selection.name.replace(
+    " - Included in Package",
+    ""
+  );
+  draft.show = true;
+  draft.message = `Selecting ${truncatedSelectionName} will unselect the package ${packageOption.name} `;
+  draft.details = confirmDetails;
 }
 
 // ------------------------------
