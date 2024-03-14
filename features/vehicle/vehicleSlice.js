@@ -11,7 +11,7 @@ const initialState = {
   popup: {
     show: false,
     message: "",
-    action: {},
+    details: {},
   },
   loading: false,
   error: null,
