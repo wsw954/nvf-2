@@ -11,6 +11,7 @@ const AllOptions = {
       { id: "LX", name: "Sedan LX", price: 23750 },
       { id: "Sport", name: "Sedan Sport", price: 25050 },
       { id: "TypeR", name: "Type R", price: 42895 },
+      { id: "HBEXL", name: "Hatchback EX-L", price: 28650 },
       // ... other trims
     ],
   },
@@ -38,6 +39,7 @@ const AllOptions = {
     choices: [
       { id: "ASP1", name: "All Season Protection Package I", price: 500 },
       { id: "ASP2", name: "All Season Protection Package II", price: 500 },
+      { id: "HPD", name: "HPD Package", price: 750 },
       { id: "PP3", name: "Package III", price: 500 },
     ],
   },
@@ -45,14 +47,19 @@ const AllOptions = {
     displayName: "Exterior Accessories",
     type: "CheckBoxGroup",
     choices: [
+      { id: "BIKE", name: "Bike Attachment Frame Mount", price: 399 },
       { id: "BSM", name: "Body Side Moulding", price: 500 },
       { id: "DLS", name: "Decklid Spoiler", price: 500 },
       { id: "SGS", name: "Splash Guard Set", price: 500 },
       { id: "EAC1", name: "EA-Component1", price: 500 },
       { id: "EAC2", name: "EA-Component2", price: 500 },
       { id: "EAC3", name: "EA-Component3", price: 500 },
+      { id: "KAY", name: "Kayak Attachment", price: 264 },
       { id: "EAC4", name: "Rival Acccessory 4", price: 500 },
       { id: "EAC5", name: "Rival Acccessory 5", price: 500 },
+      { id: "HPDE", name: "HPD Emblem", price: 150 },
+      { id: "HPDT", name: "HPD Tailgate Spoiler", price: 150 },
+      { id: "RR", name: "Roof Rack", price: 399 },
     ],
   },
   interiorAccessories: {
@@ -105,6 +112,25 @@ const Dependencies = {
       exteriorAccessories: ["BSM", "DLS", "SGS", "EAC1", "EAC2", "EAC3"],
       interiorAccessories: ["ASF", "CH", "CN", "IAC1", "IAC2"],
     },
+    HBEXL: {
+      powertrain: ["Turbo"], // Assuming only Turbo is available for Type R
+      exteriorColor: ["Red", "Black"],
+      packages: ["ASP1", "ASP2", "HPD", "PP3"],
+      exteriorAccessories: [
+        "BIKE",
+        "BSM",
+        "DLS",
+        "SGS",
+        "EAC1",
+        "EAC2",
+        "EAC3",
+        "KAY",
+        "HPDE",
+        "HPDT",
+        "RR",
+      ],
+      interiorAccessories: ["ASF", "CH", "CN", "IAC1", "IAC2"],
+    },
     // ... dependencies for other trims
   },
   //..package dependencies have two types, components & rivals
@@ -118,6 +144,10 @@ const Dependencies = {
         exteriorAccessories: ["EAC3"],
         interiorAccessories: ["IAC3"],
       },
+      HPD: {
+        exteriorAccessories: ["HPDE", "HPDT"],
+      },
+
       PP3: {
         interiorAccessories: ["IAC1", "IAC2"],
       },
@@ -134,6 +164,13 @@ const Dependencies = {
         exteriorAccessories: ["EAC4"],
       },
     },
+    parent: {
+      RR: { exteriorAccessories: ["BIKE", "KAY"] },
+    },
+    child: {
+      BIKE: { exteriorAccessories: ["RR"] },
+      KAY: { exteriorAccessories: ["RR"] },
+    },
   },
 };
 
@@ -149,6 +186,7 @@ const InitialOptionsAvailable = {
       { id: "LX", name: "Sedan LX", price: 23750 },
       { id: "Sport", name: "Sedan Sport", price: 25050 },
       { id: "TypeR", name: "Type R", price: 42895 },
+      { id: "HBEXL", name: "Hatchback EX-L", price: 28650 },
       // ... other trims
     ],
   },
@@ -442,7 +480,6 @@ function handleTrim(
 }
 
 //.....................
-//Handle powertrain change
 function handlePowertrain(
   category,
   selection,
@@ -457,17 +494,15 @@ function handlePowertrain(
   // Default popup to unchanged, modify conditionally
   let newPopup = produce(popup, (draft) => {});
 
-  // Check if optionsSelected[category] and its first choice exist
-  if (optionsSelected[category]?.choices?.[0]?.component !== undefined) {
-    // If the first choice has a 'component' property, update the popup
-    let componentOptionUnselected = optionsSelected[category].choices[0];
+  // Check if the unselected powertrain was part of a selected package
+  if (optionsSelected[category]?.choices?.[0]?.package !== undefined) {
+    let componentOptionToUnselect = optionsSelected[category].choices[0];
+    //Generate popup warning
     newPopup = produce(popup, (draft) => {
-      componentPopupMessage(category, componentOptionUnselected, draft);
+      componentPopupMessage(category, componentOptionToUnselect, draft);
     });
   } else {
-    // If the conditions are not met, update optionsSelected
-    // This also covers the case where optionsSelected[category] does not exist,
-    // optionsSelected[category].choices is empty, or choices[0] has no 'component'
+    // Add the selected powertrain to optionsSelected
     newOptionsSelected = produce(optionsSelected, (draft) => {
       addToOptionsSelected(category, selection, optionsAvailable, draft);
     });
@@ -567,7 +602,7 @@ function handleExteriorAccessories(
   optionsSelected,
   popup
 ) {
-  const newOptionsAvailable = produce(optionsAvailable, (draft) => {}); //Options available unchanged
+  const newOptionsAvailable = produce(optionsAvailable, (draft) => {}); // Options available unchanged
   let newOptionsSelected = produce(optionsSelected, (draft) => {}); // Keep optionsSelected unchanged for now
   let newPopup = produce(popup, (draft) => {}); // Default to unchanged, modify conditionally
 
@@ -576,7 +611,7 @@ function handleExteriorAccessories(
     selection,
     optionsSelected
   );
-
+  let selectionWithPackage = selection;
   if (selection.isChecked) {
     if (rivalStatus.selected) {
       newPopup = produce(popup, (draft) => {
@@ -589,16 +624,20 @@ function handleExteriorAccessories(
     }
   } else {
     // Option unchecked
-    const componentStatus = checkIfPackageComponent(
-      category,
-      selection,
-      optionsSelected
-    );
-    if (componentStatus.selected) {
+    if (
+      checkIfComponentOfSelectedPackage(category, selection, optionsSelected)
+    ) {
+      //Retrieve the selection object from  relevant optionsSelected array
+      selectionWithPackage = optionsSelected[category].choices.find(
+        (c) => c.id === selection.id
+      );
+      //Create popup message
       newPopup = produce(popup, (draft) => {
-        createPopupMessage(selection.id, draft, componentStatus);
+        // Now passing the adjusted 'selection' object
+        componentPopupMessage(category, selectionWithPackage, draft);
       });
     } else {
+      //If unselected option is not part of selected package remove from optionsSelected
       newOptionsSelected = produce(optionsSelected, (draft) => {
         removeFromOptionsSelected(category, selection, optionsAvailable, draft);
       });
@@ -621,49 +660,54 @@ function handleInteriorAccessories(
   optionsSelected,
   popup
 ) {
-  // Check if the interiorAccessory is already selected
-  let newOptionsAvailable = produce(optionsAvailable, (draft) => {});
+  const newOptionsAvailable = produce(optionsAvailable, (draft) => {}); // Options available unchanged
+  let newOptionsSelected = produce(optionsSelected, (draft) => {}); // Keep optionsSelected unchanged for now
+  let newPopup = produce(popup, (draft) => {}); // Default to unchanged, modify conditionally
 
-  let updatedOptionsSelected = produce(optionsSelected, (draft) => {
-    if (selection.isChecked) {
-      const categoryExists =
-        Dependencies[category] && Dependencies[category].rivals;
-      const selectionInRivals =
-        categoryExists &&
-        Dependencies[category].rivals.hasOwnProperty(selection.id);
-
-      if (!categoryExists || !selectionInRivals) {
-        // Scenario A: Add to optionsSelected
-        addToOptionsSelected(category, selection, optionsAvailable, draft);
-      }
+  const rivalStatus = checkIfRivalSelected(
+    category,
+    selection,
+    optionsSelected
+  );
+  let selectionWithPackage = selection;
+  if (selection.isChecked) {
+    if (rivalStatus.selected) {
+      newPopup = produce(popup, (draft) => {
+        rivalPopupMessage(category, selection, draft, rivalStatus.details);
+      });
     } else {
-      // Scenario C: Remove from optionsSelected
-      removeFromOptionsSelected(category, selection, optionsAvailable, draft);
+      newOptionsSelected = produce(optionsSelected, (draft) => {
+        addToOptionsSelected(category, selection, optionsAvailable, draft);
+      });
     }
-  });
-
-  let newPopup = produce(popup, (draft) => {
-    if (selection.isChecked) {
-      const categoryExists =
-        Dependencies[category] && Dependencies[category].rivals;
-      const selectionInRivals =
-        categoryExists &&
-        Dependencies[category].rivals.hasOwnProperty(selection.id);
-
-      if (selectionInRivals) {
-        // Scenario B: Update popup
-        return createPopupMessage(selection.id, popup); // Directly return the new popup object
-      }
+  } else {
+    // Option unchecked
+    if (
+      checkIfComponentOfSelectedPackage(category, selection, optionsSelected)
+    ) {
+      //Retrieve the selection object from  relevant optionsSelected array
+      selectionWithPackage = optionsSelected[category].choices.find(
+        (c) => c.id === selection.id
+      );
+      //Create popup message
+      newPopup = produce(popup, (draft) => {
+        // Now passing the adjusted 'selection' object
+        componentPopupMessage(category, selectionWithPackage, draft);
+      });
+    } else {
+      //If unselected option is not part of selected package remove from optionsSelected
+      newOptionsSelected = produce(optionsSelected, (draft) => {
+        removeFromOptionsSelected(category, selection, optionsAvailable, draft);
+      });
     }
-  });
+  }
 
   return {
     optionsAvailable: newOptionsAvailable,
-    optionsSelected: updatedOptionsSelected,
+    optionsSelected: newOptionsSelected,
     popup: newPopup,
   };
 }
-
 //.....................
 //Helper functions
 function addToOptionsAvailable(
@@ -755,7 +799,7 @@ function addPackageComponents(selection, newOptionsAvailable, draft) {
           const choiceWithComponent = {
             ...choice,
             name: choice.name + " - Included in Package",
-            component: selection.id,
+            package: selection.id,
           };
           // Check if the option type is CheckBoxGroup or Dropdown
           const optionType = AllOptions[dependencyKey].type;
@@ -885,6 +929,71 @@ function checkIfRivalSelected(category, selection, optionsSelected) {
   return rivalStatus;
 }
 
+function checkIfRivalSelected2(category, selection, optionsSelected) {
+  let rivalSelected = false;
+  if (Dependencies[category] && Dependencies[category].rivals) {
+    let rivalExist = Dependencies[category].rivals[selection.id] !== undefined;
+    if (rivalExist) {
+      let rivalObject = Dependencies[category].rivals[selection.id];
+
+      // Iterate over the keys in the rivalObject to find the deselectCategory
+      for (let deselectCategory in rivalObject) {
+        let rivalID = rivalObject[deselectCategory];
+
+        if (
+          optionsSelected[deselectCategory] &&
+          optionsSelected[deselectCategory].choices
+        ) {
+          optionsSelected[deselectCategory].choices.forEach((choice) => {
+            if (rivalID && rivalID.includes(choice.id)) {
+              rivalSelected = true;
+            }
+          });
+        }
+      }
+    }
+  }
+  return rivalSelected;
+}
+
+function checkIfParentSelected(category, selection, optionsSelected) {
+  let parentStatus = {
+    selected: false,
+    details: {},
+  };
+
+  if (Dependencies[category] && Dependencies[category].parent) {
+    let parentExist = Dependencies[category].parent[selection.id] !== undefined;
+    if (parentExist) {
+      let parentObject = Dependencies[category].parent[selection.id];
+
+      // Iterate over the keys in the rivalObject to find the deselectCategory
+      for (let deselectCategory in parentObject) {
+        let parentID = parentObject[deselectCategory];
+
+        if (
+          optionsSelected[deselectCategory] &&
+          optionsSelected[deselectCategory].choices
+        ) {
+          optionsSelected[deselectCategory].choices.forEach((choice) => {
+            if (rivalID && rivalID.includes(choice.id)) {
+              rivalStatus.selected = true;
+              // Prepare actionDetails for the popup
+              rivalStatus.details = createPopupConfirmDetails(
+                category,
+                selection.id,
+                deselectCategory,
+                choice.id
+              );
+            }
+          });
+        }
+      }
+    }
+  }
+  return rivalStatus;
+}
+
 function checkIfPackageComponent(category, selection, optionsSelected) {
   let componentStatus = { selected: false, component: {}, package: {} };
 
@@ -895,7 +1004,7 @@ function checkIfPackageComponent(category, selection, optionsSelected) {
   );
 
   // Check if the found choice has a 'component' property
-  if (choice && choice.hasOwnProperty("component")) {
+  if (choice && choice.hasOwnProperty("package")) {
     componentStatus.selected = true;
     const parentPackage = AllOptions.packages.choices.find(
       (p) => p.id === choice.component
@@ -905,6 +1014,25 @@ function checkIfPackageComponent(category, selection, optionsSelected) {
   }
 
   return componentStatus;
+}
+
+function checkIfComponentOfSelectedPackage(
+  category,
+  selection,
+  optionsSelected
+) {
+  let selectionIsComponent = false;
+  //Find the matching choice in the choices array
+  //Note only the 'choice' objects in the optionsSelected have stored the 'component' property
+  const choice = optionsSelected[category].choices.find(
+    (c) => c.id === selection.id
+  );
+
+  // Check if the found choice has a 'package' property
+  if (choice && choice.hasOwnProperty("package")) {
+    selectionIsComponent = true;
+  }
+  return selectionIsComponent;
 }
 
 function createPopupConfirmDetails(
@@ -1054,14 +1182,14 @@ function rivalPopupMessage(category, selection, draft, details) {
 
 function componentPopupMessage(category, selection, draft) {
   let packageOption = AllOptions.packages.choices.find(
-    (choice) => choice.id === selection.component
+    (choice) => choice.id === selection.package
   );
 
-  let confirmDetails = createPopupConfirmDetails(
+  let confirmDetails = createComponentPopupDetails(
     category,
     selection.id,
     "packages",
-    selection.component
+    selection.package
   );
 
   let truncatedSelectionName = selection.name.replace(
@@ -1073,6 +1201,27 @@ function componentPopupMessage(category, selection, draft) {
   draft.details = confirmDetails;
 }
 
+function createComponentPopupDetails(
+  componentCategory,
+  componentOptionID,
+  packageCategory,
+  packageOptionID
+) {
+  return {
+    select: [
+      {
+        category: componentCategory,
+        choices: [{ id: componentOptionID }],
+      },
+    ],
+    deselect: [
+      {
+        category: packageCategory,
+        choices: [{ id: packageOptionID }],
+      },
+    ],
+  };
+}
 // ------------------------------
 // EXPORTS SECTION
 // ------------------------------
