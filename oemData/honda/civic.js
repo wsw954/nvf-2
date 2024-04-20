@@ -74,6 +74,7 @@ const AllOptions = {
       { id: "IAC3", name: "IA-Component3", price: 500 },
       { id: "IAC4", name: "IAC4-Rival To EAC4 ", price: 500 },
       { id: "IAC5", name: "IAC5-Coparent with Roof Rack ", price: 500 },
+      { id: "IAC6", name: "IAC6-Interior Rack ", price: 500 },
     ],
   },
 };
@@ -131,7 +132,7 @@ const Dependencies = {
         "HPDT",
         "RR",
       ],
-      interiorAccessories: ["ASF", "CH", "CN", "IAC1", "IAC2", "IAC5"],
+      interiorAccessories: ["ASF", "CH", "CN", "IAC1", "IAC2", "IAC5", "IAC6"],
     },
     // ... dependencies for other trims
   },
@@ -168,7 +169,10 @@ const Dependencies = {
       },
     },
     parent: {
-      RR: { exteriorAccessories: ["BIKE", "KAY"] },
+      RR: {
+        exteriorAccessories: ["BIKE", "KAY"],
+        interiorAccessories: ["IAC6"],
+      },
     },
     child: {
       BIKE: { exteriorAccessories: ["RR"], interiorAccessories: ["IAC5"] },
@@ -177,9 +181,13 @@ const Dependencies = {
   },
   //interiorAccessories
   interiorAccessories: {
+    rivals: {
+      IAC4: { exteriorAccessories: ["EAC4"] },
+    },
     parent: {
       IAC5: { exteriorAccessories: ["BIKE"] },
     },
+    child: { IAC6: { exteriorAccessories: ["RR"] } },
   },
 };
 
@@ -541,7 +549,97 @@ function handleExteriorAccessories(
   let parentStatus = { selected: false, details: {} };
   let childStatus = { selected: false, details: {} };
 
-  // Conditionally update statuses if rivals or parents exist
+  // Conditionally update statuses
+  if (rivalExist) {
+    rivalStatus = checkIfRivalSelected(category, selection, optionsSelected);
+  }
+  if (parentExist) {
+    parentStatus = checkIfParentSelected(category, selection, optionsSelected);
+  }
+
+  if (childExist) {
+    childStatus = checkIfChildSelected(category, selection, optionsSelected);
+  }
+
+  if (selection.isChecked) {
+    // If rival is selected, update the popup and keep optionsSelected unchanged
+    if (rivalExist && rivalStatus.selected) {
+      newPopup = produce(popup, (draft) => {
+        rivalPopupMessage(category, selection, draft, rivalStatus.details);
+      });
+    } else {
+      if (parentExist && !parentStatus.selected) {
+        newPopup = produce(popup, (draft) => {
+          parentPopupMessage(category, selection, draft, parentStatus.details);
+        });
+      } else {
+        newOptionsSelected = produce(optionsSelected, (draft) => {
+          addToOptionsSelected(category, selection, optionsAvailable, draft);
+        });
+      }
+    }
+  } else {
+    // If option unchecked then check if option is a 'component' of a currently selected package
+    if (
+      checkIfComponentOfSelectedPackage(category, selection, optionsSelected)
+    ) {
+      //Retrieve the selection object from  relevant optionsSelected array
+      let selectionWithPackage = optionsSelected[category].choices.find(
+        (c) => c.id === selection.id
+      );
+      //Create popup message
+      newPopup = produce(popup, (draft) => {
+        //Pass the component'selection' object which contains the package info
+        componentPopupMessage(category, selectionWithPackage, draft);
+      });
+    } else {
+      if (childExist && childStatus.selected) {
+        newPopup = produce(popup, (draft) => {
+          childPopupMessage(category, selection, draft, childStatus.details);
+        });
+      } else {
+        //If unselected option is not part of selected 'package' or a parent of a selected 'child' option, then remove from optionsSelected
+        newOptionsSelected = produce(optionsSelected, (draft) => {
+          removeFromOptionsSelected(
+            category,
+            selection,
+            optionsAvailable,
+            draft
+          );
+        });
+      }
+    }
+  }
+  console.log(newPopup);
+
+  return {
+    optionsAvailable: newOptionsAvailable,
+    optionsSelected: newOptionsSelected,
+    popup: newPopup,
+  };
+}
+
+//.....................
+//Handle interiorAccessories change
+function handleInteriorAccessories(
+  category,
+  selection,
+  optionsAvailable,
+  optionsSelected,
+  popup
+) {
+  const newOptionsAvailable = produce(optionsAvailable, (draft) => {}); // Options available unchanged
+  let newOptionsSelected = produce(optionsSelected, (draft) => {}); // Keep optionsSelected unchanged for now
+  let newPopup = produce(popup, (draft) => {}); // Default to unchanged, modify conditionally
+
+  let rivalExist = Boolean(Dependencies[category].rivals?.[selection.id]);
+  let parentExist = Boolean(Dependencies[category].child?.[selection.id]);
+  let childExist = Boolean(Dependencies[category].parent?.[selection.id]);
+
+  let rivalStatus = { selected: false, details: {} };
+  let parentStatus = { selected: false, details: {} };
+  let childStatus = { selected: false, details: {} };
+  // Conditionally update statuses
   if (rivalExist) {
     rivalStatus = checkIfRivalSelected(category, selection, optionsSelected);
   }
@@ -587,7 +685,6 @@ function handleExteriorAccessories(
       });
     } else {
       if (childExist && childStatus.selected) {
-        console.log("Create POPUP to warn of Unselecting CHILD options");
         newPopup = produce(popup, (draft) => {
           childPopupMessage(category, selection, draft, childStatus.details);
         });
@@ -602,81 +699,6 @@ function handleExteriorAccessories(
           );
         });
       }
-    }
-  }
-
-  return {
-    optionsAvailable: newOptionsAvailable,
-    optionsSelected: newOptionsSelected,
-    popup: newPopup,
-  };
-}
-
-//.....................
-//Handle interiorAccessories change
-function handleInteriorAccessories(
-  category,
-  selection,
-  optionsAvailable,
-  optionsSelected,
-  popup
-) {
-  const newOptionsAvailable = produce(optionsAvailable, (draft) => {}); // Options available unchanged
-  let newOptionsSelected = produce(optionsSelected, (draft) => {}); // Keep optionsSelected unchanged for now
-  let newPopup = produce(popup, (draft) => {}); // Default to unchanged, modify conditionally
-
-  let rivalExist = Boolean(Dependencies[category].rivals?.[selection.id]);
-  let parentExist = Boolean(Dependencies[category].child?.[selection.id]);
-
-  // Initialize with default values
-  let rivalStatus = { selected: false, details: {} };
-  let parentStatus = { selected: false, details: {} };
-
-  // Conditionally update statuses if rivals or parents exist
-  if (rivalExist) {
-    rivalStatus = checkIfRivalSelected(category, selection, optionsSelected);
-  }
-  if (parentExist) {
-    parentStatus = checkIfParentSelected(category, selection, optionsSelected);
-  }
-
-  let selectionWithPackage = selection;
-  if (selection.isChecked) {
-    // If rival is selected, update the popup and keep optionsSelected unchanged
-    if (rivalExist && rivalStatus.selected) {
-      newPopup = produce(popup, (draft) => {
-        rivalPopupMessage(category, selection, draft, rivalStatus.details);
-      });
-    } else {
-      if (parentExist && !parentStatus.selected) {
-        newPopup = produce(popup, (draft) => {
-          parentPopupMessage(category, selection, draft, parentStatus.details);
-        });
-      } else {
-        newOptionsSelected = produce(optionsSelected, (draft) => {
-          addToOptionsSelected(category, selection, optionsAvailable, draft);
-        });
-      }
-    }
-  } else {
-    // If option unchecked is a component of a currently selected package
-    if (
-      checkIfComponentOfSelectedPackage(category, selection, optionsSelected)
-    ) {
-      //Retrieve the selection object from  relevant optionsSelected array
-      selectionWithPackage = optionsSelected[category].choices.find(
-        (c) => c.id === selection.id
-      );
-      //Create popup message
-      newPopup = produce(popup, (draft) => {
-        //Pass the component'selection' object which contains the package info
-        componentPopupMessage(category, selectionWithPackage, draft);
-      });
-    } else {
-      //If unselected option is not part of selected package remove from optionsSelected
-      newOptionsSelected = produce(optionsSelected, (draft) => {
-        removeFromOptionsSelected(category, selection, optionsAvailable, draft);
-      });
     }
   }
 
@@ -888,28 +910,72 @@ function checkIfRivalSelected(category, selection, optionsSelected) {
       optionsSelected[unselectCategory].choices.forEach((choice) => {
         if (rivalIDs && rivalIDs.includes(choice.id)) {
           rivalStatus.selected = true;
-          // Correctly handle the assignment to rivalStatus.details
+          //Handle the assignment to rivalStatus.details
           rivalStatus.details = {
             action: "rivalSelected",
-            select: [
-              {
-                category: category, // Assuming you meant to use the function's category parameter
-                choices: [{ id: selection.id }],
-              },
-            ],
-            unselect: [
-              {
-                category: unselectCategory,
-                choices: rivalIDs.map((id) => ({ id })), // map rivalIDs to objects
-              },
-            ],
+            select: {
+              selectedOptionCategory: category, //Add the actual 'option' selected
+              selectedOptionID: selection.id,
+            },
+
+            unselect: {
+              rivalCategory: unselectCategory, //Add the 'rival' options from the Dependencies object
+              rivalOptionIDs: rivalIDs.map((id) => id), // map rivalIDs to objects
+            },
           };
         }
       });
     }
   }
-
   return rivalStatus;
+}
+
+function checkIfParentSelected1(category, selection, optionsSelected) {
+  let parentStatus = {
+    selected: false,
+    details: {},
+  };
+
+  let parentObject = Dependencies[category].child?.[selection.id];
+
+  // Initialize the parent array outside the loop
+  let parentsArray = [];
+
+  for (let parentCategory in parentObject) {
+    let parentIDs = parentObject[parentCategory]; // Assuming this is an array of strings
+
+    //Retrieve all selected choices from parentCategory
+    const choices = optionsSelected[parentCategory]?.choices || [];
+    // Check if all parentIDs are present in current optionsSelected object
+    let isParentSelected = parentIDs.every((parentID) =>
+      choices.some((choice) => choice.id === parentID)
+    );
+
+    // Update the selected status based on each parent category check
+    parentStatus.selected = parentStatus.selected || isParentSelected;
+
+    if (!isParentSelected) {
+      // Add to the parentsArray for each parent category
+      parentsArray.push({
+        category: parentCategory,
+        choices: parentIDs.map((id) => ({ id })),
+      });
+    }
+  }
+
+  // Only set the details if there are unselected parents
+  if (parentsArray.length > 0) {
+    parentStatus.details = {
+      action: "childSelected",
+      select: {
+        childCategory: category,
+        childID: selection.id,
+        parent: parentsArray,
+      },
+    };
+  }
+
+  return parentStatus;
 }
 
 function checkIfParentSelected(category, selection, optionsSelected) {
@@ -918,36 +984,51 @@ function checkIfParentSelected(category, selection, optionsSelected) {
     details: {},
   };
 
+  // Define the necessary IDs for parent selection
+  // const requiredIds = {
+  //   exteriorAccessories: "RR",
+  //   interiorAccessories: "IAC5",
+  // };
+
   let parentObject = Dependencies[category].child?.[selection.id];
+  let parentsArray = [];
 
-  // Iterate over the keys in the parentObject to find the unselectCategory
+  let allRequiredSelected = true;
   for (let parentCategory in parentObject) {
-    let parentIDs = parentObject[parentCategory]; // Assuming this is an array of strings
+    let parentIDs = parentObject[parentCategory];
 
-    // Use optional chaining and provide a default empty array if choices does not exist
+    // Retrieve all selected choices from parentCategory
     const choices = optionsSelected[parentCategory]?.choices || [];
-    console.log(optionsSelected);
-    // Check if all parentIDs are present in current optionsSelected object
-    parentStatus.selected = parentIDs.every((parentID) =>
+
+    // Check if the required ID is present in the current optionsSelected object
+    let isParentSelected = parentIDs.every((parentID) =>
       choices.some((choice) => choice.id === parentID)
     );
+    // Update allRequiredSelected based on the required IDs check
+    allRequiredSelected = isParentSelected;
 
-    if (!parentStatus.selected) {
-      // Create details object to be used later in popup confirmation action
-      parentStatus.details = {
-        action: "childSelected",
-        select: [
-          {
-            category: category,
-            choices: [{ id: selection.id }], //Select the actual option checked
-          },
-          {
-            category: parentCategory,
-            choices: parentIDs.map((id) => ({ id })), //Select the parent options
-          },
-        ],
-      };
+    // If required ID is not selected, add to the parentsArray
+    if (!isParentSelected) {
+      parentsArray.push({
+        category: parentCategory,
+        choices: parentIDs.map((id) => ({ id })),
+      });
     }
+  }
+
+  // Set the selected status if all required IDs are selected
+  parentStatus.selected = allRequiredSelected;
+
+  // Only set the details if there are unselected parents
+  if (parentsArray.length > 0) {
+    parentStatus.details = {
+      action: "childSelected",
+      select: {
+        childCategory: category,
+        childID: selection.id,
+        parent: parentsArray,
+      },
+    };
   }
 
   return parentStatus;
@@ -960,25 +1041,24 @@ function checkIfChildSelected(category, selection, optionsSelected) {
   };
 
   let childObject = Dependencies[category].parent?.[selection.id];
-
   // This will hold all child categories and their selected IDs
-  let allSelectedChildIds = [];
+  let childArray = [];
 
   // Iterate over the keys in the childObject to find the childCategory
   for (let childCategory in childObject) {
     let childIDs = childObject[childCategory]; // Assuming this is an array of strings
 
-    // Use optional chaining and provide a default empty array if choices does not exist
-    const choices = optionsSelected[childCategory]?.choices || [];
+    // Retrieve all selected options with childCategory
+    const selectedChoices = optionsSelected[childCategory]?.choices || [];
 
-    // Find any childID present in current optionsSelected object
+    //Find any child options in current optionsSelected object
     const selectedChildIds = childIDs.filter((childID) =>
-      choices.some((choice) => choice.id === childID)
+      selectedChoices.some((choice) => choice.id === childID)
     );
 
     if (selectedChildIds.length > 0) {
       childStatus.selected = true;
-      allSelectedChildIds.push({
+      childArray.push({
         category: childCategory,
         choices: selectedChildIds.map((id) => ({ id })),
       });
@@ -989,13 +1069,11 @@ function checkIfChildSelected(category, selection, optionsSelected) {
     // Create details object to be used later in popup confirmation action
     childStatus.details = {
       action: "parentUnselected",
-      unselect: [
-        {
-          category: category,
-          choices: [{ id: selection.id }], // Unselect the actual option unchecked
-        },
-        ...allSelectedChildIds, // Include all child options that are present
-      ],
+      unselect: {
+        parentCategory: category,
+        parentID: selection.id, // Unselect the actual parent option unchecked
+        child: childArray, // Include all child options that are currently selected
+      },
     };
   }
 
@@ -1033,22 +1111,15 @@ function rivalPopupMessage(category, selection, draft, details) {
   let optionsToDeselect = [];
 
   // Iterate over each category in the deselect array of actionDetails
-  details.unselect.forEach((unselectAction) => {
+  details.unselect.rivalOptionIDs.forEach((id) => {
     // Get the category from AllOptions that matches the category in actionDetails
-    const categoryOptions = AllOptions[unselectAction.category].choices;
+    const rivalOption = AllOptions[details.unselect.rivalCategory].choices.find(
+      (option) => option.id === id
+    );
 
-    // Iterate over each choice in the deselectAction
-    unselectAction.choices.forEach((choice) => {
-      // Find the matching choice in the categoryOptions by id
-      const matchingChoice = categoryOptions.find(
-        (categoryChoice) => categoryChoice.id === choice.id
-      );
-
-      // If a matching choice is found, add it to the optionsToDeselect array
-      if (matchingChoice) {
-        optionsToDeselect.push(matchingChoice);
-      }
-    });
+    if (rivalOption) {
+      optionsToDeselect.push(rivalOption);
+    }
   });
 
   if (optionsToDeselect.length > 0) {
@@ -1062,7 +1133,6 @@ function rivalPopupMessage(category, selection, draft, details) {
           " and" +
           unselectionNames.substring(lastCommaIndex + 1)
         : unselectionNames;
-
     message += finalUnselectionNames;
   }
   draft.show = true;
@@ -1074,18 +1144,20 @@ function componentPopupMessage(category, selection, draft) {
   let packageOption = AllOptions.packages.choices.find(
     (choice) => choice.id === selection.package
   );
-
-  let truncatedSelectionName = selection.name.replace(
-    " - Included in Package",
-    ""
+  const componentOption = AllOptions[category].choices.find(
+    (option) => option.id === selection.id
   );
+  console.log(componentOption);
+
   draft.show = true;
-  draft.message = `Unselecting ${truncatedSelectionName} will unselect the package ${packageOption.name} `;
-  // draft.details = confirmDetails;
+  draft.message = `Unselecting ${componentOption.name} will also unselect the package ${packageOption.name} `;
   draft.details = {
-    action: "componentUnselected",
-    component: selection.id,
-    package: selection.package,
+    action: "packageComponentUnselected",
+    unselect: {
+      componentCategory: category,
+      componentID: selection.id,
+      packageID: selection.package,
+    },
   };
 }
 
@@ -1093,56 +1165,90 @@ function parentPopupMessage(category, selection, draft, details) {
   let selectedOption = AllOptions[category].choices.find(
     (choice) => choice.id === selection.id
   );
+  let parentOptionsArray = [];
 
-  // Initialize the message with the selected option part
-  let message = `Selecting ${selectedOption.name} will also select  `;
-
-  // Initialize an empty array to hold the options to select
-  let optionsToDeselect = [];
-
-  // Iterate over each category in the deselect array of actionDetails
-  details.select.forEach((selectAction) => {
-    // Get the category from AllOptions that matches the category in actionDetails
-    const categoryOptions = AllOptions[selectAction.category].choices;
-
-    // Iterate over each choice in the deselectAction
-    selectAction.choices.forEach((choice) => {
-      // Find the matching choice in the categoryOptions by id
-      const matchingChoice = categoryOptions.find(
-        (categoryChoice) => categoryChoice.id === choice.id
+  details.select.parent.forEach((parent) => {
+    parent.choices.forEach((choice) => {
+      let option = AllOptions[parent.category].choices.find(
+        (option) => option.id === choice.id
       );
-
-      // If a matching choice is found, add it to the optionsToDeselect array
-      if (matchingChoice) {
-        optionsToDeselect.push(matchingChoice);
+      if (option) {
+        parentOptionsArray.push({
+          id: option.id,
+          name: option.name,
+          price: option.price,
+        });
       }
     });
   });
 
-  if (optionsToDeselect.length > 0) {
-    const unselectionNames = optionsToDeselect
-      .map((option) => option.name)
-      .join(", ");
-    const lastCommaIndex = unselectionNames.lastIndexOf(", ");
-    const finalUnselectionNames =
-      lastCommaIndex > 0
-        ? unselectionNames.substring(0, lastCommaIndex) +
-          " and" +
-          unselectionNames.substring(lastCommaIndex + 1)
-        : unselectionNames;
+  const namesList = parentOptionsArray.map((option) => option.name);
 
-    message += finalUnselectionNames;
+  // Create a string that lists the names, inserting 'and' before the last name
+  let formattedNames;
+  if (namesList.length > 1) {
+    formattedNames = `${namesList.slice(0, -1).join(", ")} and ${
+      namesList[namesList.length - 1]
+    }`;
+  } else {
+    formattedNames = namesList[0] || "";
   }
+
+  // Create the message incorporating the formatted names
+  let message = `Selecting ${selectedOption.name} will also select ${formattedNames}`;
+
   draft.show = true;
   draft.message = message;
-  draft.details = details; // Add action details to the popup
+  draft.details = details;
 }
 
 function childPopupMessage(category, selection, draft, details) {
   let selectedOption = AllOptions[category].choices.find(
     (choice) => choice.id === selection.id
   );
-  console.log("childPopupMessage Line 1190");
+
+  // Initialize the message with the selected option part
+  let childOptionsArray = [];
+
+  details.unselect.child.forEach((child) => {
+    child.choices.forEach((choice) => {
+      let option = AllOptions[child.category].choices.find(
+        (option) => option.id === choice.id
+      );
+      if (option) {
+        childOptionsArray.push({
+          id: option.id,
+          name: option.name,
+          price: option.price,
+        });
+      }
+    });
+  });
+  const namesList = childOptionsArray.map((option) => option.name);
+
+  // Create a string that lists the names, inserting 'and' before the last name
+  let formattedNames;
+  if (namesList.length > 1) {
+    formattedNames = `${namesList.slice(0, -1).join(", ")} and ${
+      namesList[namesList.length - 1]
+    }`;
+  } else {
+    formattedNames = namesList[0] || "";
+  }
+
+  // Create the message incorporating the formatted names
+  let message = `Unselecting ${selectedOption.name} will also unselect ${formattedNames}`;
+
+  draft.show = true;
+  draft.message = message;
+  draft.details = details; // Add action details to the popup
+}
+
+function childPopupMessage1(category, selection, draft, details) {
+  let selectedOption = AllOptions[category].choices.find(
+    (choice) => choice.id === selection.id
+  );
+
   // Initialize the message with the selected option part
   let message = `Unselecting ${selectedOption.name} will also unselect  `;
 
