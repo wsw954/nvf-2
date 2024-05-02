@@ -51,9 +51,9 @@ const AllOptions = {
       { id: "BSM", name: "Body Side Moulding", price: 500 },
       { id: "DLS", name: "Decklid Spoiler", price: 500 },
       { id: "SGS", name: "Splash Guard Set", price: 500 },
-      { id: "EAC1", name: "EA-Component1", price: 500 },
-      { id: "EAC2", name: "EA-Component2", price: 500 },
-      { id: "EAC3", name: "EA-Component3", price: 500 },
+      { id: "EAC1", name: "EA-Component1- ASP1", price: 500 },
+      { id: "EAC2", name: "EA-Component2 - ASP1", price: 500 },
+      { id: "EAC3", name: "EA-Component3 -ASP2", price: 500 },
       { id: "KAY", name: "Kayak Attachment", price: 264 },
       { id: "EAC4", name: "Rival Acccessory 4", price: 500 },
       { id: "EAC5", name: "Rival Acccessory 5", price: 500 },
@@ -71,7 +71,7 @@ const AllOptions = {
       { id: "CN", name: "Cargo Net", price: 500 },
       { id: "IAC1", name: "IA-Component1", price: 500 },
       { id: "IAC2", name: "IA-Component2", price: 500 },
-      { id: "IAC3", name: "IA-Component3", price: 500 },
+      { id: "IAC3", name: "IA-Component3 -ASP2", price: 500 },
       { id: "IAC4", name: "IAC4-Rival To EAC4 ", price: 500 },
       { id: "IAC5", name: "IAC5-Coparent with Roof Rack ", price: 500 },
       { id: "IAC6", name: "IAC6-Interior Rack ", price: 500 },
@@ -348,8 +348,27 @@ export function handlePopupConfirm(optionsAvailable, optionsSelected, popup) {
       );
 
     case "parentUnselected":
-      console.log("Parent Option Unselected");
+      newOptionsSelected = produce(newOptionsSelected, (draft) => {
+        const parentCategory = popup.details.unselect.parentCategory;
+        const parentOption = AllOptions[parentCategory]?.choices.find(
+          (option) => option.id === popup.details.unselect.parentID
+        );
+
+        if (parentOption) {
+          removeFromOptionsSelected(
+            parentCategory,
+            parentOption,
+            optionsAvailable,
+            draft
+          );
+        }
+
+        popup.details.unselect.child.forEach((child) => {
+          removeOptions(child.category, child.choices, draft, optionsAvailable);
+        });
+      });
       break;
+
     case "childSelected":
       console.log("Child Option Selected");
       break;
@@ -1171,6 +1190,18 @@ function childPopupMessage(category, selection, draft, details) {
   draft.show = true;
   draft.message = message;
   draft.details = details; // Add action details to the popup
+}
+
+// Helper function to remove options
+function removeOptions(category, choices, draft, optionsAvailable) {
+  choices.forEach((choice) => {
+    let option = AllOptions[category].choices.find(
+      (opt) => opt.id === choice.id
+    );
+    if (option) {
+      removeFromOptionsSelected(category, option, optionsAvailable, draft);
+    }
+  });
 }
 
 // ------------------------------
