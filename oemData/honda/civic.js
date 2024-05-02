@@ -294,48 +294,40 @@ export function handlePopupConfirm(optionsAvailable, optionsSelected, popup) {
 
   switch (popup.details.action) {
     case "rivalSelected":
-      const selectedCategory = popup.details.select.selectedOptionCategory;
-      const selectedOption = AllOptions[selectedCategory].choices.find(
-        (option) => option.id === popup.details.select.selectedOptionID
-      );
-      // First update: add to options selected
-      newOptionsSelected = produce(newOptionsSelected, (draft) => {
-        addToOptionsSelected(
-          selectedCategory,
-          selectedOption,
-          optionsAvailable,
-          draft
-        );
-      });
-
-      // Second update: remove rival options selected
       const rivalCategory = popup.details.unselect.rivalCategory;
       const rivalOptionIDs = popup.details.unselect.rivalOptionIDs;
+      // Unselect rival options
       rivalOptionIDs.forEach((id) => {
-        const rivalOption = AllOptions[rivalCategory].choices.find(
-          (option) => option.id === id
+        const rivalOption = {
+          id: id,
+          isChecked: false,
+        };
+        let results = handleOptionChanged(
+          rivalCategory,
+          rivalOption,
+          newOptionsAvailable,
+          newOptionsSelected,
+          newPopup
         );
-
-        if (rivalOption) {
-          newOptionsSelected = produce(newOptionsSelected, (draft) => {
-            removeFromOptionsSelected(
-              rivalCategory,
-              rivalOption,
-              optionsAvailable,
-              draft
-            );
-          });
-        }
+        newOptionsAvailable = results.optionsAvailable;
+        newOptionsSelected = results.optionsSelected;
+        newPopup = results.popup;
       });
-
-      break;
-    case "packageComponentUnselected":
-      const category = "packages";
-      const selection = {
-        id: popup.details.unselect.packageID,
-        isChecked: false,
+      // Select the new option
+      const selectedCategory = popup.details.select.selectedOptionCategory;
+      const selectedOption = {
+        id: popup.details.select.selectedOptionID,
+        isChecked: true,
       };
+      return handleOptionChanged(
+        selectedCategory,
+        selectedOption,
+        newOptionsAvailable,
+        newOptionsSelected,
+        newPopup
+      );
 
+    case "packageComponentUnselected":
       return handlePackages(
         "packages",
         {
@@ -370,7 +362,25 @@ export function handlePopupConfirm(optionsAvailable, optionsSelected, popup) {
       break;
 
     case "childSelected":
-      console.log("Child Option Selected");
+      newOptionsSelected = produce(newOptionsSelected, (draft) => {
+        const childCategory = popup.details.select.childCategory;
+        const childOption = AllOptions[childCategory]?.choices.find(
+          (option) => option.id === popup.details.select.childID
+        );
+
+        if (childOption) {
+          addToOptionsSelected(
+            childCategory,
+            childOption,
+            optionsAvailable,
+            draft
+          );
+        }
+
+        popup.details.select.parent.forEach((parent) => {
+          addOptions(parent.category, parent.choices, draft, optionsAvailable);
+        });
+      });
       break;
     default:
     // code block
@@ -1192,7 +1202,7 @@ function childPopupMessage(category, selection, draft, details) {
   draft.details = details; // Add action details to the popup
 }
 
-// Helper function to remove options
+// Helper function to remove multiple options from a single category
 function removeOptions(category, choices, draft, optionsAvailable) {
   choices.forEach((choice) => {
     let option = AllOptions[category].choices.find(
@@ -1200,6 +1210,18 @@ function removeOptions(category, choices, draft, optionsAvailable) {
     );
     if (option) {
       removeFromOptionsSelected(category, option, optionsAvailable, draft);
+    }
+  });
+}
+
+// Helper function to add multiple options from a single category
+function addOptions(category, choices, draft, optionsAvailable) {
+  choices.forEach((choice) => {
+    let option = AllOptions[category].choices.find(
+      (opt) => opt.id === choice.id
+    );
+    if (option) {
+      addToOptionsSelected(category, option, optionsAvailable, draft);
     }
   });
 }
