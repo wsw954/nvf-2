@@ -217,6 +217,10 @@ export function handleOptionChanged(
   optionsSelected,
   popup
 ) {
+  let newPopup = produce(popup, (draft) => {});
+  let newOptionsAvailable = produce(optionsAvailable, (draft) => {}); // Keep optionsAvailable unchanged for now
+  let newOptionsSelected = produce(optionsSelected, (draft) => {}); // Keep optionsSelected unchanged for now
+
   switch (category) {
     case "trim":
       return handleTrim(
@@ -268,100 +272,86 @@ export function handleOptionChanged(
       );
     default:
       return {
-        optionsAvailable,
-        optionsSelected,
-        popup,
+        optionsAvailable: newOptionsAvailable,
+        optionsSelected: newOptionsSelected,
+        popup: newPopup,
       };
   }
 }
 
-export function handlePopupConfirm1(optionsAvailable, optionsSelected, popup) {
-  let newPopup = produce(popup, (draft) => {});
-  let newOptionsAvailable = produce(optionsAvailable, (draft) => {}); // Keep optionsAvailable unchanged for now
-  let newOptionsSelected = produce(optionsSelected, (draft) => {}); // Keep optionsSelected unchanged for now
-
-  // Process 'select' details if they exist and have choices to process
-  if (popup.details.select && popup.details.select.length > 0) {
-    popup.details.select.forEach((detail) => {
-      const { category, choices } = detail;
-      if (choices && choices.length > 0) {
-        choices.forEach((choice) => {
-          if (category === "packages") {
-            // First, update optionsAvailable with package components
-            newOptionsAvailable = produce(newOptionsAvailable, (draft) => {
-              updateOptionsAvailableWithPackageComponents(choice, draft);
-            });
-            // Then, update optionsSelected with the new state of optionsAvailable
-            newOptionsSelected = produce(newOptionsSelected, (draft) => {
-              addPackageComponents(choice, newOptionsAvailable, draft);
-            });
-          } else {
-            // For non-package categories, just add to optionsSelected
-            newOptionsSelected = produce(newOptionsSelected, (draft) => {
-              addToOptionsSelected(
-                category,
-                choice,
-                newOptionsAvailable,
-                draft
-              );
-            });
-          }
-        });
-      }
-    });
-  }
-
-  // Process 'deselect' details if they exist and have choices to process
-  if (popup.details.deselect && popup.details.deselect.length > 0) {
-    popup.details.deselect.forEach((detail) => {
-      const { category, choices } = detail;
-      if (choices && choices.length > 0) {
-        choices.forEach((choice) => {
-          if (category === "packages") {
-            // First, reset optionsAvailable with package components
-            newOptionsAvailable = produce(newOptionsAvailable, (draft) => {
-              resetOptionsAvailableWithPackageComponents(choice, draft);
-            });
-            // Then, update optionsSelected with the new state of optionsAvailable
-            newOptionsSelected = produce(newOptionsSelected, (draft) => {
-              removePackageComponents(choice, newOptionsAvailable, draft);
-            });
-          } else {
-            // For non-package categories, just remove from optionsSelected
-            newOptionsSelected = produce(newOptionsSelected, (draft) => {
-              removeFromOptionsSelected(
-                category,
-                choice,
-                newOptionsAvailable,
-                draft
-              );
-            });
-          }
-        });
-      }
-    });
-  }
-
-  return {
-    optionsAvailable: newOptionsAvailable,
-    optionsSelected: newOptionsSelected,
-    popup: newPopup,
-  };
-}
-
 export function handlePopupConfirm(optionsAvailable, optionsSelected, popup) {
-  let newPopup = produce(popup, (draft) => {});
   let newOptionsAvailable = produce(optionsAvailable, (draft) => {}); // Keep optionsAvailable unchanged for now
   let newOptionsSelected = produce(optionsSelected, (draft) => {}); // Keep optionsSelected unchanged for now
+
+  const DEFAULT_POPUP_STATE = {
+    show: false,
+    message: "",
+    details: {},
+  };
+
+  // Reset the popup state to default at the start of function execution
+  let newPopup = produce(DEFAULT_POPUP_STATE, (draft) => {});
 
   switch (popup.details.action) {
-    case "rivalSelectd":
-      // code block
+    case "rivalSelected":
+      const selectedCategory = popup.details.select.selectedOptionCategory;
+      const selectedOption = AllOptions[selectedCategory].choices.find(
+        (option) => option.id === popup.details.select.selectedOptionID
+      );
+      // First update: add to options selected
+      newOptionsSelected = produce(newOptionsSelected, (draft) => {
+        addToOptionsSelected(
+          selectedCategory,
+          selectedOption,
+          optionsAvailable,
+          draft
+        );
+      });
+
+      // Second update: remove rival options selected
+      const rivalCategory = popup.details.unselect.rivalCategory;
+      const rivalOptionIDs = popup.details.unselect.rivalOptionIDs;
+      rivalOptionIDs.forEach((id) => {
+        const rivalOption = AllOptions[rivalCategory].choices.find(
+          (option) => option.id === id
+        );
+
+        if (rivalOption) {
+          newOptionsSelected = produce(newOptionsSelected, (draft) => {
+            removeFromOptionsSelected(
+              rivalCategory,
+              rivalOption,
+              optionsAvailable,
+              draft
+            );
+          });
+        }
+      });
+
       break;
-    case "componentUnselected":
-      // code block
+    case "packageComponentUnselected":
+      const category = "packages";
+      const selection = {
+        id: popup.details.unselect.packageID,
+        isChecked: false,
+      };
+
+      return handlePackages(
+        "packages",
+        {
+          id: popup.details.unselect.packageID,
+          isChecked: false,
+        },
+        newOptionsAvailable,
+        newOptionsSelected,
+        newPopup
+      );
+
+    case "parentUnselected":
+      console.log("Parent Option Unselected");
       break;
     case "childSelected":
+      console.log("Child Option Selected");
       break;
     default:
     // code block
@@ -971,7 +961,6 @@ function checkIfParentSelected(category, selection, optionsSelected) {
     };
   }
 
-  console.log(parentStatus);
   return parentStatus;
 }
 
@@ -1088,7 +1077,6 @@ function componentPopupMessage(category, selection, draft) {
   const componentOption = AllOptions[category].choices.find(
     (option) => option.id === selection.id
   );
-  console.log(componentOption);
 
   draft.show = true;
   draft.message = `Unselecting ${componentOption.name} will also unselect the package ${packageOption.name} `;
