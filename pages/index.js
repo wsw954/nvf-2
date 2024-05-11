@@ -80,11 +80,6 @@ const IndexPage = () => {
       return Object.entries(optionsAvailable).map(([key, option]) => {
         switch (option.type) {
           case "Dropdown":
-            // Find the selected option for this category
-            // const selectedOptionID =
-            //   optionsSelected && optionsSelected[key]
-            //     ? optionsSelected[key].choices[0].id
-            //     : "";
             const selectedOptionID =
               optionsSelected &&
               optionsSelected[key] &&

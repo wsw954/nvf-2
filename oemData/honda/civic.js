@@ -8,7 +8,7 @@ const AllOptions = {
     displayName: "Trim",
     type: "Dropdown",
     choices: [
-      { id: "LX", name: "Sedan LX", price: 23750 },
+      { id: "LX", name: "Sedan LX", price: 23950 },
       { id: "Sport", name: "Sedan Sport", price: 25050 },
       { id: "TypeR", name: "Type R", price: 42895 },
       { id: "HBEXL", name: "Hatchback EX-L", price: 28650 },
@@ -19,42 +19,98 @@ const AllOptions = {
     displayName: "Powertrain",
     type: "Dropdown",
     choices: [
-      { id: "Standard", name: "Standard Transmission", price: 0 },
-      { id: "Premium", name: "Premium Transmission", price: 0 },
-      { id: "Turbo", name: "Turbo Transmission", price: 2500 },
+      {
+        id: "standardPowertrain",
+        name: "158hp CVT w/2.0L 4-Cyl Engine",
+        price: 0,
+      },
+      { id: "premiumPowertrain", name: "Premium Transmission", price: 0 },
+      { id: "turboPowertrain", name: "Turbo Transmission", price: 2500 },
     ],
   },
   exteriorColor: {
     displayName: "Exterior Color",
     type: "Dropdown",
     choices: [
-      { id: "Blue", name: "Aegean Blue Metallic", price: 100 },
-      { id: "Black", name: "Crystal Black Pearl", price: 0 },
-      { id: "Silver", name: "Lunar Silver Metallic", price: 200 },
+      { id: "BlueEC", name: "Aegean Blue Metallic", price: 0 },
+      { id: "BlackEC", name: "Crystal Black Pearl", price: 0 },
+      { id: "SilverEC", name: "Lunar Silver Metallic", price: 0 },
+      { id: "GrayEC", name: "Meteorite Gray Metallic", price: 0 },
+      { id: "RedEC", name: "Rallye Red", price: 0 },
+      { id: "PlatinumEC", name: "Platinum White Pearl", price: 455 },
+    ],
+  },
+  interiorColor: {
+    displayName: "Interior Color",
+    type: "Dropdown",
+    choices: [
+      { id: "BlackIC", name: "Black Cloth", price: 0 },
+      { id: "GrayIC", name: "Gray Cloth", price: 0 },
+    ],
+  },
+  wheels: {
+    displayName: "Wheels",
+    type: "Dropdown",
+    choices: [
+      {
+        id: "standardWheels",
+        name: "16 inch Wheels w/ covers",
+        price: 0,
+      },
     ],
   },
   packages: {
     displayName: "Packages",
     type: "CheckBoxGroup",
     choices: [
-      { id: "ASP1", name: "All Season Protection Package I", price: 500 },
-      { id: "ASP2", name: "All Season Protection Package II", price: 500 },
-      { id: "HPD", name: "HPD Package", price: 750 },
-      { id: "PP3", name: "Package III", price: 500 },
+      { id: "ASPack1", name: "All Season Protection Package I", price: 420 },
+      { id: "ASPack2", name: "All Season Protection Package II", price: 370 },
+      { id: "HPD", name: "HPD Package", price: 1452 },
+      { id: "PP3", name: "Package III", price: 300 },
     ],
   },
   exteriorAccessories: {
     displayName: "Exterior Accessories",
     type: "CheckBoxGroup",
     choices: [
-      { id: "BIKE", name: "Bike Attachment Frame Mount", price: 399 },
-      { id: "BSM", name: "Body Side Moulding", price: 500 },
-      { id: "DLS", name: "Decklid Spoiler", price: 500 },
-      { id: "SGS", name: "Splash Guard Set", price: 500 },
+      { id: "Bike", name: "Bike Attachment Frame Mount", price: 399 },
+      { id: "BSMoulding", name: "Body Side Moulding", price: 247 },
+      { id: "DLSpoiler", name: "Decklid Spoiler", price: 329 },
+      { id: "DEdgeFilm", name: "Door Edge Film", price: 56 },
+      { id: "DEdgeGuard", name: "Door Edge Guard", price: 127 },
+      { id: "DHandleFilm", name: "Door Handle Film", price: 56 },
+      { id: "DVisorCh", name: "Door Visors-Chrome", price: 236 },
+      {
+        id: "EmblemsFRH",
+        name: "Emblems, Front, Rear H-Mark and Civic-Gloss Black",
+        price: 116,
+      },
+      { id: "EmblemHPD", name: "Emblem-HPD", price: 44 },
+      { id: "RBumperApp", name: "Rear Bumper Applique", price: 78 },
+      { id: "SGuardSet", name: "Splash Guard Set", price: 116 },
+      {
+        id: "UBodySpoilerFront",
+        name: "Underbody Spoiler-HPD Front",
+        price: 365,
+      },
+      {
+        id: "UBodySpoilerRear",
+        name: "Underbody Spoiler-HPD Rear",
+        price: 329,
+      },
+      {
+        id: "UBodySpoilerSide",
+        name: "Underbody Spoiler-HPD Side",
+        price: 417,
+      },
+      { id: "ValveStem", name: "Valve Stem Caps", price: 24 },
+      { id: "WheelLocksB", name: "Wheel Locks-Black", price: 94 },
+      { id: "WheelLocksC", name: "Wheel Locks-Chrome", price: 65 },
+      { id: "WLugNuts", name: "Wheel Lug Nuts-Black", price: 51 },
       { id: "EAC1", name: "EA-Component1- ASP1", price: 500 },
       { id: "EAC2", name: "EA-Component2 - ASP1", price: 500 },
       { id: "EAC3", name: "EA-Component3 -ASP2", price: 500 },
-      { id: "KAY", name: "Kayak Attachment", price: 264 },
+      { id: "KayakAtt", name: "Kayak Attachment", price: 264 },
       { id: "EAC4", name: "Rival Acccessory 4", price: 500 },
       { id: "EAC5", name: "Rival Acccessory 5", price: 500 },
       { id: "HPDE", name: "HPD Emblem", price: 150 },
@@ -66,10 +122,20 @@ const AllOptions = {
     displayName: "Interior Accessories",
     type: "CheckBoxGroup",
     choices: [
-      { id: "ASF", name: "All Season Floor Mats", price: 500 },
-      { id: "CH", name: "Cargo Hook", price: 500 },
-      { id: "CN", name: "Cargo Net", price: 500 },
-      { id: "IAC1", name: "IA-Component1", price: 500 },
+      { id: "ASFloorMat", name: "All Season Floor Mats", price: 183 },
+      { id: "CHook", name: "Cargo Hook", price: 15 },
+      { id: "CNet", name: "Cargo Net", price: 56 },
+      {
+        id: "CHWFloorMat",
+        name: "Contoured High-Wall Carpet Floor Mats",
+        price: 198,
+      },
+      { id: "DoorSill", name: "Door Sill Protection Film", price: 111 },
+      { id: "FirstAid", name: "First Aid Kit", price: 35 },
+      { id: "IDoorSill", name: "Illuminated Door Sill Trim", price: 329 },
+      { id: "RPWShade", name: "Rear Passenger Window Shades", price: 192 },
+      { id: "TTray", name: "Trunk Tray", price: 127 },
+      { id: "TTDividers", name: "Trunk Tray Dividers", price: 67 },
       { id: "IAC2", name: "IA-Component2", price: 500 },
       { id: "IAC3", name: "IA-Component3 -ASP2", price: 500 },
       { id: "IAC4", name: "IAC4-Rival To EAC4 ", price: 500 },
@@ -77,32 +143,72 @@ const AllOptions = {
       { id: "IAC6", name: "IAC6-Interior Rack ", price: 500 },
     ],
   },
+  electronicAccessories: {
+    displayName: "Electronic Accessories",
+    type: "Dropdown",
+    choices: [{ id: "EngBlockHeat", name: "Engine Block Heater", price: 94 }],
+  },
 };
 
 // ------------------------------
 // DEPENDENCIES SECTION
+
 // ------------------------------
 const Dependencies = {
   // ... trim dependencies- Each trim is effectively a main ancestor to all other options
   trim: {
     LX: {
-      powertrain: ["Standard", "Premium"],
-      exteriorColor: ["Blue", "Black"],
-      packages: ["ASP1", "ASP2"],
-      exteriorAccessories: [
-        "BSM",
-        "DLS",
-        "SGS",
-        "EAC1",
-        "EAC2",
-        "EAC3",
-        "EAC4",
-        "EAC5",
+      powertrain: ["standardPowertrain"],
+      exteriorColor: [
+        "BlueEC",
+        "BlackEC",
+        "SilverEC",
+        "GrayEC",
+        "RedEC",
+        "PlatinumEC",
       ],
-      interiorAccessories: ["ASF", "CH", "CN", "IAC1", "IAC2", "IAC3", "IAC4"],
+      interiorColor: ["BlackIC", "GrayIC"],
+      wheels: ["standardWheels"],
+      packages: ["ASPack1", "ASPack2", "HPD", "PP3"],
+      exteriorAccessories: [
+        "BSMoulding",
+        "DLSpoiler",
+        "DEdgeFilm",
+        "DEdgeGuard",
+        "DHandleFilm",
+        "DVisorCh",
+        "EmblemsFRH",
+        "EmblemHPD",
+        "RBumperApp",
+        "SGuardSet",
+        "UBodySpoilerFront",
+        "UBodySpoilerRear",
+        "UBodySpoilerSide",
+        "ValveStem",
+        "WheelLocksB",
+        "WheelLocksC",
+        "WLugNuts",
+      ],
+      interiorAccessories: [
+        "ASFloorMat",
+        "CHook",
+        "CNet",
+        "CHWFloorMat",
+        "DoorSill",
+        "FirstAid",
+        "IDoorSill",
+        "RPWShade",
+        "TTray",
+        "TTDividers",
+        "IAC2",
+        "IAC3",
+        "IAC4",
+        "IAC5",
+        "IAC6",
+      ],
     },
     Sport: {
-      powertrain: ["Standard", "Premium", "Turbo"],
+      powertrain: ["standardPowertrain", "premiumPowertrain", "Turbo"],
       exteriorColor: ["Blue", "Black", "Silver", "Red"],
       packages: ["ASP1", "ASP2", "PP3"],
       exteriorAccessories: ["BSM", "DLS", "SGS", "EAC1", "EAC2", "EAC3"],
@@ -111,7 +217,7 @@ const Dependencies = {
     TypeR: {
       powertrain: ["Turbo"], // Assuming only Turbo is available for Type R
       exteriorColor: ["Red", "Black"],
-      packages: ["ASP1", "ASP2", "PP3"],
+      packages: ["PP3"],
       exteriorAccessories: ["BSM", "DLS", "SGS", "EAC1", "EAC2", "EAC3"],
       interiorAccessories: ["ASF", "CH", "CN", "IAC1", "IAC2"],
     },
@@ -139,13 +245,13 @@ const Dependencies = {
   //..package dependencies have two types, components & rivals
   packages: {
     components: {
-      ASP1: {
-        exteriorAccessories: ["EAC1", "EAC2"],
-        powertrain: ["Premium"],
+      ASPack1: {
+        exteriorAccessories: ["SGuardSet", "ASF"],
+        interiorAccessories: ["ASFloorMat", "TTray"],
       },
-      ASP2: {
-        exteriorAccessories: ["EAC3"],
-        interiorAccessories: ["IAC3"],
+      ASPack2: {
+        exteriorAccessories: ["WheelLocksC"],
+        interiorAccessories: ["ASFloorMat", "TTray"],
       },
       HPD: {
         exteriorAccessories: ["HPDE", "HPDT"],
@@ -155,7 +261,10 @@ const Dependencies = {
         interiorAccessories: ["IAC1", "IAC2"],
       },
     },
-    rivals: { ASP1: { packages: ["ASP2"] }, ASP2: { packages: ["ASP1"] } },
+    rivals: {
+      ASPack1: { packages: ["ASPack2"] },
+      ASPack2: { packages: ["ASPack1"] },
+    },
   },
   //exteriorAccessories
   exteriorAccessories: {
@@ -240,6 +349,22 @@ export function handleOptionChanged(
       );
     case "exteriorColor":
       return handleExteriorColor(
+        category,
+        selection,
+        optionsAvailable,
+        optionsSelected,
+        popup
+      );
+    case "interiorColor":
+      return handleInteriorColor(
+        category,
+        selection,
+        optionsAvailable,
+        optionsSelected,
+        popup
+      );
+    case "wheels":
+      return handleWheels(
         category,
         selection,
         optionsAvailable,
@@ -410,8 +535,11 @@ function handleTrim(
     addToOptionsSelected(category, selection, optionsAvailable, draft);
   });
 
-  // Initialize newOptionsAvailable based on trimDependencies
-  let newOptionsAvailable = produce(optionsAvailable, (draft) => {
+  // Preserve the trim object while resetting other options
+  let newOptionsAvailable = produce({}, (draft) => {
+    // Copy the trim object
+    draft.trim = optionsAvailable.trim || AllOptions.trim;
+
     const trimDependencies = Dependencies.trim[selection.id];
     if (trimDependencies) {
       Object.keys(trimDependencies).forEach((dependencyKey) => {
@@ -485,6 +613,63 @@ function handleExteriorColor(
 
   let newOptionsAvailable = produce(optionsAvailable, (draft) => {});
   let newPopup = produce(popup, (draft) => {});
+  return {
+    optionsAvailable: newOptionsAvailable,
+    optionsSelected: newOptionsSelected,
+    popup: newPopup,
+  };
+}
+
+//Handle exteriorColor change
+function handleInteriorColor(
+  category,
+  selection,
+  optionsAvailable,
+  optionsSelected,
+  popup
+) {
+  // Initialize newOptionsSelected by calling addToOptionsSelected
+  let newOptionsSelected = produce(optionsSelected, (draft) => {
+    addToOptionsSelected(category, selection, optionsAvailable, draft);
+  });
+
+  let newOptionsAvailable = produce(optionsAvailable, (draft) => {});
+  let newPopup = produce(popup, (draft) => {});
+  return {
+    optionsAvailable: newOptionsAvailable,
+    optionsSelected: newOptionsSelected,
+    popup: newPopup,
+  };
+}
+
+function handleWheels(
+  category,
+  selection,
+  optionsAvailable,
+  optionsSelected,
+  popup
+) {
+  // Keep optionsAvailable unchanged
+  let newOptionsAvailable = produce(optionsAvailable, (draft) => {});
+  // Initialize newOptionsSelected with the current state to be modified conditionally
+  let newOptionsSelected = produce(optionsSelected, (draft) => {});
+  // Default popup to unchanged, modify conditionally
+  let newPopup = produce(popup, (draft) => {});
+
+  // Check if the unselected wheels was part of a selected package
+  if (optionsSelected[category]?.choices?.[0]?.package !== undefined) {
+    let componentOptionToUnselect = optionsSelected[category].choices[0];
+    //Generate popup warning
+    newPopup = produce(popup, (draft) => {
+      componentPopupMessage(category, componentOptionToUnselect, draft);
+    });
+  } else {
+    // Add the selected wheel to optionsSelected
+    newOptionsSelected = produce(optionsSelected, (draft) => {
+      addToOptionsSelected(category, selection, optionsAvailable, draft);
+    });
+  }
+
   return {
     optionsAvailable: newOptionsAvailable,
     optionsSelected: newOptionsSelected,
@@ -818,7 +1003,7 @@ function addPackageComponents(selection, newOptionsAvailable, draft) {
           const choiceWithComponent = {
             ...choice,
             name: choice.name + " - Included in Package",
-            package: selection.id,
+            component: selection.id,
           };
           // Check if the option type is CheckBoxGroup or Dropdown
           const optionType = AllOptions[dependencyKey].type;
@@ -829,8 +1014,17 @@ function addPackageComponents(selection, newOptionsAvailable, draft) {
             };
           }
           if (optionType === "CheckBoxGroup") {
-            // Add to choices array for CheckBoxGroup
-            draft[dependencyKey].choices.push(choiceWithComponent);
+            // Check if the choice already exists in the array
+            const existingIndex = draft[dependencyKey].choices.findIndex(
+              (existingChoice) => existingChoice.id === choiceWithComponent.id
+            );
+            if (existingIndex !== -1) {
+              // Replace the existing choice with the updated one
+              draft[dependencyKey].choices[existingIndex] = choiceWithComponent;
+            } else {
+              // Add new choice if it doesn't exist
+              draft[dependencyKey].choices.push(choiceWithComponent);
+            }
           } else if (optionType === "Dropdown") {
             // Replace choices array for Dropdown
             draft[dependencyKey].choices = [choiceWithComponent];
@@ -1051,8 +1245,8 @@ function checkIfComponentOfSelectedPackage(
     (c) => c.id === selection.id
   );
 
-  // Check if the found choice has a 'package' property
-  if (choice && choice.hasOwnProperty("package")) {
+  // Check if the found choice has a 'component' property
+  if (choice && choice.hasOwnProperty("component")) {
     selectionIsComponent = true;
   }
   return selectionIsComponent;
@@ -1101,7 +1295,7 @@ function rivalPopupMessage(category, selection, draft, details) {
 
 function componentPopupMessage(category, selection, draft) {
   let packageOption = AllOptions.packages.choices.find(
-    (choice) => choice.id === selection.package
+    (choice) => choice.id === selection.component
   );
   const componentOption = AllOptions[category].choices.find(
     (option) => option.id === selection.id
@@ -1114,7 +1308,7 @@ function componentPopupMessage(category, selection, draft) {
     unselect: {
       componentCategory: category,
       componentID: selection.id,
-      packageID: selection.package,
+      packageID: selection.component,
     },
   };
 }
