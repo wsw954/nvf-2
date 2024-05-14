@@ -1,4 +1,4 @@
-// Civic.js
+//oemData/honda/civic.js
 import produce from "immer";
 // ------------------------------
 // OPTIONS AVAILABLE SECTION
@@ -145,7 +145,7 @@ const AllOptions = {
   },
   electronicAccessories: {
     displayName: "Electronic Accessories",
-    type: "Dropdown",
+    type: "CheckBoxGroup",
     choices: [{ id: "EngBlockHeat", name: "Engine Block Heater", price: 94 }],
   },
 };
@@ -167,7 +167,10 @@ const Dependencies = {
         "RedEC",
         "PlatinumEC",
       ],
-      interiorColor: ["BlackIC", "GrayIC"],
+      interiorColor: {
+        default: ["BlackIC"],
+        GrayEC: ["BlackIC", "GrayIC"], // Adds GrayIC as an option if GrayEC is selected
+      },
       wheels: ["standardWheels"],
       packages: ["ASPack1", "ASPack2", "HPD", "PP3"],
       exteriorAccessories: [
@@ -200,26 +203,36 @@ const Dependencies = {
         "RPWShade",
         "TTray",
         "TTDividers",
-        "IAC2",
-        "IAC3",
-        "IAC4",
-        "IAC5",
-        "IAC6",
       ],
     },
     Sport: {
       powertrain: ["standardPowertrain", "premiumPowertrain", "Turbo"],
-      exteriorColor: ["Blue", "Black", "Silver", "Red"],
+      exteriorColor: [
+        "BlueEC",
+        "BlackEC",
+        "SilverEC",
+        "GrayEC",
+        "RedEC",
+        "PlatinumEC",
+      ],
       packages: ["ASP1", "ASP2", "PP3"],
       exteriorAccessories: ["BSM", "DLS", "SGS", "EAC1", "EAC2", "EAC3"],
-      interiorAccessories: ["ASF", "CH", "CN", "IAC1", "IAC2", "IAC3", "IAC4"],
+      interiorAccessories: [
+        "ASFloorMat",
+        "CH",
+        "CN",
+        "IAC1",
+        "IAC2",
+        "IAC3",
+        "IAC4",
+      ],
     },
     TypeR: {
       powertrain: ["Turbo"], // Assuming only Turbo is available for Type R
       exteriorColor: ["Red", "Black"],
       packages: ["PP3"],
       exteriorAccessories: ["BSM", "DLS", "SGS", "EAC1", "EAC2", "EAC3"],
-      interiorAccessories: ["ASF", "CH", "CN", "IAC1", "IAC2"],
+      interiorAccessories: ["ASFloorMat", "CH", "CN", "IAC1", "IAC2"],
     },
     HBEXL: {
       powertrain: ["Turbo"], // Assuming only Turbo is available for Type R
@@ -238,15 +251,24 @@ const Dependencies = {
         "HPDT",
         "RR",
       ],
-      interiorAccessories: ["ASF", "CH", "CN", "IAC1", "IAC2", "IAC5", "IAC6"],
+      interiorAccessories: [
+        "ASFloorMat",
+        "CH",
+        "CN",
+        "IAC1",
+        "IAC2",
+        "IAC5",
+        "IAC6",
+      ],
     },
     // ... dependencies for other trims
   },
+
   //..package dependencies have two types, components & rivals
   packages: {
     components: {
       ASPack1: {
-        exteriorAccessories: ["SGuardSet", "ASF"],
+        exteriorAccessories: ["SGuardSet"],
         interiorAccessories: ["ASFloorMat", "TTray"],
       },
       ASPack2: {
@@ -519,7 +541,6 @@ export function handlePopupConfirm(optionsAvailable, optionsSelected, popup) {
 }
 
 //Callback functions for handleOptionChange
-//.....................
 
 function handleTrim(
   category,
@@ -528,30 +549,43 @@ function handleTrim(
   optionsSelected,
   popup
 ) {
-  //When a trim is changed, all prior selected options are unselected
+  // Reset previously selected options to ensure a clean state
   let resetOptionsSelected = {};
-  // Initialize newOptionsSelected by calling addToOptionsSelected
   let newOptionsSelected = produce(resetOptionsSelected, (draft) => {
     addToOptionsSelected(category, selection, optionsAvailable, draft);
   });
 
-  // Preserve the trim object while resetting other options
+  // Initialize a new options available object, starting with a clean slate
   let newOptionsAvailable = produce({}, (draft) => {
-    // Copy the trim object
+    // Safely copy the trim object or fallback if undefined
     draft.trim = optionsAvailable.trim || AllOptions.trim;
 
+    // Check if dependencies for the selected trim are defined and correct
     const trimDependencies = Dependencies.trim[selection.id];
-    if (trimDependencies) {
-      Object.keys(trimDependencies).forEach((dependencyKey) => {
-        draft[dependencyKey] = {
-          ...AllOptions[dependencyKey],
-          choices: AllOptions[dependencyKey].choices.filter((choice) =>
-            trimDependencies[dependencyKey].includes(choice.id)
-          ),
-        };
-      });
-    }
+    Object.keys(trimDependencies).forEach((dependencyKey) => {
+      if (Dependencies.trim && Dependencies.trim[selection.id]) {
+        if (Array.isArray(trimDependencies[dependencyKey])) {
+          // Filter choices based on dependency ids for arrays
+          draft[dependencyKey] = {
+            ...AllOptions[dependencyKey],
+            choices: AllOptions[dependencyKey].choices.filter((choice) =>
+              trimDependencies[dependencyKey].includes(choice.id)
+            ),
+          };
+        } else {
+          // Handle object dependencies using default configurations
+          draft[dependencyKey] = {
+            ...AllOptions[dependencyKey],
+            choices: AllOptions[dependencyKey].choices.filter((choice) =>
+              trimDependencies[dependencyKey].default.includes(choice.id)
+            ),
+          };
+        }
+      }
+    });
   });
+
+  // Update popup state if needed (this function is just a placeholder)
   let newPopup = produce(popup, (draft) => {});
 
   return {
@@ -606,10 +640,22 @@ function handleExteriorColor(
   optionsSelected,
   popup
 ) {
+  const trimDependencies =
+    Dependencies.trim[optionsSelected.trim.choices[0].id];
+
   // Initialize newOptionsSelected by calling addToOptionsSelected
   let newOptionsSelected = produce(optionsSelected, (draft) => {
     addToOptionsSelected(category, selection, optionsAvailable, draft);
   });
+  console.log(trimDependencies);
+
+  let availableInteriorColors = trimDependencies.interiorColor.default; // default interior colors
+  console.log(availableInteriorColors);
+  // // Check if there's a special rule for the selected exterior color
+  // if (trimDependencies.interiorColor[selection.id]) {
+  //   availableInteriorColors = trimDependencies.interiorColor[selection.id];
+  // }
+  // console.log(availableInteriorColors);
 
   let newOptionsAvailable = produce(optionsAvailable, (draft) => {});
   let newPopup = produce(popup, (draft) => {});
