@@ -169,7 +169,8 @@ const Dependencies = {
       ],
       interiorColor: {
         default: ["BlackIC"],
-        GrayEC: ["BlackIC", "GrayIC"], // Adds GrayIC as an option if GrayEC is selected
+        GrayEC: ["BlackIC", "GrayIC"],
+        PlatinumEC: ["BlackIC", "GrayIC"],
       },
       wheels: ["standardWheels"],
       packages: ["ASPack1", "ASPack2", "HPD", "PP3"],
@@ -516,12 +517,7 @@ export function handlePopupConfirm(optionsAvailable, optionsSelected, popup) {
         );
 
         if (childOption) {
-          addToOptionsSelected(
-            childCategory,
-            childOption,
-            optionsAvailable,
-            draft
-          );
+          addToOptionsSelected(childCategory, childOption, draft);
         }
 
         popup.details.select.parent.forEach((parent) => {
@@ -552,7 +548,7 @@ function handleTrim(
   // Reset previously selected options to ensure a clean state
   let resetOptionsSelected = {};
   let newOptionsSelected = produce(resetOptionsSelected, (draft) => {
-    addToOptionsSelected(category, selection, optionsAvailable, draft);
+    addToOptionsSelected(category, selection, draft);
   });
 
   // Initialize a new options available object, starting with a clean slate
@@ -620,7 +616,7 @@ function handlePowertrain(
   } else {
     // Add the selected powertrain to optionsSelected
     newOptionsSelected = produce(optionsSelected, (draft) => {
-      addToOptionsSelected(category, selection, optionsAvailable, draft);
+      addToOptionsSelected(category, selection, draft);
     });
   }
 
@@ -642,23 +638,22 @@ function handleExteriorColor(
 ) {
   const trimDependencies =
     Dependencies.trim[optionsSelected.trim.choices[0].id];
+  let availableInteriorColors = trimDependencies.interiorColor.default; // default interior colors
 
   // Initialize newOptionsSelected by calling addToOptionsSelected
   let newOptionsSelected = produce(optionsSelected, (draft) => {
-    addToOptionsSelected(category, selection, optionsAvailable, draft);
+    addToOptionsSelected(category, selection, draft);
   });
-  console.log(trimDependencies);
 
-  let availableInteriorColors = trimDependencies.interiorColor.default; // default interior colors
-  console.log(availableInteriorColors);
-  // // Check if there's a special rule for the selected exterior color
-  // if (trimDependencies.interiorColor[selection.id]) {
-  //   availableInteriorColors = trimDependencies.interiorColor[selection.id];
-  // }
-  // console.log(availableInteriorColors);
-
-  let newOptionsAvailable = produce(optionsAvailable, (draft) => {});
+  if (trimDependencies.interiorColor[selection.id]) {
+    availableInteriorColors = trimDependencies.interiorColor[selection.id];
+  }
+  // Work on code to add the availableColors to the optionsAvailable object
+  let newOptionsAvailable = produce(optionsAvailable, (draft) => {
+    changeOptionsAvailable("interiorColor", availableInteriorColors, draft);
+  });
   let newPopup = produce(popup, (draft) => {});
+
   return {
     optionsAvailable: newOptionsAvailable,
     optionsSelected: newOptionsSelected,
@@ -676,7 +671,7 @@ function handleInteriorColor(
 ) {
   // Initialize newOptionsSelected by calling addToOptionsSelected
   let newOptionsSelected = produce(optionsSelected, (draft) => {
-    addToOptionsSelected(category, selection, optionsAvailable, draft);
+    addToOptionsSelected(category, selection, draft);
   });
 
   let newOptionsAvailable = produce(optionsAvailable, (draft) => {});
@@ -712,7 +707,7 @@ function handleWheels(
   } else {
     // Add the selected wheel to optionsSelected
     newOptionsSelected = produce(optionsSelected, (draft) => {
-      addToOptionsSelected(category, selection, optionsAvailable, draft);
+      addToOptionsSelected(category, selection, draft);
     });
   }
 
@@ -753,7 +748,7 @@ function handlePackages(
       //Update the optionsSelected
       newOptionsSelected = produce(optionsSelected, (draft) => {
         // Add the actual 'parent'  package option
-        addToOptionsSelected(category, selection, optionsAvailable, draft);
+        addToOptionsSelected(category, selection, draft);
         // Add the package 'components' options
         addPackageComponents(selection, optionsAvailable, draft);
       });
@@ -824,7 +819,7 @@ function handleExteriorAccessories(
         });
       } else {
         newOptionsSelected = produce(optionsSelected, (draft) => {
-          addToOptionsSelected(category, selection, optionsAvailable, draft);
+          addToOptionsSelected(category, selection, draft);
         });
       }
     }
@@ -914,7 +909,7 @@ function handleInteriorAccessories(
         });
       } else {
         newOptionsSelected = produce(optionsSelected, (draft) => {
-          addToOptionsSelected(category, selection, optionsAvailable, draft);
+          addToOptionsSelected(category, selection, draft);
         });
       }
     }
@@ -989,8 +984,46 @@ function addToOptionsAvailable(
   return newOptionsAvailable;
 }
 
+function changeOptionsAvailable(category, selection, draft) {
+  // Ensure the category exists with initialization if necessary
+  if (!draft[category]) {
+    draft[category] = {
+      displayName: AllOptions[category].displayName,
+      type: AllOptions[category].type,
+      choices: [],
+    };
+  }
+
+  // Retrieve all selectedOption objects based on selection array of ids
+  let errors = [];
+  const selectedOptions = selection
+    .map((sel) => {
+      let foundChoice = AllOptions[category].choices.find(
+        (choice) => choice.id === sel
+      );
+      if (!foundChoice) {
+        errors.push(`No choice found for ID ${sel}`);
+        return null;
+      }
+      return foundChoice;
+    })
+    .filter(Boolean); // This will filter out any null results if an id is not found
+
+  // Error handling: log or handle errors
+  if (errors.length > 0) {
+    console.error(
+      "Errors occurred while retrieving choices:",
+      errors.join(", ")
+    );
+    // Optionally, handle these errors more gracefully
+  }
+
+  // Replace the choices array with the new array of selectedOption objects
+  draft[category].choices = selectedOptions;
+}
+
 //Add to oprionsSelected a selected 'option'
-function addToOptionsSelected(category, selection, optionsAvailable, draft) {
+function addToOptionsSelected(category, selection, draft) {
   //If category doesn't already exists, add it
   if (!draft[category]) {
     draft[category] = {
@@ -1461,7 +1494,7 @@ function addOptions(category, choices, draft, optionsAvailable) {
       (opt) => opt.id === choice.id
     );
     if (option) {
-      addToOptionsSelected(category, option, optionsAvailable, draft);
+      addToOptionsSelected(category, option, draft);
     }
   });
 }
