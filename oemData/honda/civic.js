@@ -66,7 +66,7 @@ const AllOptions = {
       { id: "ASPack1", name: "All Season Protection Package I", price: 420 },
       { id: "ASPack2", name: "All Season Protection Package II", price: 370 },
       { id: "HPD", name: "HPD Package", price: 1452 },
-      { id: "PP3", name: "Package III", price: 300 },
+      { id: "PP", name: "Protection Package ", price: 300 },
     ],
   },
   exteriorAccessories: {
@@ -173,7 +173,7 @@ const Dependencies = {
         PlatinumEC: ["BlackIC", "GrayIC"],
       },
       wheels: ["standardWheels"],
-      packages: ["ASPack1", "ASPack2", "HPD", "PP3"],
+      packages: ["ASPack1", "ASPack2", "HPD", "PP"],
       exteriorAccessories: [
         "BSMoulding",
         "DLSpoiler",
@@ -277,21 +277,37 @@ const Dependencies = {
         interiorAccessories: ["ASFloorMat", "TTray"],
       },
       HPD: {
-        exteriorAccessories: ["HPDE", "HPDT"],
+        exteriorAccessories: [
+          "DLSpoiler",
+          "EmblemHPD",
+          "UBodySpoilerFront",
+          "UBodySpoilerRear",
+          "UBodySpoilerSide",
+        ],
       },
 
-      PP3: {
-        interiorAccessories: ["IAC1", "IAC2"],
+      PP: {
+        exteriorAccessories: ["SGuardSet", "WheelLocksC"],
+        interiorAccessories: ["TTray"],
       },
     },
     rivals: {
-      ASPack1: { packages: ["ASPack2"] },
-      ASPack2: { packages: ["ASPack1"] },
+      ASPack1: { packages: ["ASPack2", "HPD", "PP"] },
+      ASPack2: { packages: ["ASPack1", "PP"] },
+      PP: { packages: ["ASPack1", "ASPack2", "HPD"] },
+      HPD: { packages: ["ASPack1", "PP"], exteriorAccessories: ["SGuardSet"] },
     },
   },
   //exteriorAccessories
   exteriorAccessories: {
     rivals: {
+      DEdgeFilm: { exteriorAccessories: ["DEdgeGuard"] },
+      DEdgeGuard: { exteriorAccessories: ["DEdgeFilm"] },
+      SGuardSet: {
+        exteriorAccessories: ["UBodySpoilerRear"],
+        packages: ["HPD"],
+      },
+      UBodySpoilerRear: { exteriorAccessories: ["SGuardSet"] },
       EAC4: {
         exteriorAccessories: ["EAC5"],
         interiorAccessories: ["IAC4"],
@@ -442,25 +458,25 @@ export function handlePopupConfirm(optionsAvailable, optionsSelected, popup) {
 
   switch (popup.details.action) {
     case "rivalSelected":
-      const rivalCategory = popup.details.unselect.rivalCategory;
-      const rivalOptionIDs = popup.details.unselect.rivalOptionIDs;
-      // Unselect rival options
-      rivalOptionIDs.forEach((id) => {
-        const rivalOption = {
-          id: id,
-          isChecked: false,
-        };
-        let results = handleOptionChanged(
-          rivalCategory,
-          rivalOption,
-          newOptionsAvailable,
-          newOptionsSelected,
-          newPopup
-        );
-        newOptionsAvailable = results.optionsAvailable;
-        newOptionsSelected = results.optionsSelected;
-        newPopup = results.popup;
+      popup.details.unselect.forEach((rival) => {
+        rival.rivalOptionIDs.forEach((id) => {
+          const rivalOption = {
+            id: id,
+            isChecked: false,
+          };
+          let results = handleOptionChanged(
+            rival.rivalCategory,
+            rivalOption,
+            newOptionsAvailable,
+            newOptionsSelected,
+            newPopup
+          );
+          newOptionsAvailable = results.optionsAvailable;
+          newOptionsSelected = results.optionsSelected;
+          newPopup = newPopup;
+        });
       });
+
       // Select the new option
       const selectedCategory = popup.details.select.selectedOptionCategory;
       const selectedOption = {
@@ -1186,7 +1202,14 @@ function resetOptionsAvailableWithPackageComponents(selection, draft) {
 function checkIfRivalSelected(category, selection, optionsSelected) {
   let rivalStatus = {
     selected: false,
-    details: {},
+    details: {
+      action: "rivalSelected",
+      select: {
+        selectedOptionCategory: category,
+        selectedOptionID: selection.id,
+      },
+      unselect: [],
+    },
   };
 
   let rivalObject = Dependencies[category].rivals[selection.id];
@@ -1201,19 +1224,23 @@ function checkIfRivalSelected(category, selection, optionsSelected) {
       optionsSelected[unselectCategory].choices.forEach((choice) => {
         if (rivalIDs && rivalIDs.includes(choice.id)) {
           rivalStatus.selected = true;
-          //Handle the assignment to rivalStatus.details
-          rivalStatus.details = {
-            action: "rivalSelected",
-            select: {
-              selectedOptionCategory: category, //Add the actual 'option' selected
-              selectedOptionID: selection.id,
-            },
 
-            unselect: {
-              rivalCategory: unselectCategory, //Add the 'rival' options from the Dependencies object
-              rivalOptionIDs: rivalIDs.map((id) => id), // map rivalIDs to objects
-            },
-          };
+          // Check if the unselect category already exists
+          let unselectCategoryObj = rivalStatus.details.unselect.find(
+            (u) => u.rivalCategory === unselectCategory
+          );
+          if (!unselectCategoryObj) {
+            unselectCategoryObj = {
+              rivalCategory: unselectCategory,
+              rivalOptionIDs: [],
+            };
+            rivalStatus.details.unselect.push(unselectCategoryObj);
+          }
+
+          // Add the choice id to the rivalOptionIDs array
+          if (!unselectCategoryObj.rivalOptionIDs.includes(choice.id)) {
+            unselectCategoryObj.rivalOptionIDs.push(choice.id);
+          }
         }
       });
     }
@@ -1331,7 +1358,7 @@ function checkIfComponentOfSelectedPackage(
   return selectionIsComponent;
 }
 
-function rivalPopupMessage(category, selection, draft, details) {
+function rivalPopupMessage2(category, selection, draft, details) {
   let selectedOption = AllOptions[category].choices.find(
     (choice) => choice.id === selection.id
   );
@@ -1352,6 +1379,48 @@ function rivalPopupMessage(category, selection, draft, details) {
     if (rivalOption) {
       optionsToDeselect.push(rivalOption);
     }
+  });
+
+  console.log(details);
+  if (optionsToDeselect.length > 0) {
+    const unselectionNames = optionsToDeselect
+      .map((option) => option.name)
+      .join(", ");
+    const lastCommaIndex = unselectionNames.lastIndexOf(", ");
+    const finalUnselectionNames =
+      lastCommaIndex > 0
+        ? unselectionNames.substring(0, lastCommaIndex) +
+          " and" +
+          unselectionNames.substring(lastCommaIndex + 1)
+        : unselectionNames;
+    message += finalUnselectionNames;
+  }
+  draft.show = true;
+  draft.message = message;
+  draft.details = details; // Add action details to the popup
+}
+
+function rivalPopupMessage(category, selection, draft, details) {
+  let selectedOption = AllOptions[category].choices.find(
+    (choice) => choice.id === selection.id
+  );
+
+  // Initialize the message with the selected option part
+  let message = `Selecting ${selectedOption.name} will unselect `;
+
+  // Initialize an empty array to hold the options to deselect
+  let optionsToDeselect = [];
+
+  details.unselect.forEach((unselectItem) => {
+    unselectItem.rivalOptionIDs.forEach((rivalOptionID) => {
+      // Find the matching choice from the global AllOptions object
+      const rivalOption = AllOptions[unselectItem.rivalCategory].choices.find(
+        (choice) => choice.id === rivalOptionID
+      );
+      if (rivalOption) {
+        optionsToDeselect.push(rivalOption);
+      }
+    });
   });
 
   if (optionsToDeselect.length > 0) {
