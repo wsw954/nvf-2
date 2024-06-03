@@ -10,6 +10,8 @@ const AllOptions = {
     choices: [
       { id: "LX", name: "Sedan LX", price: 23950 },
       { id: "Sport", name: "Sedan Sport", price: 25050 },
+      { id: "EX", name: "Sedan EX", price: 26950 },
+      { id: "Touring", name: "Sedan Touring", price: 30550 },
       { id: "TypeR", name: "Type R", price: 42895 },
       { id: "HBEXL", name: "Hatchback EX-L", price: 28650 },
       // ... other trims
@@ -22,6 +24,11 @@ const AllOptions = {
       {
         id: "standardPowertrain",
         name: "158hp CVT w/2.0L 4-Cyl Engine",
+        price: 0,
+      },
+      {
+        id: "standardTurbo",
+        name: "180hp CVT w/1.5L Turbo 4-Cyl Engine",
         price: 0,
       },
       { id: "premiumPowertrain", name: "Premium Transmission", price: 0 },
@@ -38,6 +45,7 @@ const AllOptions = {
       { id: "GrayEC", name: "Meteorite Gray Metallic", price: 0 },
       { id: "RedEC", name: "Rallye Red", price: 0 },
       { id: "PlatinumEC", name: "Platinum White Pearl", price: 455 },
+      { id: "SGrayPearl", name: "Sonic Gray Pearl", price: 455 },
     ],
   },
   interiorColor: {
@@ -46,6 +54,8 @@ const AllOptions = {
     choices: [
       { id: "BlackIC", name: "Black Cloth", price: 0 },
       { id: "GrayIC", name: "Gray Cloth", price: 0 },
+      { id: "BlackL", name: "Black Leather", price: 0 },
+      { id: "GrayL", name: "Gray Leather", price: 0 },
     ],
   },
   wheels: {
@@ -55,6 +65,26 @@ const AllOptions = {
       {
         id: "standardWheels",
         name: "16 inch Wheels w/ covers",
+        price: 0,
+      },
+      {
+        id: "18InchGB",
+        name: "18-inch Gloss Black Alloy Wheels",
+        price: 0,
+      },
+      {
+        id: "18InchAW",
+        name: "18-inch Alloy Wheels",
+        price: 0,
+      },
+      {
+        id: "18InchBA",
+        name: "18-inch Black Alloy Wheels",
+        price: 1744,
+      },
+      {
+        id: "17InchAW",
+        name: "17-inch Alloy Wheels",
         price: 0,
       },
     ],
@@ -75,17 +105,20 @@ const AllOptions = {
     choices: [
       { id: "Bike", name: "Bike Attachment Frame Mount", price: 399 },
       { id: "BSMoulding", name: "Body Side Moulding", price: 247 },
-      { id: "DLSpoiler", name: "Decklid Spoiler", price: 329 },
+      { id: "DLSpoiler", name: "Decklid Spoiler-HPD", price: 329 },
       { id: "DEdgeFilm", name: "Door Edge Film", price: 56 },
       { id: "DEdgeGuard", name: "Door Edge Guard", price: 127 },
       { id: "DHandleFilm", name: "Door Handle Film", price: 56 },
       { id: "DVisorCh", name: "Door Visors-Chrome", price: 236 },
+      { id: "DVisorBl", name: "Door Visors-Black", price: 236 },
       {
         id: "EmblemsFRH",
         name: "Emblems, Front, Rear H-Mark and Civic-Gloss Black",
         price: 116,
       },
+      { id: "EmblemSportGB", name: "Emblem Sport- Gloss Black", price: 41 },
       { id: "EmblemHPD", name: "Emblem-HPD", price: 44 },
+      { id: "MoonRVisor", name: "Moon Roof Visor", price: 171 },
       { id: "RBumperApp", name: "Rear Bumper Applique", price: 78 },
       { id: "SGuardSet", name: "Splash Guard Set", price: 116 },
       {
@@ -205,9 +238,10 @@ const Dependencies = {
         "TTray",
         "TTDividers",
       ],
+      electronicAccessories: ["EngBlockHeat"],
     },
     Sport: {
-      powertrain: ["standardPowertrain", "premiumPowertrain", "Turbo"],
+      powertrain: ["standardPowertrain"],
       exteriorColor: [
         "BlueEC",
         "BlackEC",
@@ -215,18 +249,153 @@ const Dependencies = {
         "GrayEC",
         "RedEC",
         "PlatinumEC",
+        "SGrayPearl",
       ],
-      packages: ["ASP1", "ASP2", "PP3"],
-      exteriorAccessories: ["BSM", "DLS", "SGS", "EAC1", "EAC2", "EAC3"],
+      interiorColor: {
+        default: ["BlackIC"],
+      },
+      wheels: ["18InchGB", "18InchBA"],
+      packages: ["ASPack1", "ASPack2", "HPD", "PP"],
+      exteriorAccessories: [
+        "BSMoulding",
+        "DLSpoiler",
+        "DEdgeFilm",
+        "DEdgeGuard",
+        "DHandleFilm",
+        "DVisorBl",
+        "EmblemsFRH",
+        "EmblemSportGB",
+        "EmblemHPD",
+        "RBumperApp",
+        "SGuardSet",
+        "UBodySpoilerFront",
+        "UBodySpoilerRear",
+        "UBodySpoilerSide",
+        "ValveStem",
+        "WheelLocksB",
+        "WheelLocksC",
+        "WLugNuts",
+        ,
+      ],
       interiorAccessories: [
         "ASFloorMat",
-        "CH",
-        "CN",
-        "IAC1",
-        "IAC2",
-        "IAC3",
-        "IAC4",
+        "CHook",
+        "CNet",
+        "CHWFloorMat",
+        "DoorSill",
+        "FirstAid",
+        "IDoorSill",
+        "RPWShade",
+        "TTray",
+        "TTDividers",
       ],
+      electronicAccessories: ["EngBlockHeat"],
+    },
+    EX: {
+      powertrain: ["standardTurbo"],
+      exteriorColor: [
+        "BlueEC",
+        "BlackEC",
+        "SilverEC",
+        "GrayEC",
+        "RedEC",
+        "PlatinumEC",
+        "SGrayPearl",
+      ],
+      interiorColor: {
+        default: ["BlackIC"],
+        GrayEC: ["BlackIC", "GrayIC"],
+        PlatinumEC: ["BlackIC", "GrayIC"],
+      },
+      wheels: ["17InchAW"],
+      packages: ["ASPack1", "ASPack2", "HPD", "PP"],
+      exteriorAccessories: [
+        "BSMoulding",
+        "DLSpoiler",
+        "DEdgeFilm",
+        "DEdgeGuard",
+        "DHandleFilm",
+        "DVisorCh",
+        "EmblemsFRH",
+        "EmblemHPD",
+        "MoonRVisor",
+        "RBumperApp",
+        "SGuardSet",
+        "UBodySpoilerFront",
+        "UBodySpoilerRear",
+        "UBodySpoilerSide",
+        "ValveStem",
+        "WheelLocksB",
+        "WheelLocksC",
+        "WLugNuts",
+        ,
+      ],
+      interiorAccessories: [
+        "ASFloorMat",
+        "CHook",
+        "CNet",
+        "CHWFloorMat",
+        "DoorSill",
+        "FirstAid",
+        "IDoorSill",
+        "RPWShade",
+        "TTray",
+        "TTDividers",
+      ],
+      electronicAccessories: ["EngBlockHeat"],
+    },
+    Touring: {
+      powertrain: ["standardTurbo"],
+      exteriorColor: [
+        "BlueEC",
+        "BlackEC",
+        "SilverEC",
+        "GrayEC",
+        "RedEC",
+        "PlatinumEC",
+        "SGrayPearl",
+      ],
+      interiorColor: {
+        default: ["BlackL"],
+        GrayEC: ["BlackL", "GrayL"],
+        PlatinumEC: ["BlackL", "GrayL"],
+      },
+      wheels: ["18InchAW", "18InchBA"],
+      packages: ["ASPack1", "ASPack2", "HPD", "PP"],
+      exteriorAccessories: [
+        "BSMoulding",
+        "DLSpoiler",
+        "DEdgeFilm",
+        "DEdgeGuard",
+        "DHandleFilm",
+        "DVisorCh",
+        "EmblemsFRH",
+        "EmblemHPD",
+        "MoonRVisor",
+        "RBumperApp",
+        "SGuardSet",
+        "UBodySpoilerFront",
+        "UBodySpoilerRear",
+        "UBodySpoilerSide",
+        "ValveStem",
+        "WheelLocksB",
+        "WheelLocksC",
+        "WLugNuts",
+        ,
+      ],
+      interiorAccessories: [
+        "ASFloorMat",
+        "CHook",
+        "CNet",
+        "CHWFloorMat",
+        "DoorSill",
+        "FirstAid",
+        "IDoorSill",
+        "RPWShade",
+        "TTray",
+        "TTDividers",
+      ],
+      electronicAccessories: ["EngBlockHeat"],
     },
     TypeR: {
       powertrain: ["Turbo"], // Assuming only Turbo is available for Type R
@@ -292,10 +461,16 @@ const Dependencies = {
       },
     },
     rivals: {
-      ASPack1: { packages: ["ASPack2", "HPD", "PP"] },
+      ASPack1: {
+        packages: ["ASPack2", "HPD", "PP"],
+        exteriorAccessories: ["UBodySpoilerRear"],
+      },
       ASPack2: { packages: ["ASPack1", "PP"] },
-      PP: { packages: ["ASPack1", "ASPack2", "HPD"] },
       HPD: { packages: ["ASPack1", "PP"], exteriorAccessories: ["SGuardSet"] },
+      PP: {
+        packages: ["ASPack1", "ASPack2", "HPD"],
+        exteriorAccessories: ["UBodySpoilerRear"],
+      },
     },
   },
   //exteriorAccessories
@@ -307,7 +482,10 @@ const Dependencies = {
         exteriorAccessories: ["UBodySpoilerRear"],
         packages: ["HPD"],
       },
-      UBodySpoilerRear: { exteriorAccessories: ["SGuardSet"] },
+      UBodySpoilerRear: {
+        exteriorAccessories: ["SGuardSet"],
+        packages: ["ASPack1", "PP"],
+      },
       EAC4: {
         exteriorAccessories: ["EAC5"],
         interiorAccessories: ["IAC4"],
@@ -330,6 +508,10 @@ const Dependencies = {
   //interiorAccessories
   interiorAccessories: {
     rivals: {
+      ASFloorMat: { interiorAccessories: ["CHWFloorMat"] },
+      CHWFloorMat: { interiorAccessories: ["ASFloorMat"] },
+      DoorSill: { interiorAccessories: ["IDoorSill"] },
+      IDoorSill: { interiorAccessories: ["DoorSill"] },
       IAC4: { exteriorAccessories: ["EAC4"] },
     },
     parent: {
@@ -350,6 +532,8 @@ const InitialOptionsAvailable = {
     choices: [
       { id: "LX", name: "Sedan LX", price: 23750 },
       { id: "Sport", name: "Sedan Sport", price: 25050 },
+      { id: "EX", name: "Sedan EX", price: 26950 },
+      { id: "Touring", name: "Sedan Touring", price: 30550 },
       { id: "TypeR", name: "Type R", price: 42895 },
       { id: "HBEXL", name: "Hatchback EX-L", price: 28650 },
       // ... other trims
@@ -903,6 +1087,7 @@ function handleInteriorAccessories(
   // Conditionally update statuses
   if (rivalExist) {
     rivalStatus = checkIfRivalSelected(category, selection, optionsSelected);
+    console.log(rivalStatus);
   }
   if (parentExist) {
     parentStatus = checkIfParentSelected(category, selection, optionsSelected);
@@ -1033,7 +1218,7 @@ function changeOptionsAvailable(category, selection, draft) {
     );
     // Optionally, handle these errors more gracefully
   }
-
+  console.log(selectedOptions);
   // Replace the choices array with the new array of selectedOption objects
   draft[category].choices = selectedOptions;
 }
