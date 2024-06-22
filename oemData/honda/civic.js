@@ -12,6 +12,7 @@ const AllOptions = {
       { id: "Sport", name: "Sedan Sport", price: 25050 },
       { id: "EX", name: "Sedan EX", price: 26950 },
       { id: "Touring", name: "Sedan Touring", price: 30550 },
+      { id: "HatchbackLX", name: "Hatchback LX", price: 24950 },
       { id: "TypeR", name: "Type R", price: 42895 },
       { id: "HBEXL", name: "Hatchback EX-L", price: 28650 },
       // ... other trims
@@ -63,8 +64,13 @@ const AllOptions = {
     type: "Dropdown",
     choices: [
       {
-        id: "standardWheels",
+        id: "standard16WC",
         name: "16 inch Wheels w/ covers",
+        price: 0,
+      },
+      {
+        id: "standard16Alloy",
+        name: "16 inch Alloy Wheels",
         price: 0,
       },
       {
@@ -97,13 +103,25 @@ const AllOptions = {
       { id: "ASPack2", name: "All Season Protection Package II", price: 370 },
       { id: "HPD", name: "HPD Package", price: 1452 },
       { id: "PP", name: "Protection Package ", price: 300 },
+      {
+        id: "ASPack1Hatch",
+        name: "All Season Protection Package I",
+        price: 417,
+      },
+      {
+        id: "ASPack2Hatch",
+        name: "All Season Protection Package II",
+        price: 367,
+      },
+      { id: "HPDHatch", name: "HPD Package", price: 799 },
+      { id: "PPHatch", name: "Protection Package ", price: 295 },
     ],
   },
   exteriorAccessories: {
     displayName: "Exterior Accessories",
     type: "CheckBoxGroup",
     choices: [
-      { id: "Bike", name: "Bike Attachment Frame Mount", price: 399 },
+      { id: "Bike", name: "Bike Attachment Frame Mount", price: 216 },
       { id: "BSMoulding", name: "Body Side Moulding", price: 247 },
       { id: "DLSpoiler", name: "Decklid Spoiler-HPD", price: 329 },
       { id: "DEdgeFilm", name: "Door Edge Film", price: 56 },
@@ -116,14 +134,29 @@ const AllOptions = {
         name: "Emblems, Front, Rear H-Mark and Civic-Gloss Black",
         price: 116,
       },
+
       { id: "EmblemSportGB", name: "Emblem Sport- Gloss Black", price: 41 },
       { id: "EmblemHPD", name: "Emblem-HPD", price: 44 },
+      {
+        id: "EmblemsFRHHatch",
+        name: "Emblems, Front, Rear H-Mark and Civic",
+        price: 114,
+      },
+      { id: "Kayak", name: "Kayak Attachment", price: 270 },
       { id: "MoonRVisor", name: "Moon Roof Visor", price: 171 },
       { id: "RBumperApp", name: "Rear Bumper Applique", price: 78 },
+      { id: "RBumperProt", name: "Rear Bumper Protector", price: 97 },
+      { id: "RoofBas", name: "Roof Basket", price: 412 },
+      { id: "RBoxMid", name: "Roof Box-Midsize", price: 567 },
+      { id: "RBoxShort", name: "Roof Box-Short", price: 534 },
+      { id: "RoofRack", name: "Roof Rack", price: 407 },
+      { id: "SkiSnow", name: "Ski/Snowboard Attachment", price: 287 },
+      { id: "Surf", name: "Surf/Paddleboard Attachment", price: 173 },
       { id: "SGuardSet", name: "Splash Guard Set", price: 116 },
+      { id: "TailGate", name: "Tail Gate Spoiler-HPD ", price: 407 },
       {
         id: "UBodySpoilerFront",
-        name: "Underbody Spoiler-HPD Front",
+        name: "Underbody Spoiler HPD-Front",
         price: 365,
       },
       {
@@ -163,10 +196,15 @@ const AllOptions = {
         name: "Contoured High-Wall Carpet Floor Mats",
         price: 198,
       },
-      { id: "DoorSill", name: "Door Sill Protection Film", price: 111 },
+      { id: "CargoTray", name: "Cargo Tray", price: 124 },
+      { id: "CargoTrayDiv", name: "Cargo Tray Dividers", price: 67 },
+      { id: "FirstAid", name: "First Aid Kit", price: 35 },
+      { id: "DoorSillProt", name: "Door Sill Protection Film", price: 111 },
+      { id: "DoorSillIllum", name: "Door Sill Illumination", price: 329 },
       { id: "FirstAid", name: "First Aid Kit", price: 35 },
       { id: "IDoorSill", name: "Illuminated Door Sill Trim", price: 329 },
       { id: "RPWShade", name: "Rear Passenger Window Shades", price: 192 },
+      { id: "SeatBackProt", name: "Seat Back Protectors", price: 109 },
       { id: "TTray", name: "Trunk Tray", price: 127 },
       { id: "TTDividers", name: "Trunk Tray Dividers", price: 67 },
       { id: "IAC2", name: "IA-Component2", price: 500 },
@@ -205,7 +243,7 @@ const Dependencies = {
         GrayEC: ["BlackIC", "GrayIC"],
         PlatinumEC: ["BlackIC", "GrayIC"],
       },
-      wheels: ["standardWheels"],
+      wheels: ["standard16WC"],
       packages: ["ASPack1", "ASPack2", "HPD", "PP"],
       exteriorAccessories: [
         "BSMoulding",
@@ -397,6 +435,52 @@ const Dependencies = {
       ],
       electronicAccessories: ["EngBlockHeat"],
     },
+    HatchbackLX: {
+      powertrain: ["standardPowertrain"],
+      exteriorColor: ["BlackEC", "SilverEC", "GrayEC", "PlatinumEC"],
+      interiorColor: {
+        default: ["BlackIC"],
+      },
+      wheels: ["standard16Alloy"],
+      packages: ["ASPack1Hatch", "ASPack2Hatch", "HPDHatch", "PPHatch"],
+      exteriorAccessories: [
+        "Bike",
+        "BSMoulding",
+        "DEdgeFilm",
+        "DEdgeGuard",
+        "DHandleFilm",
+        "EmblemHPD",
+        "EmblemsFRHHatch",
+        "Kayak",
+        "RBumperProt",
+        "RoofBas",
+        "RBoxMid",
+        "RBoxShort",
+        "RoofRack",
+        "SkiSnow",
+        "Surf",
+        "SGuardSet",
+        "TailGate",
+        "UBodySpoilerFront",
+        "ValveStem",
+        "WheelLocksB",
+        "WheelLocksC",
+        "WLugNuts",
+        ,
+      ],
+      interiorAccessories: [
+        "ASFloorMat",
+        "CNet",
+        "CHWFloorMat",
+        "CargoTray",
+        "CargoTrayDiv",
+        "DoorSillProt",
+        "DoorSillIllum",
+        "RPWShade",
+        "SeatBackProt",
+      ],
+      electronicAccessories: ["EngBlockHeat"],
+    },
     TypeR: {
       powertrain: ["Turbo"], // Assuming only Turbo is available for Type R
       exteriorColor: ["Red", "Black"],
@@ -409,7 +493,7 @@ const Dependencies = {
       exteriorColor: ["Red", "Black"],
       packages: ["ASP1", "ASP2", "HPD", "PP3"],
       exteriorAccessories: [
-        "BIKE",
+        "Bike",
         "BSM",
         "DLS",
         "SGS",
@@ -459,17 +543,40 @@ const Dependencies = {
         exteriorAccessories: ["SGuardSet", "WheelLocksC"],
         interiorAccessories: ["TTray"],
       },
+      ASPack1Hatch: {
+        exteriorAccessories: ["SGuardSet"],
+        interiorAccessories: ["ASFloorMat", "CargoTray"],
+      },
+      ASPack2Hatch: {
+        exteriorAccessories: ["WheelLocksC"],
+        interiorAccessories: ["ASFloorMat", "CargoTray"],
+      },
+      HPDHatch: {
+        exteriorAccessories: ["EmblemHPD", "TailGate", "UBodySpoilerFront"],
+      },
+
+      PPHatch: {
+        exteriorAccessories: ["SGuardSet", "WheelLocksC"],
+        interiorAccessories: ["CargoTray"],
+      },
     },
+
     rivals: {
       ASPack1: {
         packages: ["ASPack2", "HPD", "PP"],
-        exteriorAccessories: ["UBodySpoilerRear"],
       },
       ASPack2: { packages: ["ASPack1", "PP"] },
       HPD: { packages: ["ASPack1", "PP"], exteriorAccessories: ["SGuardSet"] },
       PP: {
         packages: ["ASPack1", "ASPack2", "HPD"],
-        exteriorAccessories: ["UBodySpoilerRear"],
+      },
+      ASPack1Hatch: {
+        packages: ["ASPack2Hatch", "PPHatch"],
+      },
+      ASPack2Hatch: { packages: ["ASPack1Hatch", "PPHatch"] },
+
+      PPHatch: {
+        packages: ["ASPack1Hatch", "ASPack2Hatch"],
       },
     },
   },
@@ -493,16 +600,41 @@ const Dependencies = {
       EAC5: {
         exteriorAccessories: ["EAC4"],
       },
+      Bike: { exteriorAccessories: ["SkiSnow", "Surf"] },
+      Kayak: { exteriorAccessories: ["SkiSnow", "Surf"] },
+      RBoxMid: { exteriorAccessories: ["SkiSnow", "Surf"] },
+      RBoxShort: { exteriorAccessories: ["SkiSnow", "Surf"] },
+      RoofRack: { exteriorAccessories: ["SkiSnow", "Surf"] },
+      SkiSnow: {
+        exteriorAccessories: [
+          "RoofRack",
+          "Bike",
+          "Kayak",
+          "RBoxMid",
+          "RBoxShort",
+        ],
+      },
+      Surf: {
+        exteriorAccessories: [
+          "RoofRack",
+          "Bike",
+          "Kayak",
+          "RBoxMid",
+          "RBoxShort",
+        ],
+      },
     },
     parent: {
-      RR: {
-        exteriorAccessories: ["BIKE", "KAY"],
+      RoofRack: {
+        exteriorAccessories: ["Bike", "Kayak", "RBoxMid", "RBoxShort"],
         interiorAccessories: ["IAC6"],
       },
     },
     child: {
-      BIKE: { exteriorAccessories: ["RR"], interiorAccessories: ["IAC5"] },
-      KAY: { exteriorAccessories: ["RR"] },
+      Bike: { exteriorAccessories: ["RoofRack"] },
+      Kayak: { exteriorAccessories: ["RoofRack"] },
+      RBoxMid: { exteriorAccessories: ["RoofRack"] },
+      RBoxShort: { exteriorAccessories: ["RoofRack"] },
     },
   },
   //interiorAccessories
@@ -515,7 +647,7 @@ const Dependencies = {
       IAC4: { exteriorAccessories: ["EAC4"] },
     },
     parent: {
-      IAC5: { exteriorAccessories: ["BIKE"] },
+      IAC5: { exteriorAccessories: ["Bike"] },
     },
     child: { IAC6: { exteriorAccessories: ["RR"] } },
   },
@@ -534,6 +666,7 @@ const InitialOptionsAvailable = {
       { id: "Sport", name: "Sedan Sport", price: 25050 },
       { id: "EX", name: "Sedan EX", price: 26950 },
       { id: "Touring", name: "Sedan Touring", price: 30550 },
+      { id: "HatchbackLX", name: "Hatchback LX", price: 24950 },
       { id: "TypeR", name: "Type R", price: 42895 },
       { id: "HBEXL", name: "Hatchback EX-L", price: 28650 },
       // ... other trims
@@ -648,15 +781,15 @@ export function handlePopupConfirm(optionsAvailable, optionsSelected, popup) {
             id: id,
             isChecked: false,
           };
-          let results = handleOptionChanged(
-            rival.rivalCategory,
-            rivalOption,
-            newOptionsAvailable,
-            newOptionsSelected,
-            newPopup
-          );
-          newOptionsAvailable = results.optionsAvailable;
-          newOptionsSelected = results.optionsSelected;
+          // Remove rivals from newOptionsSelected
+          newOptionsSelected = produce(newOptionsSelected, (draft) => {
+            removeFromOptionsSelected(
+              rival.rivalCategory,
+              rivalOption,
+              optionsAvailable,
+              draft
+            );
+          });
           newPopup = newPopup;
         });
       });
@@ -667,13 +800,16 @@ export function handlePopupConfirm(optionsAvailable, optionsSelected, popup) {
         id: popup.details.select.selectedOptionID,
         isChecked: true,
       };
-      return handleOptionChanged(
-        selectedCategory,
-        selectedOption,
-        newOptionsAvailable,
-        newOptionsSelected,
-        newPopup
-      );
+      // Add the new option to selected options
+      newOptionsSelected = produce(newOptionsSelected, (draft) => {
+        addToOptionsSelected(selectedCategory, selectedOption, draft);
+      });
+
+      return {
+        optionsAvailable: newOptionsAvailable,
+        optionsSelected: newOptionsSelected,
+        popup: newPopup,
+      };
 
     case "packageComponentUnselected":
       return handlePackages(
@@ -974,7 +1110,7 @@ function handlePackages(
 }
 
 //.....................
-
+let accessoryCounter = 0;
 function handleExteriorAccessories(
   category,
   selection,
@@ -982,6 +1118,9 @@ function handleExteriorAccessories(
   optionsSelected,
   popup
 ) {
+  // Increment the counter each time the function runs
+  accessoryCounter++;
+
   const newOptionsAvailable = produce(optionsAvailable, (draft) => {}); // Options available unchanged
   let newOptionsSelected = produce(optionsSelected, (draft) => {}); // Keep optionsSelected unchanged for now
   let newPopup = produce(popup, (draft) => {}); // Default to unchanged, modify conditionally
@@ -989,7 +1128,6 @@ function handleExteriorAccessories(
   let rivalExist = Boolean(Dependencies[category].rivals?.[selection.id]);
   let parentExist = Boolean(Dependencies[category].child?.[selection.id]);
   let childExist = Boolean(Dependencies[category].parent?.[selection.id]);
-
   let rivalStatus = { selected: false, details: {} };
   let parentStatus = { selected: false, details: {} };
   let childStatus = { selected: false, details: {} };
@@ -1012,15 +1150,21 @@ function handleExteriorAccessories(
       newPopup = produce(popup, (draft) => {
         rivalPopupMessage(category, selection, draft, rivalStatus.details);
       });
+      console.log(`Counter: ${accessoryCounter}, rivalLoop:`, selection);
     } else {
       if (parentExist && !parentStatus.selected) {
         newPopup = produce(popup, (draft) => {
           parentPopupMessage(category, selection, draft, parentStatus.details);
         });
+        console.log(`Counter: ${accessoryCounter}, parentLoop:`, selection);
       } else {
         newOptionsSelected = produce(optionsSelected, (draft) => {
           addToOptionsSelected(category, selection, draft);
         });
+        console.log(
+          `Counter: ${accessoryCounter}, DefaultSelect Loop:`,
+          selection
+        );
       }
     }
   } else {
@@ -1028,6 +1172,7 @@ function handleExteriorAccessories(
     if (
       checkIfComponentOfSelectedPackage(category, selection, optionsSelected)
     ) {
+      console.log(`Counter: ${accessoryCounter}, ComponentLoop:`, selection);
       //Retrieve the selection object from  relevant optionsSelected array
       let selectionWithPackage = optionsSelected[category].choices.find(
         (c) => c.id === selection.id
@@ -1039,10 +1184,15 @@ function handleExteriorAccessories(
       });
     } else {
       if (childExist && childStatus.selected) {
+        console.log(`Counter: ${accessoryCounter}, ChildLoop:`, selection);
         newPopup = produce(popup, (draft) => {
           childPopupMessage(category, selection, draft, childStatus.details);
         });
       } else {
+        console.log(
+          `Counter: ${accessoryCounter}, DefaulUnselectLoop:`,
+          selection
+        );
         //If unselected option is not part of selected 'package' or a parent of a selected 'child' option, then remove from optionsSelected
         newOptionsSelected = produce(optionsSelected, (draft) => {
           removeFromOptionsSelected(
@@ -1053,6 +1203,86 @@ function handleExteriorAccessories(
           );
         });
       }
+    }
+  }
+
+  return {
+    optionsAvailable: newOptionsAvailable,
+    optionsSelected: newOptionsSelected,
+    popup: newPopup,
+  };
+}
+
+function handleExteriorAccessories3(
+  category,
+  selection,
+  optionsAvailable,
+  optionsSelected,
+  popup
+) {
+  const newOptionsAvailable = produce(optionsAvailable, (draft) => {}); // Options available unchanged
+  let newOptionsSelected = produce(optionsSelected, (draft) => {}); // Keep optionsSelected unchanged for now
+  let newPopup = produce(popup, (draft) => {}); // Default to unchanged, modify conditionally
+
+  let rivalExist = Boolean(Dependencies[category].rivals?.[selection.id]);
+  let parentExist = Boolean(Dependencies[category].child?.[selection.id]);
+  let childExist = Boolean(Dependencies[category].parent?.[selection.id]);
+  let rivalStatus = { selected: false, details: {} };
+  let parentStatus = { selected: false, details: {} };
+  let childStatus = { selected: false, details: {} };
+
+  // Conditionally update statuses
+  if (rivalExist) {
+    rivalStatus = checkIfRivalSelected(category, selection, optionsSelected);
+  }
+  if (parentExist) {
+    parentStatus = checkIfParentSelected(category, selection, optionsSelected);
+  }
+
+  if (childExist) {
+    childStatus = checkIfChildSelected(category, selection, optionsSelected);
+  }
+
+  // Handle selection.isChecked
+  if (selection.isChecked) {
+    if (rivalExist && rivalStatus.selected && !parentExist) {
+      newPopup = produce(popup, (draft) => {
+        rivalPopupMessage(category, selection, draft, rivalStatus.details);
+      });
+      return {
+        optionsAvailable: newOptionsAvailable,
+        optionsSelected: newOptionsSelected,
+        popup: newPopup,
+      };
+    } else if (rivalExist && !parentExist && !childExist) {
+      // Specific case handling
+    } else if (rivalExist && parentExist && !childExist) {
+      // Specific case handling
+    } else if (rivalExist && !parentExist && childExist) {
+      // Specific case handling
+    } else {
+      // Default case handling for selection.isChecked
+      newOptionsSelected = produce(optionsSelected, (draft) => {
+        addToOptionsSelected(category, selection, draft);
+      });
+    }
+  } else {
+    // Handle !selection.isChecked
+    if (!rivalExist && !parentExist && !childExist) {
+      newOptionsSelected = produce(optionsSelected, (draft) => {
+        removeFromOptionsSelected(category, selection, optionsAvailable, draft);
+      });
+    } else if (rivalExist && !parentExist && !childExist) {
+      // Specific case handling
+    } else if (rivalExist && parentExist && !childExist) {
+      // Specific case handling
+    } else if (rivalExist && !parentExist && childExist) {
+      // Specific case handling
+    } else {
+      // Default case handling for !selection.isChecked
+      newOptionsSelected = produce(optionsSelected, (draft) => {
+        removeFromOptionsSelected(category, selection, optionsAvailable, draft);
+      });
     }
   }
 
@@ -1087,7 +1317,6 @@ function handleInteriorAccessories(
   // Conditionally update statuses
   if (rivalExist) {
     rivalStatus = checkIfRivalSelected(category, selection, optionsSelected);
-    console.log(rivalStatus);
   }
   if (parentExist) {
     parentStatus = checkIfParentSelected(category, selection, optionsSelected);
@@ -1218,7 +1447,7 @@ function changeOptionsAvailable(category, selection, draft) {
     );
     // Optionally, handle these errors more gracefully
   }
-  console.log(selectedOptions);
+
   // Replace the choices array with the new array of selectedOption objects
   draft[category].choices = selectedOptions;
 }
@@ -1257,6 +1486,7 @@ function removeFromOptionsSelected(
   optionsAvailable,
   draft
 ) {
+  console.log(selection);
   if (draft[category]) {
     if (optionsAvailable[category].type === "Dropdown") {
       // For Dropdown, clear the choices array
@@ -1541,48 +1771,6 @@ function checkIfComponentOfSelectedPackage(
     selectionIsComponent = true;
   }
   return selectionIsComponent;
-}
-
-function rivalPopupMessage2(category, selection, draft, details) {
-  let selectedOption = AllOptions[category].choices.find(
-    (choice) => choice.id === selection.id
-  );
-
-  // Initialize the message with the selected option part
-  let message = `Selecting ${selectedOption.name} will unselect `;
-
-  // Initialize an empty array to hold the options to deselect
-  let optionsToDeselect = [];
-
-  // Iterate over each category in the deselect array of actionDetails
-  details.unselect.rivalOptionIDs.forEach((id) => {
-    // Get the category from AllOptions that matches the category in actionDetails
-    const rivalOption = AllOptions[details.unselect.rivalCategory].choices.find(
-      (option) => option.id === id
-    );
-
-    if (rivalOption) {
-      optionsToDeselect.push(rivalOption);
-    }
-  });
-
-  console.log(details);
-  if (optionsToDeselect.length > 0) {
-    const unselectionNames = optionsToDeselect
-      .map((option) => option.name)
-      .join(", ");
-    const lastCommaIndex = unselectionNames.lastIndexOf(", ");
-    const finalUnselectionNames =
-      lastCommaIndex > 0
-        ? unselectionNames.substring(0, lastCommaIndex) +
-          " and" +
-          unselectionNames.substring(lastCommaIndex + 1)
-        : unselectionNames;
-    message += finalUnselectionNames;
-  }
-  draft.show = true;
-  draft.message = message;
-  draft.details = details; // Add action details to the popup
 }
 
 function rivalPopupMessage(category, selection, draft, details) {
