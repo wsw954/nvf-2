@@ -95,7 +95,10 @@ const IndexPage = () => {
                   id={key}
                   value={selectedOptionID} // Set the selected option here
                   onChange={(event) =>
-                    handleOptionChange(key, { id: event.target.value })
+                    handleOptionChange(key, {
+                      id: event.target.value,
+                      isChecked: true, //Mark all selected options as checked
+                    })
                   }
                   options={option.choices}
                 />
@@ -113,6 +116,7 @@ const IndexPage = () => {
               <div key={key}>
                 <label>{option.displayName}:</label>
                 <CheckBoxGroup
+                  category={key}
                   choices={option.choices.map((choice) => ({
                     ...choice,
                     checked: selectedCheckBoxes.includes(choice.id), // Set checked status

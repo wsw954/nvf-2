@@ -1,7 +1,7 @@
 // components/CheckBoxGroup.js
-import React from "react";
+import React, { useEffect } from "react";
 
-const CheckBoxGroup = ({ choices, onChange }) => {
+const CheckBoxGroup = ({ category, choices, onChange }) => {
   const handleChange = (event) => {
     onChange(event.target.id, event.target.checked);
   };
@@ -9,7 +9,7 @@ const CheckBoxGroup = ({ choices, onChange }) => {
   return (
     <div>
       {choices.map((choice) => (
-        <div key={choice.id}>
+        <div key={`${category}-${choice.id}`}>
           <input
             type="checkbox"
             id={choice.id}

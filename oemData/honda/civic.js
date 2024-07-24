@@ -115,6 +115,7 @@ const AllOptions = {
       },
       { id: "HPDHatch", name: "HPD Package", price: 799 },
       { id: "PPHatch", name: "Protection Package ", price: 295 },
+      { id: "TestPackage1", name: "Test Package1", price: 500 },
     ],
   },
   exteriorAccessories: {
@@ -154,6 +155,9 @@ const AllOptions = {
       { id: "Surf", name: "Surf/Paddleboard Attachment", price: 173 },
       { id: "SGuardSet", name: "Splash Guard Set", price: 116 },
       { id: "TailGate", name: "Tail Gate Spoiler-HPD ", price: 407 },
+      { id: "TestC1", name: "Test Comp 1", price: 100 },
+      { id: "TestC2", name: "Test Comp 2", price: 100 },
+      { id: "TestRO1", name: "Test Rival Option 1", price: 100 },
       {
         id: "UBodySpoilerFront",
         name: "Underbody Spoiler HPD-Front",
@@ -201,7 +205,6 @@ const AllOptions = {
       { id: "FirstAid", name: "First Aid Kit", price: 35 },
       { id: "DoorSillProt", name: "Door Sill Protection Film", price: 111 },
       { id: "DoorSillIllum", name: "Door Sill Illumination", price: 329 },
-      { id: "FirstAid", name: "First Aid Kit", price: 35 },
       { id: "IDoorSill", name: "Illuminated Door Sill Trim", price: 329 },
       { id: "RPWShade", name: "Rear Passenger Window Shades", price: 192 },
       { id: "SeatBackProt", name: "Seat Back Protectors", price: 109 },
@@ -442,7 +445,13 @@ const Dependencies = {
         default: ["BlackIC"],
       },
       wheels: ["standard16Alloy"],
-      packages: ["ASPack1Hatch", "ASPack2Hatch", "HPDHatch", "PPHatch"],
+      packages: [
+        "ASPack1Hatch",
+        "ASPack2Hatch",
+        "HPDHatch",
+        "PPHatch",
+        "TestPackage1",
+      ],
       exteriorAccessories: [
         "Bike",
         "BSMoulding",
@@ -461,6 +470,10 @@ const Dependencies = {
         "Surf",
         "SGuardSet",
         "TailGate",
+        "TestC1",
+        "TestC2",
+        "TestRO1",
+        "TestRO1",
         "UBodySpoilerFront",
         "ValveStem",
         "WheelLocksB",
@@ -559,6 +572,10 @@ const Dependencies = {
         exteriorAccessories: ["SGuardSet", "WheelLocksC"],
         interiorAccessories: ["CargoTray"],
       },
+      TestPackage1: {
+        exteriorAccessories: ["TestC1", "TestC2"],
+        interiorAccessories: ["ASFloorMat"],
+      },
     },
 
     rivals: {
@@ -577,6 +594,9 @@ const Dependencies = {
 
       PPHatch: {
         packages: ["ASPack1Hatch", "ASPack2Hatch"],
+      },
+      TestPackage1: {
+        exteriorAccessories: ["TestRO1"],
       },
     },
   },
@@ -600,11 +620,12 @@ const Dependencies = {
       EAC5: {
         exteriorAccessories: ["EAC4"],
       },
+      //Note: RoofRack is a also a 'parent' option
+      RoofRack: { exteriorAccessories: ["SkiSnow", "Surf"] },
       Bike: { exteriorAccessories: ["SkiSnow", "Surf"] },
       Kayak: { exteriorAccessories: ["SkiSnow", "Surf"] },
       RBoxMid: { exteriorAccessories: ["SkiSnow", "Surf"] },
       RBoxShort: { exteriorAccessories: ["SkiSnow", "Surf"] },
-      RoofRack: { exteriorAccessories: ["SkiSnow", "Surf"] },
       SkiSnow: {
         exteriorAccessories: [
           "RoofRack",
@@ -622,6 +643,10 @@ const Dependencies = {
           "RBoxMid",
           "RBoxShort",
         ],
+      },
+      TestRO1: {
+        packages: ["TestPackage1"],
+        exteriorAccessories: ["TestC1", "TestC2"],
       },
     },
     parent: {
@@ -675,7 +700,7 @@ const InitialOptionsAvailable = {
 };
 
 //Main option change function
-export function handleOptionChanged(
+export function handleOptionChanged1(
   category,
   selection,
   optionsAvailable,
@@ -728,7 +753,7 @@ export function handleOptionChanged(
         popup
       );
     case "packages":
-      return handlePackages(
+      return handleExteriorAccessories(
         category,
         selection,
         optionsAvailable,
@@ -752,6 +777,100 @@ export function handleOptionChanged(
         popup
       );
     default:
+      return {
+        optionsAvailable: newOptionsAvailable,
+        optionsSelected: newOptionsSelected,
+        popup: newPopup,
+      };
+  }
+}
+export function handleOptionChanged(
+  category,
+  selection,
+  optionsAvailable,
+  optionsSelected,
+  popup
+) {
+  let newPopup = produce(popup, (draft) => {});
+  let newOptionsAvailable = produce(optionsAvailable, (draft) => {}); // Keep optionsAvailable unchanged for now
+  let newOptionsSelected = produce(optionsSelected, (draft) => {}); // Keep optionsSelected unchanged for now
+  switch (category) {
+    case "trim":
+      return handleTrim(
+        category,
+        selection,
+        optionsAvailable,
+        optionsSelected,
+        popup
+      );
+
+    default:
+      let exceptionObject = checkOptionDependency(
+        category,
+        selection,
+        optionsSelected
+      );
+
+      if (exceptionObject.status) {
+        switch (exceptionObject.type) {
+          case "rivalSelected":
+            // code block
+            newOptionsSelected = produce(optionsSelected, (draft) => {
+              addToOptionsSelected(category, selection, draft);
+            });
+
+          case "packageSelected":
+            newOptionsSelected = produce(optionsSelected, (draft) => {
+              // First, add the main category and selection
+              addToOptionsSelected(category, selection, draft);
+
+              // Then, iterate over each component in the exceptionObject
+              Object.entries(exceptionObject.components).forEach(
+                ([compCategory, items]) => {
+                  items.forEach((itemId) => {
+                    const compSelection = { id: itemId, isChecked: true };
+                    addToOptionsSelected(compCategory, compSelection, draft);
+                  });
+                }
+              );
+            });
+            break;
+          case "childSelected":
+            newOptionsSelected = produce(optionsSelected, (draft) => {
+              addToOptionsSelected(category, selection, draft);
+            });
+            break;
+          case "parentUnselected":
+            newOptionsSelected = produce(optionsSelected, (draft) => {
+              addToOptionsSelected(category, selection, draft);
+            });
+          case "childAndRivalSelected":
+            newOptionsSelected = produce(optionsSelected, (draft) => {
+              addToOptionsSelected(category, selection, draft);
+            });
+            break;
+          default:
+            newOptionsSelected = produce(optionsSelected, (draft) => {
+              addToOptionsSelected(category, selection, draft);
+            });
+        }
+      } else {
+        if (selection.isChecked) {
+          newOptionsSelected = produce(optionsSelected, (draft) => {
+            addToOptionsSelected(category, selection, draft);
+          });
+        } else {
+          newOptionsSelected = produce(optionsSelected, (draft) => {
+            removeFromOptionsSelected(
+              category,
+              selection,
+
+              optionsAvailable,
+              draft
+            );
+          });
+        }
+      }
       return {
         optionsAvailable: newOptionsAvailable,
         optionsSelected: newOptionsSelected,
@@ -883,6 +1002,7 @@ function handleTrim(
 ) {
   // Reset previously selected options to ensure a clean state
   let resetOptionsSelected = {};
+  //Add only the actual trim selected
   let newOptionsSelected = produce(resetOptionsSelected, (draft) => {
     addToOptionsSelected(category, selection, draft);
   });
@@ -1111,7 +1231,7 @@ function handlePackages(
 
 //.....................
 let accessoryCounter = 0;
-function handleExteriorAccessories(
+function handleExteriorAccessories1(
   category,
   selection,
   optionsAvailable,
@@ -1150,21 +1270,15 @@ function handleExteriorAccessories(
       newPopup = produce(popup, (draft) => {
         rivalPopupMessage(category, selection, draft, rivalStatus.details);
       });
-      console.log(`Counter: ${accessoryCounter}, rivalLoop:`, selection);
     } else {
       if (parentExist && !parentStatus.selected) {
         newPopup = produce(popup, (draft) => {
           parentPopupMessage(category, selection, draft, parentStatus.details);
         });
-        console.log(`Counter: ${accessoryCounter}, parentLoop:`, selection);
       } else {
         newOptionsSelected = produce(optionsSelected, (draft) => {
           addToOptionsSelected(category, selection, draft);
         });
-        console.log(
-          `Counter: ${accessoryCounter}, DefaultSelect Loop:`,
-          selection
-        );
       }
     }
   } else {
@@ -1172,7 +1286,6 @@ function handleExteriorAccessories(
     if (
       checkIfComponentOfSelectedPackage(category, selection, optionsSelected)
     ) {
-      console.log(`Counter: ${accessoryCounter}, ComponentLoop:`, selection);
       //Retrieve the selection object from  relevant optionsSelected array
       let selectionWithPackage = optionsSelected[category].choices.find(
         (c) => c.id === selection.id
@@ -1184,15 +1297,10 @@ function handleExteriorAccessories(
       });
     } else {
       if (childExist && childStatus.selected) {
-        console.log(`Counter: ${accessoryCounter}, ChildLoop:`, selection);
         newPopup = produce(popup, (draft) => {
           childPopupMessage(category, selection, draft, childStatus.details);
         });
       } else {
-        console.log(
-          `Counter: ${accessoryCounter}, DefaulUnselectLoop:`,
-          selection
-        );
         //If unselected option is not part of selected 'package' or a parent of a selected 'child' option, then remove from optionsSelected
         newOptionsSelected = produce(optionsSelected, (draft) => {
           removeFromOptionsSelected(
@@ -1213,7 +1321,70 @@ function handleExteriorAccessories(
   };
 }
 
-function handleExteriorAccessories3(
+function handleExteriorAccessories(
+  category,
+  selection,
+  optionsAvailable,
+  optionsSelected,
+  popup
+) {
+  const newOptionsAvailable = produce(optionsAvailable, (draft) => {}); // Options available unchanged
+  let newOptionsSelected = produce(optionsSelected, (draft) => {}); // Keep optionsSelected unchanged for now
+  let newPopup = produce(popup, (draft) => {}); // Default to unchanged, modify conditionally
+
+  let exceptionObject = checkOptionDependency(
+    category,
+    selection,
+    optionsSelected
+  );
+
+  if (exceptionObject.status) {
+    switch (exceptionObject.type) {
+      case "noExceptions":
+        break;
+      case "packageSelected":
+        console.log("Must add components for the package selected");
+        newOptionsSelected = produce(optionsSelected, (draft) => {
+          addToOptionsSelected(category, selection, draft);
+        });
+
+        break;
+      case "rivalSelectedOnly":
+        // code block
+
+        break;
+      case "childSelected":
+        // code block
+        break;
+      case "parentUnselected":
+        // code block
+        break;
+      case "childAndRivalSelected":
+        // code block
+        break;
+      default:
+      // code block
+    }
+  } else {
+    if (selection.isChecked) {
+      newOptionsSelected = produce(optionsSelected, (draft) => {
+        addToOptionsSelected(category, selection, draft);
+      });
+    } else {
+      newOptionsSelected = produce(optionsSelected, (draft) => {
+        removeFromOptionsSelected(category, selection, optionsAvailable, draft);
+      });
+    }
+  }
+
+  return {
+    optionsAvailable: newOptionsAvailable,
+    optionsSelected: newOptionsSelected,
+    popup: newPopup,
+  };
+}
+
+function handleExteriorAccessories2(
   category,
   selection,
   optionsAvailable,
@@ -1245,7 +1416,7 @@ function handleExteriorAccessories3(
 
   // Handle selection.isChecked
   if (selection.isChecked) {
-    if (rivalExist && rivalStatus.selected && !parentExist) {
+    if (rivalExist && rivalStatus.selected && !parentExist && !childExist) {
       newPopup = produce(popup, (draft) => {
         rivalPopupMessage(category, selection, draft, rivalStatus.details);
       });
@@ -1254,8 +1425,7 @@ function handleExteriorAccessories3(
         optionsSelected: newOptionsSelected,
         popup: newPopup,
       };
-    } else if (rivalExist && !parentExist && !childExist) {
-      // Specific case handling
+    } else if (rivalExist && parentExist && !parentStatus.selected) {
     } else if (rivalExist && parentExist && !childExist) {
       // Specific case handling
     } else if (rivalExist && !parentExist && childExist) {
@@ -1486,7 +1656,6 @@ function removeFromOptionsSelected(
   optionsAvailable,
   draft
 ) {
-  console.log(selection);
   if (draft[category]) {
     if (optionsAvailable[category].type === "Dropdown") {
       // For Dropdown, clear the choices array
@@ -1614,6 +1783,153 @@ function resetOptionsAvailableWithPackageComponents(selection, draft) {
   }
 }
 
+//Scenario object used to evaluate the current form state
+const scenarios = {
+  noDependency: (state) =>
+    //No dependencies that make an exception
+    (state.rivalExist &&
+      !state.rivalStatus.selected &&
+      !state.parentExist &&
+      !state.childExist &&
+      !state.componentsExist) ||
+    (!state.rivalExist &&
+      !state.parentExist &&
+      !state.childExist &&
+      !state.componentsExist),
+  packageSelected: (state) =>
+    (state.rivalExist &&
+      !state.rivalStatus.selected &&
+      state.componentsExist &&
+      !state.parentExist &&
+      !state.childExist) ||
+    (!state.rivalExist &&
+      state.componentsExist &&
+      !state.parentExist &&
+      !state.childExist),
+  scenario2: (state) => !state.rivalExist && state.componentsExist,
+  scenario3: (state) => state.parentExist && state.parentStatus.selected,
+  scenario4: (state) => state.childExist && state.childStatus.selected,
+  // Add more scenarios as needed
+};
+
+//Helper function to retrieve relevant scenario
+function evaluateScenarios(state) {
+  for (const scenario in scenarios) {
+    if (scenarios[scenario](state)) {
+      return scenario;
+    }
+  }
+  return null;
+}
+
+function checkOptionDependency(category, selection, optionsSelected) {
+  let exceptionObject = {
+    status: false,
+    type: "NoExceptions",
+  };
+
+  let rivalExist = Boolean(Dependencies[category]?.rivals?.[selection.id]);
+  let parentExist = Boolean(Dependencies[category]?.child?.[selection.id]);
+  let childExist = Boolean(Dependencies[category]?.parent?.[selection.id]);
+  let componentsExist = Boolean(
+    Dependencies[category]?.components?.[selection.id]
+  );
+
+  let rivalStatus = { selected: false, details: {} };
+  let parentStatus = { selected: false, details: {} };
+  let childStatus = { selected: false, details: {} };
+  let packageStatus = { selected: false, details: {} };
+
+  if (rivalExist) {
+    rivalStatus = getRivalStatus(category, selection, optionsSelected);
+  }
+  if (parentExist) {
+    parentStatus = checkIfParentSelected(category, selection, optionsSelected);
+  }
+  if (childExist) {
+    childStatus = checkIfChildSelected(category, selection, optionsSelected);
+  }
+
+  const state = {
+    rivalExist,
+    rivalStatus,
+    parentExist,
+    parentStatus,
+    childExist,
+    childStatus,
+    componentsExist,
+    packageStatus,
+  };
+
+  const activeScenario = evaluateScenarios(state);
+  if (selection.isChecked) {
+    switch (activeScenario) {
+      case "noDependency":
+        return exceptionObject;
+
+      case "packageSelected":
+        // Add logic for scenario1 when selection is checked
+        exceptionObject.status = true;
+        exceptionObject.type = "packageSelected";
+
+        let componentsObject = getComponents(category, selection);
+        exceptionObject.components = componentsObject;
+        return exceptionObject;
+      case "scenario2":
+        // Add logic for scenario2 when selection is checked
+        exceptionObject.status = true;
+        exceptionObject.type = "Scenario2";
+
+        return exceptionObject;
+      case "scenario3":
+        // Add logic for scenario3 when selection is checked
+        exceptionObject.status = true;
+        exceptionObject.type = "Scenario3";
+
+        return exceptionObject;
+      case "scenario4":
+        // Add logic for scenario4 when selection is checked
+        exceptionObject.status = true;
+        exceptionObject.type = "Scenario4";
+
+        return exceptionObject;
+      default:
+        // Default logic when no scenario matches
+        return exceptionObject;
+    }
+  } else {
+    switch (activeScenario) {
+      case "scenario1":
+        // Add logic for scenario1 when selection is not checked
+        exceptionObject.status = true;
+        exceptionObject.type = "Scenario1";
+
+        return exceptionObject;
+      case "scenario2":
+        // Add logic for scenario2 when selection is not checked
+        exceptionObject.status = true;
+        exceptionObject.type = "Scenario2";
+
+        return exceptionObject;
+      case "scenario3":
+        // Add logic for scenario3 when selection is not checked
+        exceptionObject.status = true;
+        exceptionObject.type = "Scenario3";
+
+        return exceptionObject;
+      case "scenario4":
+        // Add logic for scenario4 when selection is not checked
+        exceptionObject.status = true;
+        exceptionObject.type = "Scenario4";
+
+        return exceptionObject;
+      default:
+        // Default logic when no scenario matches
+        return exceptionObject;
+    }
+  }
+}
+
 function checkIfRivalSelected(category, selection, optionsSelected) {
   let rivalStatus = {
     selected: false,
@@ -1661,6 +1977,48 @@ function checkIfRivalSelected(category, selection, optionsSelected) {
     }
   }
   return rivalStatus;
+}
+
+function getRivalStatus(category, selection, optionsSelected) {
+  let rivalStatus = {
+    selected: false,
+    optionsToAdd: [
+      {
+        category: category,
+        selection: selection,
+      },
+    ],
+    optionsToRemove: [],
+  };
+
+  let rivalObject = Dependencies[category].rivals[selection.id];
+
+  for (let unselectCategory in rivalObject) {
+    let rivalIDs = rivalObject[unselectCategory]; // Ensure this is an array
+    if (
+      optionsSelected[unselectCategory] &&
+      optionsSelected[unselectCategory].choices
+    ) {
+      optionsSelected[unselectCategory].choices.forEach((choice) => {
+        if (rivalIDs && rivalIDs.includes(choice.id)) {
+          rivalStatus.selected = true;
+          // Add the matching choice to optionsToRemove
+          rivalStatus.optionsToRemove.push({
+            category: unselectCategory,
+            selection: choice,
+          });
+        }
+      });
+    }
+  }
+
+  return rivalStatus;
+}
+
+function getComponents(category, selection) {
+  let componentArray = Dependencies[category].components[selection.id];
+  // console.log(componentArray);
+  return componentArray;
 }
 
 function checkIfParentSelected(category, selection, optionsSelected) {
@@ -1770,6 +2128,7 @@ function checkIfComponentOfSelectedPackage(
   if (choice && choice.hasOwnProperty("component")) {
     selectionIsComponent = true;
   }
+  console.log("Line 2194- checking if component of selectedPackage");
   return selectionIsComponent;
 }
 
