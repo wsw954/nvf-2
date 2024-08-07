@@ -1,25 +1,35 @@
 // components/Dropdown.js
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 
 const formatPlaceholder = (id) => {
-  // Split the ID based on camel case, capitalize each word, and join with spaces
   return id
-    .replace(/([A-Z])/g, " $1") // Insert space before capital letters
-    .split(" ") // Split into words
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()) // Capitalize each word
+    .replace(/([A-Z])/g, " $1")
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join(" ");
 };
 
 const Dropdown = ({ id, value, onChange, options, disabled }) => {
+  const [prevValue, setPrevValue] = useState(null);
+
   useEffect(() => {
-    // If there's only one option and it's not already selected, automatically select it
     if (options.length === 1 && value !== options[0].id) {
-      onChange({ target: { value: options[0].id } });
+      setPrevValue(value);
+      onChange(
+        { target: { value: options[0].id } },
+        { id: options[0].id, isChecked: true, prevValue: value }
+      );
     }
   }, [options, value, onChange]);
 
+  const handleChange = (event) => {
+    const newValue = event.target.value;
+    onChange(event, { id: newValue, isChecked: true, prevValue: prevValue });
+    setPrevValue(newValue);
+  };
+
   return (
-    <select id={id} value={value} onChange={onChange} disabled={disabled}>
+    <select id={id} value={value} onChange={handleChange} disabled={disabled}>
       {value ? null : <option value="">Select {formatPlaceholder(id)}</option>}
       {options.map((option) => (
         <option key={option.id} value={option.id}>

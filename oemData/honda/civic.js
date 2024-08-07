@@ -860,6 +860,7 @@ export function handleOptionChanged(
             addToOptionsSelected(category, selection, draft);
           });
         } else {
+          console.log("Option unchecked has no Exceptions");
           newOptionsSelected = produce(optionsSelected, (draft) => {
             removeFromOptionsSelected(
               category,

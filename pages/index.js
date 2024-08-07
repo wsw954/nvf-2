@@ -30,12 +30,12 @@ const IndexPage = () => {
     name: item.name,
   }));
 
-  const handleMakeChange = (event) => {
-    dispatch(selectMake(event.target.value));
+  const handleMakeChange = (category, selection) => {
+    dispatch(selectMake(selection.id));
   };
 
-  const handleModelChange = (event) => {
-    const model = event.target.value;
+  const handleModelChange = (category, selection) => {
+    const model = selection.id;
     dispatch(selectModel(model));
     if (selectedMake && model) {
       dispatch(fetchModelData({ make: selectedMake, model }));
@@ -94,11 +94,8 @@ const IndexPage = () => {
                 <Dropdown
                   id={key}
                   value={selectedOptionID} // Set the selected option here
-                  onChange={(event) =>
-                    handleOptionChange(key, {
-                      id: event.target.value,
-                      isChecked: true, //Mark all selected options as checked
-                    })
+                  onChange={(event, selection) =>
+                    handleOptionChange(key, selection)
                   }
                   options={option.choices}
                 />
@@ -145,7 +142,12 @@ const IndexPage = () => {
           <Dropdown
             id="make"
             value={selectedMake}
-            onChange={handleMakeChange}
+            onChange={(event) =>
+              handleMakeChange("make", {
+                id: event.target.value,
+                isChecked: true, //Mark all selected options as checked
+              })
+            }
             options={makeOptions}
           />
         </div>
@@ -155,7 +157,12 @@ const IndexPage = () => {
           <Dropdown
             id="model"
             value={selectedModel} // Adjust as needed
-            onChange={handleModelChange}
+            onChange={(event) =>
+              handleModelChange("model", {
+                id: event.target.value,
+                isChecked: true, //Mark all selected options as checked
+              })
+            }
             options={models}
             disabled={!selectedMake}
           />
