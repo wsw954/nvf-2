@@ -530,6 +530,15 @@ const Dependencies = {
     },
     // ... dependencies for other trims
   },
+  //exterior color dependencies
+  exteriorColor: {
+    unlock: {
+      PlatinumEC: {
+        preCursor: { trim: ["EX"] },
+        interiorAccessories: ["GrayIC"],
+      },
+    },
+  },
 
   //..package dependencies have two types, components & rivals
   packages: {
@@ -813,7 +822,7 @@ export function handleOptionChanged(
 
       if (exceptionObject.status) {
         switch (exceptionObject.type) {
-          case "rivalSelected":
+          case "rivalCurrentlySelected":
             // code block
             newOptionsSelected = produce(optionsSelected, (draft) => {
               addToOptionsSelected(category, selection, draft);
@@ -821,19 +830,47 @@ export function handleOptionChanged(
 
           case "packageSelected":
             newOptionsSelected = produce(optionsSelected, (draft) => {
-              // First, add the main category and selection
+              //First, add the main category and selection
               addToOptionsSelected(category, selection, draft);
-
-              // Then, iterate over each component in the exceptionObject
-              Object.entries(exceptionObject.components).forEach(
-                ([compCategory, items]) => {
-                  items.forEach((itemId) => {
-                    const compSelection = { id: itemId, isChecked: true };
-                    addToOptionsSelected(compCategory, compSelection, draft);
-                  });
-                }
+              //Update the 'components' of selected package
+              addComponentsToOptionsSelected(
+                category,
+                selection,
+                newOptionsAvailable,
+                draft
               );
             });
+            // Update the package'components'  optionsAvailable as needed
+            newOptionsAvailable = produce(optionsAvailable, (draft) => {
+              updateOptionsAvailableWithPackageComponents(selection, draft);
+            });
+            console.log(newOptionsSelected);
+            break;
+          case "packageUnselected":
+            newOptionsSelected = produce(optionsSelected, (draft) => {
+              //Remove the actual 'parent' package selected
+              removeFromOptionsSelected(
+                category,
+                selection,
+                optionsAvailable,
+                draft
+              );
+              //Remove the package 'components' options
+              removePackageComponents(selection, optionsAvailable, draft);
+            });
+            newOptionsAvailable = produce(optionsAvailable, (draft) => {
+              //Reset the package 'components' in  optionsAvailable to default
+              resetOptionsAvailableWithPackageComponents(selection, draft);
+            });
+
+            break;
+          case "componentOfSelectedPackageUnchecked":
+            console.log("Add logic to display Popup Notification");
+            newPopup = produce(popup, (draft) => {
+              console.log("Line 855");
+              componentUnselectedPopupMessage(category, selection, draft);
+            });
+            console.log(newPopup);
             break;
           case "childSelected":
             newOptionsSelected = produce(optionsSelected, (draft) => {
@@ -865,13 +902,13 @@ export function handleOptionChanged(
             removeFromOptionsSelected(
               category,
               selection,
-
               optionsAvailable,
               draft
             );
           });
         }
       }
+
       return {
         optionsAvailable: newOptionsAvailable,
         optionsSelected: newOptionsSelected,
@@ -1657,6 +1694,7 @@ function removeFromOptionsSelected(
   optionsAvailable,
   draft
 ) {
+  console.log("Line 1677 in removeFromOptionsSelected");
   if (draft[category]) {
     if (optionsAvailable[category].type === "Dropdown") {
       // For Dropdown, clear the choices array
@@ -1671,12 +1709,62 @@ function removeFromOptionsSelected(
 }
 
 //Helper function
-function addPackageComponents(selection, newOptionsAvailable, draft) {
-  const packageDependencies = Dependencies.packages.components[selection.id];
-  if (packageDependencies) {
-    Object.keys(packageDependencies).forEach((dependencyKey) => {
-      packageDependencies[dependencyKey].forEach((depId) => {
-        const choice = newOptionsAvailable[dependencyKey].choices.find(
+// function addPackageComponents(selection, newOptionsAvailable, draft) {
+//   const packageDependencies = Dependencies.packages.components[selection.id];
+//   if (packageDependencies) {
+//     Object.keys(packageDependencies).forEach((dependencyKey) => {
+//       packageDependencies[dependencyKey].forEach((depId) => {
+//         const choice = newOptionsAvailable[dependencyKey].choices.find(
+//           (choice) => choice.id === depId
+//         );
+//         if (choice) {
+//           const choiceWithComponent = {
+//             ...choice,
+//             name: choice.name + " - Included in Package",
+//             component: selection.id,
+//           };
+//           // Check if the option type is CheckBoxGroup or Dropdown
+//           const optionType = AllOptions[dependencyKey].type;
+//           if (!draft[dependencyKey]) {
+//             draft[dependencyKey] = {
+//               type: optionType,
+//               choices: [],
+//             };
+//           }
+//           if (optionType === "CheckBoxGroup") {
+//             // Check if the choice already exists in the array
+//             const existingIndex = draft[dependencyKey].choices.findIndex(
+//               (existingChoice) => existingChoice.id === choiceWithComponent.id
+//             );
+//             if (existingIndex !== -1) {
+//               // Replace the existing choice with the updated one
+//               draft[dependencyKey].choices[existingIndex] = choiceWithComponent;
+//             } else {
+//               // Add new choice if it doesn't exist
+//               draft[dependencyKey].choices.push(choiceWithComponent);
+//             }
+//           } else if (optionType === "Dropdown") {
+//             // Replace choices array for Dropdown
+//             draft[dependencyKey].choices = [choiceWithComponent];
+//           }
+//         }
+//       });
+//     });
+//   }
+// }
+
+function addComponentsToOptionsSelected(
+  category,
+  selection,
+  newOptionsAvailable,
+  draft
+) {
+  const componentDependencies = Dependencies[category].components[selection.id];
+  if (componentDependencies) {
+    Object.keys(componentDependencies).forEach((dependencyKey) => {
+      componentDependencies[dependencyKey].forEach((depId) => {
+        // Corrected to use 'draft' instead of 'newOptionsAvailable'
+        const choice = newOptionsAvailable[dependencyKey]?.choices.find(
           (choice) => choice.id === depId
         );
         if (choice) {
@@ -1797,7 +1885,8 @@ const scenarios = {
       !state.parentExist &&
       !state.childExist &&
       !state.componentsExist),
-  packageSelected: (state) =>
+  //Package option selected
+  packageChecked: (state) =>
     (state.rivalExist &&
       !state.rivalStatus.selected &&
       state.componentsExist &&
@@ -1807,7 +1896,9 @@ const scenarios = {
       state.componentsExist &&
       !state.parentExist &&
       !state.childExist),
-  scenario2: (state) => !state.rivalExist && state.componentsExist,
+  packageUnselected: (state) => state.componentsExist,
+  rivalCurrentlySelected: (state) =>
+    state.rivalExist && state.rivalStatus.selected,
   scenario3: (state) => state.parentExist && state.parentStatus.selected,
   scenario4: (state) => state.childExist && state.childStatus.selected,
   // Add more scenarios as needed
@@ -1835,7 +1926,7 @@ function checkOptionDependency(category, selection, optionsSelected) {
   let componentsExist = Boolean(
     Dependencies[category]?.components?.[selection.id]
   );
-
+  // let unlockExist = Boolean(Dependencies[category]?.unlock?.[selection.id]);
   let rivalStatus = { selected: false, details: {} };
   let parentStatus = { selected: false, details: {} };
   let childStatus = { selected: false, details: {} };
@@ -1868,13 +1959,14 @@ function checkOptionDependency(category, selection, optionsSelected) {
       case "noDependency":
         return exceptionObject;
 
-      case "packageSelected":
-        // Add logic for scenario1 when selection is checked
+      case "rivalCurrentlySelected":
+        exceptionObject.status = true;
+        exceptionObject.type = "rivalCurrentlySelected";
+        return exceptionObject;
+      case "packageChecked":
+        // Add logic for packageSelected
         exceptionObject.status = true;
         exceptionObject.type = "packageSelected";
-
-        let componentsObject = getComponents(category, selection);
-        exceptionObject.components = componentsObject;
         return exceptionObject;
       case "scenario2":
         // Add logic for scenario2 when selection is checked
@@ -1899,34 +1991,42 @@ function checkOptionDependency(category, selection, optionsSelected) {
         return exceptionObject;
     }
   } else {
-    switch (activeScenario) {
-      case "scenario1":
-        // Add logic for scenario1 when selection is not checked
-        exceptionObject.status = true;
-        exceptionObject.type = "Scenario1";
+    //Other scenarios for an unselected option
+    if (
+      checkIfComponentOfSelectedPackage(category, selection, optionsSelected)
+    ) {
+      exceptionObject.status = true;
+      exceptionObject.type = "componentOfSelectedPackageUnchecked";
+      return exceptionObject;
+    } else {
+      switch (activeScenario) {
+        case "packageChecked":
+          // Add logic for package unselected
+          exceptionObject.status = true;
+          exceptionObject.type = "packageUnselected";
+          return exceptionObject;
 
-        return exceptionObject;
-      case "scenario2":
-        // Add logic for scenario2 when selection is not checked
-        exceptionObject.status = true;
-        exceptionObject.type = "Scenario2";
+        case "scenario2":
+          // Add logic for scenario2 when selection is not checked
+          exceptionObject.status = true;
+          exceptionObject.type = "Scenario2";
+          return exceptionObject;
+        case "scenario3":
+          // Add logic for scenario3 when selection is not checked
+          exceptionObject.status = true;
+          exceptionObject.type = "Scenario3";
 
-        return exceptionObject;
-      case "scenario3":
-        // Add logic for scenario3 when selection is not checked
-        exceptionObject.status = true;
-        exceptionObject.type = "Scenario3";
+          return exceptionObject;
+        case "scenario4":
+          // Add logic for scenario4 when selection is not checked
+          exceptionObject.status = true;
+          exceptionObject.type = "Scenario4";
 
-        return exceptionObject;
-      case "scenario4":
-        // Add logic for scenario4 when selection is not checked
-        exceptionObject.status = true;
-        exceptionObject.type = "Scenario4";
-
-        return exceptionObject;
-      default:
-        // Default logic when no scenario matches
-        return exceptionObject;
+          return exceptionObject;
+        default:
+          // Default logic when no scenario matches
+          return exceptionObject;
+      }
     }
   }
 }
@@ -2129,7 +2229,7 @@ function checkIfComponentOfSelectedPackage(
   if (choice && choice.hasOwnProperty("component")) {
     selectionIsComponent = true;
   }
-  console.log("Line 2194- checking if component of selectedPackage");
+
   return selectionIsComponent;
 }
 
@@ -2174,7 +2274,8 @@ function rivalPopupMessage(category, selection, draft, details) {
   draft.details = details; // Add action details to the popup
 }
 
-function componentPopupMessage(category, selection, draft) {
+function componentUnselectedPopupMessage(category, selection, draft) {
+  console.log(selection);
   let packageOption = AllOptions.packages.choices.find(
     (choice) => choice.id === selection.component
   );
@@ -2185,13 +2286,14 @@ function componentPopupMessage(category, selection, draft) {
   draft.show = true;
   draft.message = `Unselecting ${componentOption.name} will also unselect the package ${packageOption.name} `;
   draft.details = {
-    action: "packageComponentUnselected",
+    action: "componentOfSelectedPackageUnselected",
     unselect: {
       componentCategory: category,
       componentID: selection.id,
       packageID: selection.component,
     },
   };
+  console.log("Line 2227 - component of Selected package was unchecked");
 }
 
 function parentPopupMessage(category, selection, draft, details) {
