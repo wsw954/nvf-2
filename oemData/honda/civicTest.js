@@ -8,10 +8,10 @@ const AllOptions = {
     displayName: "Trim",
     type: "Dropdown",
     choices: [
-      { id: "LX", name: "Sedan LX", price: 23950 },
-      { id: "Sport", name: "Sedan Sport", price: 25050 },
-      { id: "EX", name: "Sedan EX", price: 26950 },
-      { id: "Touring", name: "Sedan Touring", price: 30550 },
+      { id: "SedanLX", name: "Sedan LX", price: 23950 },
+      { id: "SedanSport", name: "Sedan Sport", price: 25050 },
+      { id: "SedanEX", name: "Sedan EX", price: 26950 },
+      { id: "SedanTouring", name: "Sedan Touring", price: 30550 },
       { id: "HatchbackLX", name: "Hatchback LX", price: 24950 },
       { id: "TypeR", name: "Type R", price: 42895 },
       { id: "HBEXL", name: "Hatchback EX-L", price: 28650 },
@@ -228,7 +228,7 @@ const Dependencies = {
   // ... trim dependencies- Each trim is effectively a main ancestor to all other options
   trim: {
     modelTrim: {
-      LX: {
+      SedanLX: {
         powertrain: ["standardPowertrain"],
         exteriorColor: [
           "BlueEC",
@@ -278,7 +278,7 @@ const Dependencies = {
         ],
         electronicAccessories: ["EngBlockHeat"],
       },
-      Sport: {
+      SedanSport: {
         powertrain: ["standardPowertrain"],
         exteriorColor: [
           "BlueEC",
@@ -329,7 +329,7 @@ const Dependencies = {
         ],
         electronicAccessories: ["EngBlockHeat"],
       },
-      EX: {
+      SedanEX: {
         powertrain: ["standardTurbo"],
         exteriorColor: [
           "BlueEC",
@@ -382,7 +382,7 @@ const Dependencies = {
         ],
         electronicAccessories: ["EngBlockHeat"],
       },
-      Touring: {
+      SedanTouring: {
         powertrain: ["standardTurbo"],
         exteriorColor: [
           "BlueEC",
@@ -532,8 +532,11 @@ const Dependencies = {
   exteriorColor: {
     unlock: {
       PlatinumEC: {
-        preCursor: { trim: ["EX"] },
-        interiorAccessories: ["GrayIC"],
+        precursor: { trim: ["SedanEX", "SedanTouring"] },
+      },
+      auxiliary: {
+        interiorColor: ["GrayIC", "BlackL"],
+        interiorAccessories: ["IAC6"],
       },
     },
   },
@@ -670,10 +673,10 @@ const InitialOptionsAvailable = {
     displayName: "Trim",
     type: "Dropdown",
     choices: [
-      { id: "LX", name: "Sedan LX", price: 23750 },
-      { id: "Sport", name: "Sedan Sport", price: 25050 },
-      { id: "EX", name: "Sedan EX", price: 26950 },
-      { id: "Touring", name: "Sedan Touring", price: 30550 },
+      { id: "SedanLX", name: "Sedan LX", price: 23750 },
+      { id: "SedanSport", name: "Sedan Sport", price: 25050 },
+      { id: "SedanEX", name: "Sedan EX", price: 26950 },
+      { id: "SedanTouring", name: "Sedan Touring", price: 30550 },
       { id: "HatchbackLX", name: "Hatchback LX", price: 24950 },
       { id: "TypeR", name: "Type R", price: 42895 },
       { id: "HBEXL", name: "Hatchback EX-L", price: 28650 },
@@ -701,7 +704,7 @@ export function handleOptionChanged(
     selection,
     optionsSelected
   );
-
+  console.log(optionsSelected);
   if (!exceptionObject.status) {
     if (selection.isChecked) {
       newOptionsSelected = produce(optionsSelected, (draft) => {
@@ -716,12 +719,15 @@ export function handleOptionChanged(
     //Add switch statement to handle all Exceptions
     switch (exceptionObject.type) {
       case "trimOptionSelected":
-        //Add only trim selected to options selected
-        newOptionsSelected = produce(optionsSelected, (draft) => {
+        // Reset all prior selected options
+        newOptionsSelected = produce({}, (draft) => {});
+
+        // Add only selected trim to the newly reset optionsSelected
+        newOptionsSelected = produce(newOptionsSelected, (draft) => {
           addToOptionsSelected(category, selection, draft);
         });
 
-        // Use the callback function to reset options for the trim selected
+        // Use the callback function to reset all options available for the trim selected
         newOptionsAvailable = resetOptionsForTrimSelected(
           selection,
           optionsAvailable
@@ -731,16 +737,104 @@ export function handleOptionChanged(
       case "rivalSelected":
         //Generate popup notification of a rival option is currently selected
 
-        let rivalsSelected = exceptionObject.rivalsCurrentlySelected;
+        let rivalsCurrentlySelected = exceptionObject.rivalsCurrentlySelected;
         newPopup = produce(popup, (draft) => {
-          rivalSelectedPopupMessage(category, selection, draft, rivalsSelected);
+          rivalSelectedPopupMessage(
+            category,
+            selection,
+            draft,
+            rivalsCurrentlySelected
+          );
         });
-
+        break;
+      case "addAuxiliaryOptionsAvailable":
         newOptionsSelected = produce(optionsSelected, (draft) => {
           addToOptionsSelected(category, selection, draft);
         });
-        console.log(newPopup);
+        // Step 1: Iterate over the `unlock` object in exceptionObject
+        newOptionsAvailable = produce(optionsAvailable, (draft) => {
+          Object.keys(exceptionObject.unlock).forEach((unlockCategory) => {
+            // Step 2: Iterate over each array of values in the `unlock` object
+            exceptionObject.unlock[unlockCategory].forEach((item) => {
+              // Call addToOptionsAvailable for each item
+              addToOptionsAvailable(unlockCategory, item, draft);
+            });
+          });
+        });
         break;
+      case "removeAuxiliaryOptionsAvailable":
+        //Add the selected option to all selected options
+        newOptionsSelected = produce(optionsSelected, (draft) => {
+          addToOptionsSelected(category, selection, draft);
+        });
+        //Remove the unlock auxiliary options
+        newOptionsAvailable = produce(optionsAvailable, (draft) => {
+          Object.keys(exceptionObject.unlock).forEach((unlockCategory) => {
+            // Step 2: Iterate over each array of values in the `unlock` object
+            exceptionObject.unlock[unlockCategory].forEach((item) => {
+              let auxiliaryOption = {
+                id: item,
+              };
+              // Call addToOptionsAvailable for each item
+              removeFromOptionsAvailable(
+                unlockCategory,
+                auxiliaryOption,
+                draft
+              );
+            });
+          });
+        });
+        if (selection.isChecked) {
+          newOptionsSelected = produce(optionsSelected, (draft) => {
+            addToOptionsSelected(category, selection, draft);
+          });
+        } else {
+          newOptionsSelected = produce(optionsSelected, (draft) => {
+            removeFromOptionsSelected(
+              category,
+              selection,
+              optionsAvailable,
+              draft
+            );
+          });
+        }
+        console.log(optionsSelected);
+        break;
+      case "componentOptionSelected":
+        newOptionsSelected = produce(optionsSelected, (draft) => {
+          //First, add the main category and selection
+          addToOptionsSelected(category, selection, draft);
+          //Update the 'components' of selected package
+          addComponentsToOptionsSelected(
+            category,
+            selection,
+            newOptionsAvailable,
+            draft
+          );
+        });
+        // Update the option 'components' in the optionsAvailable as needed
+        newOptionsAvailable = produce(optionsAvailable, (draft) => {
+          updateOptionsAvailableForComponentsAdded(selection, draft);
+        });
+        break;
+      case "componentOptionUnselected":
+        newOptionsSelected = produce(optionsSelected, (draft) => {
+          //Remove the actual 'component' option selected
+          removeFromOptionsSelected(
+            category,
+            selection,
+            optionsAvailable,
+            draft
+          );
+          //Remove the nested'components' options
+          removePackageComponents(selection, optionsAvailable, draft);
+        });
+        // Update the option 'components' in the optionsAvailable as needed
+        newOptionsAvailable = produce(optionsAvailable, (draft) => {
+          //Reset the package 'components' in  optionsAvailable to default
+          resetOptionsAvailableForComponentsRemoved(selection, draft);
+        });
+
       default:
       // code block
     }
@@ -753,9 +847,73 @@ export function handleOptionChanged(
   };
 }
 
+//
+export function handlePopupConfirm(optionsAvailable, optionsSelected, popup) {
+  let newOptionsAvailable = produce(optionsAvailable, (draft) => {}); // Keep optionsAvailable unchanged for now
+  let newOptionsSelected = produce(optionsSelected, (draft) => {}); // Keep optionsSelected unchanged for now
+
+  const DEFAULT_POPUP_STATE = {
+    show: false,
+    message: "",
+    exception: {},
+  };
+
+  // Reset the popup state to default at the start of function execution
+  let newPopup = produce(DEFAULT_POPUP_STATE, (draft) => {});
+
+  switch (popup.exception.action) {
+    case "rivalSelected":
+      //Add the rival selected, unselect the currently selected rivals
+      let categoryRivalChecked = popup.category;
+      let selectionRivalChecked = popup.selection;
+      newOptionsSelected = produce(optionsSelected, (draft) => {
+        addToOptionsSelected(
+          categoryRivalChecked,
+          selectionRivalChecked,
+          draft
+        );
+      });
+
+      popup.exception.rivalsCurrentlySelected.forEach((rivalSelected) => {
+        let rivalChoice = {
+          id: rivalSelected.choice.id,
+          isChecked: false,
+        };
+        // Remove currently selected rivals from newOptionsSelected
+        newOptionsSelected = produce(newOptionsSelected, (draft) => {
+          removeFromOptionsSelected(
+            rivalSelected.category,
+            rivalChoice,
+            optionsAvailable,
+            draft
+          );
+        });
+      });
+
+      break;
+
+    case "packageComponentUnselected":
+      break;
+
+    case "parentUnselected":
+      break;
+
+    case "childSelected":
+      break;
+    default:
+    // code block
+  }
+
+  return {
+    optionsAvailable: newOptionsAvailable,
+    optionsSelected: newOptionsSelected,
+    popup: newPopup,
+  };
+}
+
 //Helper Functions
 
-//Add to oprionsSelected a selected 'option'
+//Add to optionsSelected a selected 'option'
 function addToOptionsSelected(category, selection, draft) {
   //If category doesn't already exists, add it
   if (!draft[category]) {
@@ -802,6 +960,29 @@ function removeFromOptionsSelected(
   }
 }
 
+//Add to optionsAvailble a specified 'option'
+function addToOptionsAvailable(category, selection, draft) {
+  //If category doesn't already exists, add it
+  if (!draft[category]) {
+    draft[category] = {
+      displayName: AllOptions[category].displayName,
+      type: AllOptions[category].type,
+      choices: [],
+    };
+  }
+  const selectedOption = AllOptions[category].choices.find(
+    (choice) => choice.id === selection
+  );
+  draft[category].choices.push(selectedOption);
+}
+
+//Removes from option from optionsAvailable
+function removeFromOptionsAvailable(category, selection, draft) {
+  draft[category].choices = draft[category].choices.filter(
+    (choice) => choice.id !== selection.id
+  );
+}
+
 // Callback function to reset options available when a model trim is selected
 function resetOptionsForTrimSelected(selection, optionsAvailable) {
   return produce({}, (draft) => {
@@ -810,7 +991,6 @@ function resetOptionsForTrimSelected(selection, optionsAvailable) {
 
     // Check if dependencies for the selected trim are defined and correct
     const trimDependencies = Dependencies.trim.modelTrim[selection.id];
-
     Object.keys(trimDependencies).forEach((dependencyKey) => {
       if (Dependencies.trim && Dependencies.trim.modelTrim[selection.id]) {
         if (Array.isArray(trimDependencies[dependencyKey])) {
@@ -840,26 +1020,52 @@ function checkOptionDependency(category, selection, optionsSelected) {
     status: false,
     type: "NoExceptions",
   };
-  let trimOption = Boolean(Dependencies[category]?.modelTrim?.[selection.id]);
-  let rivalExist = Boolean(Dependencies[category]?.rivals?.[selection.id]);
-  let parentExist = Boolean(Dependencies[category]?.child?.[selection.id]);
-  let childExist = Boolean(Dependencies[category]?.parent?.[selection.id]);
-  let componentsExist = Boolean(
-    Dependencies[category]?.components?.[selection.id]
-  );
 
-  if (selection.isChecked && trimOption) {
-    exceptionObject.status = true;
-    exceptionObject.type = "trimOptionSelected";
-  }
-  if (selection.isChecked && rivalExist) {
-    let rivalStatus = getRivalStatus(category, selection, optionsSelected);
-    if (rivalStatus.selected) {
-      (exceptionObject.status = true),
-        ((exceptionObject.type = "rivalSelected"),
-        (exceptionObject.rivalsCurrentlySelected =
-          rivalStatus.rivalOptionsCurrentlySelected));
-    }
+  switch (category) {
+    case "trim":
+      exceptionObject.status = true;
+      exceptionObject.type = "trimOptionSelected";
+      return exceptionObject;
+    case "exteriorColor":
+      exceptionObject.status = true;
+      let selectedVehicleTrim = optionsSelected.trim.choices[0].id;
+      let auxiliaryOptions = Dependencies[category].unlock.auxiliary;
+      exceptionObject.unlock = auxiliaryOptions;
+
+      //Check if all the conditions for unlocking the 'auxiliary' options exist
+      if (
+        Dependencies[category].unlock[selection.id]?.precursor.trim.includes(
+          selectedVehicleTrim
+        )
+      ) {
+        exceptionObject.type = "addAuxiliaryOptionsAvailable";
+      } else {
+        exceptionObject.type = "removeAuxiliaryOptionsAvailable";
+      }
+      return exceptionObject;
+    case "packages":
+      let rivalStatus = getRivalStatus(category, selection, optionsSelected);
+      if (rivalStatus.selected) {
+        (exceptionObject.status = true),
+          ((exceptionObject.type = "rivalSelected"),
+          (exceptionObject.rivalsCurrentlySelected =
+            rivalStatus.rivalOptionsCurrentlySelected));
+      } else if (selection.isChecked) {
+        exceptionObject.status = true;
+        exceptionObject.type = "componentOptionSelected";
+
+        return exceptionObject;
+      } else {
+        exceptionObject.status = true;
+        exceptionObject.type = "componentOptionUnselected";
+        return exceptionObject;
+      }
+
+      break;
+    case "exteriorAccessories":
+      // code block
+      break;
+    // code block
   }
 
   return exceptionObject;
@@ -901,17 +1107,170 @@ function getRivalStatus(category, selection, optionsSelected) {
   return rivalStatus;
 }
 
-function rivalSelectedPopupMessage(category, selection, draft, rivalsSelected) {
+function addComponentsToOptionsSelected(
+  category,
+  selection,
+  newOptionsAvailable,
+  draft
+) {
+  const componentDependencies = Dependencies[category].components[selection.id];
+  if (componentDependencies) {
+    Object.keys(componentDependencies).forEach((dependencyKey) => {
+      componentDependencies[dependencyKey].forEach((depId) => {
+        // Corrected to use 'draft' instead of 'newOptionsAvailable'
+        const choice = newOptionsAvailable[dependencyKey]?.choices.find(
+          (choice) => choice.id === depId
+        );
+        if (choice) {
+          const choiceWithComponent = {
+            ...choice,
+            name: choice.name + " - Included in Package",
+            component: selection.id,
+          };
+          // Check if the option type is CheckBoxGroup or Dropdown
+          const optionType = AllOptions[dependencyKey].type;
+          if (!draft[dependencyKey]) {
+            draft[dependencyKey] = {
+              type: optionType,
+              choices: [],
+            };
+          }
+          if (optionType === "CheckBoxGroup") {
+            // Check if the choice already exists in the array
+            const existingIndex = draft[dependencyKey].choices.findIndex(
+              (existingChoice) => existingChoice.id === choiceWithComponent.id
+            );
+            if (existingIndex !== -1) {
+              // Replace the existing choice with the updated one
+              draft[dependencyKey].choices[existingIndex] = choiceWithComponent;
+            } else {
+              // Add new choice if it doesn't exist
+              draft[dependencyKey].choices.push(choiceWithComponent);
+            }
+          } else if (optionType === "Dropdown") {
+            // Replace choices array for Dropdown
+            draft[dependencyKey].choices = [choiceWithComponent];
+          }
+        }
+      });
+    });
+  }
+}
+
+//Removes from optionsSelected, components of an option unselected
+function removeComponentsFromOptionsSelected(
+  selection,
+  optionsAvailable,
+  draft
+) {
+  const packageDependencies = Dependencies.packages.components[selection.id];
+  if (packageDependencies) {
+    Object.keys(packageDependencies).forEach((dependencyKey) => {
+      packageDependencies[dependencyKey].forEach((depId) => {
+        if (draft[dependencyKey]) {
+          if (optionsAvailable[dependencyKey].type === "Dropdown") {
+            // For Dropdown, clear the choices array
+            draft[dependencyKey].choices = [];
+          } else if (optionsAvailable[dependencyKey].type === "CheckBoxGroup") {
+            // For CheckBoxGroup, filter out the specific choice
+            draft[dependencyKey].choices = draft[dependencyKey].choices.filter(
+              (choice) => choice.id !== depId
+            );
+          }
+        }
+      });
+    });
+  }
+}
+
+//Changes the optionsAvailable to account for being part of package selected
+function updateOptionsAvailableForComponentsAdded(selection, draft) {
+  const packageDependencies = Dependencies.packages.components[selection.id];
+  if (packageDependencies) {
+    Object.keys(packageDependencies).forEach((dependencyKey) => {
+      packageDependencies[dependencyKey].forEach((depId) => {
+        // Find the index of the choice in the draft
+        const choiceIndex = draft[dependencyKey].choices.findIndex(
+          (choice) => choice.id === depId
+        );
+
+        if (choiceIndex !== -1) {
+          // Directly update the properties of the found choice in the draft
+          draft[dependencyKey].choices[choiceIndex].name +=
+            " - Included in Package";
+          draft[dependencyKey].choices[choiceIndex].component = selection.id;
+          draft[dependencyKey].choices[choiceIndex].price = 0; // Set price to 0 or as required
+        }
+      });
+    });
+  }
+}
+
+//Resets the optionsAvailable to default after a package is unselected
+function resetOptionsAvailableForComponentsRemoved(selection, draft) {
+  const packageDependencies = Dependencies.packages.components[selection.id];
+  if (packageDependencies) {
+    Object.keys(packageDependencies).forEach((dependencyKey) => {
+      packageDependencies[dependencyKey].forEach((depId) => {
+        // Find the index of the choice in the draft
+        const choiceIndex = draft[dependencyKey].choices.findIndex(
+          (choice) => choice.id === depId
+        );
+        if (choiceIndex !== -1) {
+          const defaultOption = AllOptions[dependencyKey].choices.find(
+            (choice) => choice.id === depId
+          );
+          // Reset to default
+          draft[dependencyKey].choices[choiceIndex].name = defaultOption.name;
+          draft[dependencyKey].choices[choiceIndex].price = defaultOption.price;
+          delete draft[dependencyKey].choices[choiceIndex].component;
+        }
+      });
+    });
+  }
+}
+
+function unlockOptionHandler(category, selection, draft) {
+  //If category doesn't already exists, add it
+  if (!draft[category]) {
+    draft[category] = {
+      displayName: AllOptions[category].displayName,
+      type: AllOptions[category].type,
+      choices: [],
+    };
+  }
+
+  const selectedOption = AllOptions[category].choices.find(
+    (choice) => choice.id === selection.id
+  );
+
+  if (AllOptions[category].type === "Dropdown") {
+    draft[category].choices = [selectedOption];
+  } else if (AllOptions[category].type === "CheckBoxGroup") {
+    //If selectedOption not in draft, add to draft
+    if (
+      !draft[category].choices.some((choice) => choice.id === selectedOption.id)
+    ) {
+      draft[category].choices.push(selectedOption);
+    }
+  }
+}
+
+function rivalSelectedPopupMessage(
+  category,
+  selection,
+  draft,
+  rivalsCurrentlySelected
+) {
   let selectedOption = AllOptions[category].choices.find(
     (choice) => choice.id === selection.id
   );
-  console.log(selectedOption);
-  console.log(rivalsSelected);
+
   // Start constructing the draft message with the selected option name
   let message = `Selecting ${selectedOption.name} will also unselect `;
 
   // Extract names from the rivalsSelected array
-  const rivalNames = rivalsSelected.map((rival) => rival.choice.name);
+  const rivalNames = rivalsCurrentlySelected.map((rival) => rival.choice.name);
 
   // Construct the message based on the number of rival names
   if (rivalNames.length === 1) {
@@ -925,13 +1284,15 @@ function rivalSelectedPopupMessage(category, selection, draft, rivalsSelected) {
     const lastRival = rivalNames.pop();
     message += `${rivalNames.join(", ")} and ${lastRival}`;
   }
-  let popupAction = { rivalSelected: { category: category } };
+
   // Set the constructed message to draft.message
+  draft.show = true;
   draft.message = message;
-  draft.details = {
+  draft.category = category;
+  draft.selection = selection;
+  draft.exception = {
     action: "rivalSelected",
-    rivalChecked: selectedOption,
-    rivalsSelected: rivalsSelected,
+    rivalsCurrentlySelected: rivalsCurrentlySelected,
   };
 }
 
