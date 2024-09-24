@@ -227,304 +227,288 @@ const AllOptions = {
 const Dependencies = {
   // ... trim dependencies- Each trim is effectively a main ancestor to all other options
   trim: {
-    modelTrim: {
-      SedanLX: {
-        powertrain: ["standardPowertrain"],
-        exteriorColor: [
-          "BlueEC",
-          "BlackEC",
-          "SilverEC",
-          "GrayEC",
-          "RedEC",
-          "PlatinumEC",
-        ],
-        interiorColor: {
-          default: ["BlackIC"],
-          GrayEC: ["BlackIC", "GrayIC"],
-          PlatinumEC: ["BlackIC", "GrayIC"],
-        },
-        wheels: ["standard16WC"],
-        packages: ["ASPack1", "ASPack2", "HPD", "PP"],
-        exteriorAccessories: [
-          "BSMoulding",
-          "DLSpoiler",
-          "DEdgeFilm",
-          "DEdgeGuard",
-          "DHandleFilm",
-          "DVisorCh",
-          "EmblemsFRH",
-          "EmblemHPD",
-          "RBumperApp",
-          "SGuardSet",
-          "UBodySpoilerFront",
-          "UBodySpoilerRear",
-          "UBodySpoilerSide",
-          "ValveStem",
-          "WheelLocksB",
-          "WheelLocksC",
-          "WLugNuts",
-        ],
-        interiorAccessories: [
-          "ASFloorMat",
-          "CHook",
-          "CNet",
-          "CHWFloorMat",
-          "DoorSill",
-          "FirstAid",
-          "IDoorSill",
-          "RPWShade",
-          "TTray",
-          "TTDividers",
-        ],
-        electronicAccessories: ["EngBlockHeat"],
-      },
-      SedanSport: {
-        powertrain: ["standardPowertrain"],
-        exteriorColor: [
-          "BlueEC",
-          "BlackEC",
-          "SilverEC",
-          "GrayEC",
-          "RedEC",
-          "PlatinumEC",
-          "SGrayPearl",
-        ],
-        interiorColor: {
-          default: ["BlackIC"],
-        },
-        wheels: ["18InchGB", "18InchBA"],
-        packages: ["ASPack1", "ASPack2", "HPD", "PP"],
-        exteriorAccessories: [
-          "BSMoulding",
-          "DLSpoiler",
-          "DEdgeFilm",
-          "DEdgeGuard",
-          "DHandleFilm",
-          "DVisorBl",
-          "EmblemsFRH",
-          "EmblemSportGB",
-          "EmblemHPD",
-          "RBumperApp",
-          "SGuardSet",
-          "UBodySpoilerFront",
-          "UBodySpoilerRear",
-          "UBodySpoilerSide",
-          "ValveStem",
-          "WheelLocksB",
-          "WheelLocksC",
-          "WLugNuts",
-          ,
-        ],
-        interiorAccessories: [
-          "ASFloorMat",
-          "CHook",
-          "CNet",
-          "CHWFloorMat",
-          "DoorSill",
-          "FirstAid",
-          "IDoorSill",
-          "RPWShade",
-          "TTray",
-          "TTDividers",
-        ],
-        electronicAccessories: ["EngBlockHeat"],
-      },
-      SedanEX: {
-        powertrain: ["standardTurbo"],
-        exteriorColor: [
-          "BlueEC",
-          "BlackEC",
-          "SilverEC",
-          "GrayEC",
-          "RedEC",
-          "PlatinumEC",
-          "SGrayPearl",
-        ],
-        interiorColor: {
-          default: ["BlackIC"],
-          GrayEC: ["BlackIC", "GrayIC"],
-          PlatinumEC: ["BlackIC", "GrayIC"],
-        },
-        wheels: ["17InchAW"],
-        packages: ["ASPack1", "ASPack2", "HPD", "PP"],
-        exteriorAccessories: [
-          "BSMoulding",
-          "DLSpoiler",
-          "DEdgeFilm",
-          "DEdgeGuard",
-          "DHandleFilm",
-          "DVisorCh",
-          "EmblemsFRH",
-          "EmblemHPD",
-          "MoonRVisor",
-          "RBumperApp",
-          "SGuardSet",
-          "UBodySpoilerFront",
-          "UBodySpoilerRear",
-          "UBodySpoilerSide",
-          "ValveStem",
-          "WheelLocksB",
-          "WheelLocksC",
-          "WLugNuts",
-          ,
-        ],
-        interiorAccessories: [
-          "ASFloorMat",
-          "CHook",
-          "CNet",
-          "CHWFloorMat",
-          "DoorSill",
-          "FirstAid",
-          "IDoorSill",
-          "RPWShade",
-          "TTray",
-          "TTDividers",
-        ],
-        electronicAccessories: ["EngBlockHeat"],
-      },
-      SedanTouring: {
-        powertrain: ["standardTurbo"],
-        exteriorColor: [
-          "BlueEC",
-          "BlackEC",
-          "SilverEC",
-          "GrayEC",
-          "RedEC",
-          "PlatinumEC",
-          "SGrayPearl",
-        ],
-        interiorColor: {
-          default: ["BlackL"],
-          GrayEC: ["BlackL", "GrayL"],
-          PlatinumEC: ["BlackL", "GrayL"],
-        },
-        wheels: ["18InchAW", "18InchBA"],
-        packages: ["ASPack1", "ASPack2", "HPD", "PP"],
-        exteriorAccessories: [
-          "BSMoulding",
-          "DLSpoiler",
-          "DEdgeFilm",
-          "DEdgeGuard",
-          "DHandleFilm",
-          "DVisorCh",
-          "EmblemsFRH",
-          "EmblemHPD",
-          "MoonRVisor",
-          "RBumperApp",
-          "SGuardSet",
-          "UBodySpoilerFront",
-          "UBodySpoilerRear",
-          "UBodySpoilerSide",
-          "ValveStem",
-          "WheelLocksB",
-          "WheelLocksC",
-          "WLugNuts",
-          ,
-        ],
-        interiorAccessories: [
-          "ASFloorMat",
-          "CHook",
-          "CNet",
-          "CHWFloorMat",
-          "DoorSill",
-          "FirstAid",
-          "IDoorSill",
-          "RPWShade",
-          "TTray",
-          "TTDividers",
-        ],
-        electronicAccessories: ["EngBlockHeat"],
-      },
-      HatchbackLX: {
-        powertrain: ["standardPowertrain"],
-        exteriorColor: ["BlackEC", "SilverEC", "GrayEC", "PlatinumEC"],
-        interiorColor: {
-          default: ["BlackIC"],
-        },
-        wheels: ["standard16Alloy"],
-        packages: [
-          "ASPack1Hatch",
-          "ASPack2Hatch",
-          "HPDHatch",
-          "PPHatch",
-          "TestPackage1",
-        ],
-        exteriorAccessories: [
-          "Bike",
-          "BSMoulding",
-          "DEdgeFilm",
-          "DEdgeGuard",
-          "DHandleFilm",
-          "EmblemHPD",
-          "EmblemsFRHHatch",
-          "Kayak",
-          "RBumperProt",
-          "RoofBas",
-          "RBoxMid",
-          "RBoxShort",
-          "RoofRack",
-          "SkiSnow",
-          "Surf",
-          "SGuardSet",
-          "TailGate",
-          "TestC1",
-          "TestC2",
-          "TestRO1",
-          "TestRO1",
-          "UBodySpoilerFront",
-          "ValveStem",
-          "WheelLocksB",
-          "WheelLocksC",
-          "WLugNuts",
-          ,
-        ],
-        interiorAccessories: [
-          "ASFloorMat",
-          "CNet",
-          "CHWFloorMat",
-          "CargoTray",
-          "CargoTrayDiv",
-          "DoorSillProt",
-          "DoorSillIllum",
-          "RPWShade",
-          "SeatBackProt",
-        ],
-        electronicAccessories: ["EngBlockHeat"],
-      },
-      TypeR: {
-        powertrain: ["Turbo"], // Assuming only Turbo is available for Type R
-        exteriorColor: ["Red", "Black"],
-        packages: ["PP3"],
-        exteriorAccessories: ["BSM", "DLS", "SGS", "EAC1", "EAC2", "EAC3"],
-        interiorAccessories: ["ASFloorMat", "CH", "CN", "IAC1", "IAC2"],
-      },
-      HBEXL: {
-        powertrain: ["Turbo"], // Assuming only Turbo is available for Type R
-        exteriorColor: ["Red", "Black"],
-        packages: ["ASP1", "ASP2", "HPD", "PP3"],
-        exteriorAccessories: [
-          "Bike",
-          "BSM",
-          "DLS",
-          "SGS",
-          "EAC1",
-          "EAC2",
-          "EAC3",
-          "KAY",
-          "HPDE",
-          "HPDT",
-          "RR",
-        ],
-        interiorAccessories: [
-          "ASFloorMat",
-          "CH",
-          "CN",
-          "IAC1",
-          "IAC2",
-          "IAC5",
-          "IAC6",
-        ],
-      },
+    SedanLX: {
+      powertrain: ["standardPowertrain"],
+      exteriorColor: [
+        "BlueEC",
+        "BlackEC",
+        "SilverEC",
+        "GrayEC",
+        "RedEC",
+        "PlatinumEC",
+      ],
+      interiorColor: ["BlackIC"],
+      wheels: ["standard16WC"],
+      packages: ["ASPack1", "ASPack2", "HPD", "PP"],
+      exteriorAccessories: [
+        "BSMoulding",
+        "DLSpoiler",
+        "DEdgeFilm",
+        "DEdgeGuard",
+        "DHandleFilm",
+        "DVisorCh",
+        "EmblemsFRH",
+        "EmblemHPD",
+        "RBumperApp",
+        "SGuardSet",
+        "UBodySpoilerFront",
+        "UBodySpoilerRear",
+        "UBodySpoilerSide",
+        "ValveStem",
+        "WheelLocksB",
+        "WheelLocksC",
+        "WLugNuts",
+      ],
+      interiorAccessories: [
+        "ASFloorMat",
+        "CHook",
+        "CNet",
+        "CHWFloorMat",
+        "DoorSill",
+        "FirstAid",
+        "IDoorSill",
+        "RPWShade",
+        "TTray",
+        "TTDividers",
+      ],
+      electronicAccessories: ["EngBlockHeat"],
+    },
+    SedanSport: {
+      powertrain: ["standardPowertrain"],
+      exteriorColor: [
+        "BlueEC",
+        "BlackEC",
+        "SilverEC",
+        "GrayEC",
+        "RedEC",
+        "PlatinumEC",
+        "SGrayPearl",
+      ],
+      interiorColor: ["BlackIC"],
+      wheels: ["18InchGB", "18InchBA"],
+      packages: ["ASPack1", "ASPack2", "HPD", "PP"],
+      exteriorAccessories: [
+        "BSMoulding",
+        "DLSpoiler",
+        "DEdgeFilm",
+        "DEdgeGuard",
+        "DHandleFilm",
+        "DVisorBl",
+        "EmblemsFRH",
+        "EmblemSportGB",
+        "EmblemHPD",
+        "RBumperApp",
+        "SGuardSet",
+        "UBodySpoilerFront",
+        "UBodySpoilerRear",
+        "UBodySpoilerSide",
+        "ValveStem",
+        "WheelLocksB",
+        "WheelLocksC",
+        "WLugNuts",
+        ,
+      ],
+      interiorAccessories: [
+        "ASFloorMat",
+        "CHook",
+        "CNet",
+        "CHWFloorMat",
+        "DoorSill",
+        "FirstAid",
+        "IDoorSill",
+        "RPWShade",
+        "TTray",
+        "TTDividers",
+      ],
+      electronicAccessories: ["EngBlockHeat"],
+    },
+    SedanEX: {
+      powertrain: ["standardTurbo"],
+      exteriorColor: [
+        "BlueEC",
+        "BlackEC",
+        "SilverEC",
+        "GrayEC",
+        "RedEC",
+        "PlatinumEC",
+        "SGrayPearl",
+      ],
+      interiorColor: ["BlackIC"],
+      wheels: ["17InchAW"],
+      packages: ["ASPack1", "ASPack2", "HPD", "PP"],
+      exteriorAccessories: [
+        "BSMoulding",
+        "DLSpoiler",
+        "DEdgeFilm",
+        "DEdgeGuard",
+        "DHandleFilm",
+        "DVisorCh",
+        "EmblemsFRH",
+        "EmblemHPD",
+        "MoonRVisor",
+        "RBumperApp",
+        "SGuardSet",
+        "UBodySpoilerFront",
+        "UBodySpoilerRear",
+        "UBodySpoilerSide",
+        "ValveStem",
+        "WheelLocksB",
+        "WheelLocksC",
+        "WLugNuts",
+        ,
+      ],
+      interiorAccessories: [
+        "ASFloorMat",
+        "CHook",
+        "CNet",
+        "CHWFloorMat",
+        "DoorSill",
+        "FirstAid",
+        "IDoorSill",
+        "RPWShade",
+        "TTray",
+        "TTDividers",
+      ],
+      electronicAccessories: ["EngBlockHeat"],
+    },
+    SedanTouring: {
+      powertrain: ["standardTurbo"],
+      exteriorColor: [
+        "BlueEC",
+        "BlackEC",
+        "SilverEC",
+        "GrayEC",
+        "RedEC",
+        "PlatinumEC",
+        "SGrayPearl",
+      ],
+      interiorColor: ["BlackL"],
+      wheels: ["18InchAW", "18InchBA"],
+      packages: ["ASPack1", "ASPack2", "HPD", "PP"],
+      exteriorAccessories: [
+        "BSMoulding",
+        "DLSpoiler",
+        "DEdgeFilm",
+        "DEdgeGuard",
+        "DHandleFilm",
+        "DVisorCh",
+        "EmblemsFRH",
+        "EmblemHPD",
+        "MoonRVisor",
+        "RBumperApp",
+        "SGuardSet",
+        "UBodySpoilerFront",
+        "UBodySpoilerRear",
+        "UBodySpoilerSide",
+        "ValveStem",
+        "WheelLocksB",
+        "WheelLocksC",
+        "WLugNuts",
+        ,
+      ],
+      interiorAccessories: [
+        "ASFloorMat",
+        "CHook",
+        "CNet",
+        "CHWFloorMat",
+        "DoorSill",
+        "FirstAid",
+        "IDoorSill",
+        "RPWShade",
+        "TTray",
+        "TTDividers",
+      ],
+      electronicAccessories: ["EngBlockHeat"],
+    },
+    HatchbackLX: {
+      powertrain: ["standardPowertrain"],
+      exteriorColor: ["BlackEC", "SilverEC", "GrayEC", "PlatinumEC"],
+      interiorColor: ["BlackIC"],
+      wheels: ["standard16Alloy"],
+      packages: [
+        "ASPack1Hatch",
+        "ASPack2Hatch",
+        "HPDHatch",
+        "PPHatch",
+        "TestPackage1",
+      ],
+      exteriorAccessories: [
+        "Bike",
+        "BSMoulding",
+        "DEdgeFilm",
+        "DEdgeGuard",
+        "DHandleFilm",
+        "EmblemHPD",
+        "EmblemsFRHHatch",
+        "Kayak",
+        "RBumperProt",
+        "RoofBas",
+        "RBoxMid",
+        "RBoxShort",
+        "RoofRack",
+        "SkiSnow",
+        "Surf",
+        "SGuardSet",
+        "TailGate",
+        "TestC1",
+        "TestC2",
+        "TestRO1",
+        "TestRO1",
+        "UBodySpoilerFront",
+        "ValveStem",
+        "WheelLocksB",
+        "WheelLocksC",
+        "WLugNuts",
+        ,
+      ],
+      interiorAccessories: [
+        "ASFloorMat",
+        "CNet",
+        "CHWFloorMat",
+        "CargoTray",
+        "CargoTrayDiv",
+        "DoorSillProt",
+        "DoorSillIllum",
+        "RPWShade",
+        "SeatBackProt",
+      ],
+      electronicAccessories: ["EngBlockHeat"],
+    },
+    TypeR: {
+      powertrain: ["Turbo"], // Assuming only Turbo is available for Type R
+      exteriorColor: ["Red", "Black"],
+      interiorColor: ["BlackIC"],
+      packages: ["PP3"],
+      exteriorAccessories: ["BSM", "DLS", "SGS", "EAC1", "EAC2", "EAC3"],
+      interiorAccessories: ["ASFloorMat", "CH", "CN", "IAC1", "IAC2"],
+    },
+    HBEXL: {
+      powertrain: ["Turbo"], // Assuming only Turbo is available for Type R
+      exteriorColor: ["Red", "Black"],
+      interiorColor: ["BlackIC"],
+      packages: ["ASP1", "ASP2", "HPD", "PP3"],
+      exteriorAccessories: [
+        "Bike",
+        "BSM",
+        "DLS",
+        "SGS",
+        "EAC1",
+        "EAC2",
+        "EAC3",
+        "KAY",
+        "HPDE",
+        "HPDT",
+        "RR",
+      ],
+      interiorAccessories: [
+        "ASFloorMat",
+        "CH",
+        "CN",
+        "IAC1",
+        "IAC2",
+        "IAC5",
+        "IAC6",
+      ],
     },
   },
 
@@ -532,11 +516,18 @@ const Dependencies = {
   exteriorColor: {
     unlock: {
       PlatinumEC: {
-        precursor: { trim: ["SedanEX", "SedanTouring"] },
-      },
-      auxiliary: {
-        interiorColor: ["GrayIC", "BlackL"],
-        interiorAccessories: ["IAC6"],
+        SedanEX: {
+          interiorColor: ["BlackL"],
+          interiorAccessories: ["IAC5"],
+        },
+        SedanTouring: {
+          interiorColor: ["BlackL"],
+          interiorAccessories: ["IAC6"],
+        },
+        HBEXL: {
+          interiorColor: ["BlackL"],
+          interiorAccessories: ["SeatBackProt"],
+        },
       },
     },
   },
@@ -704,7 +695,6 @@ export function handleOptionChanged(
     selection,
     optionsSelected
   );
-  console.log(optionsSelected);
   if (!exceptionObject.status) {
     if (selection.isChecked) {
       newOptionsSelected = produce(optionsSelected, (draft) => {
@@ -727,12 +717,10 @@ export function handleOptionChanged(
           addToOptionsSelected(category, selection, draft);
         });
 
-        // Use the callback function to reset all options available for the trim selected
-        newOptionsAvailable = resetOptionsForTrimSelected(
-          selection,
-          optionsAvailable
-        );
-
+        // Use the callback function to reset all options available,  for the trim selected
+        newOptionsAvailable = produce(optionsAvailable, (draft) => {
+          resetOptionsForTrimSelected(selection, draft);
+        });
         break;
       case "rivalSelected":
         //Generate popup notification of a rival option is currently selected
@@ -751,6 +739,8 @@ export function handleOptionChanged(
         newOptionsSelected = produce(optionsSelected, (draft) => {
           addToOptionsSelected(category, selection, draft);
         });
+        console.log("Add Auxiliary Options");
+        console.log(exceptionObject);
         // Step 1: Iterate over the `unlock` object in exceptionObject
         newOptionsAvailable = produce(optionsAvailable, (draft) => {
           Object.keys(exceptionObject.unlock).forEach((unlockCategory) => {
@@ -762,25 +752,15 @@ export function handleOptionChanged(
           });
         });
         break;
-      case "removeAuxiliaryOptionsAvailable":
-        //Add the selected option to all selected options
-        newOptionsSelected = produce(optionsSelected, (draft) => {
-          addToOptionsSelected(category, selection, draft);
-        });
-        //Remove the unlock auxiliary options
+      case "resetAuxiliaryOptionsToDefault":
+        console.log(exceptionObject);
+        //Remove the auxiliary options for the prior selected unlock option
         newOptionsAvailable = produce(optionsAvailable, (draft) => {
-          Object.keys(exceptionObject.unlock).forEach((unlockCategory) => {
+          Object.keys(exceptionObject.remove).forEach((unlockCategory) => {
             // Step 2: Iterate over each array of values in the `unlock` object
-            exceptionObject.unlock[unlockCategory].forEach((item) => {
-              let auxiliaryOption = {
-                id: item,
-              };
+            exceptionObject.remove[unlockCategory].forEach((item) => {
               // Call addToOptionsAvailable for each item
-              removeFromOptionsAvailable(
-                unlockCategory,
-                auxiliaryOption,
-                draft
-              );
+              removeFromOptionsAvailable(unlockCategory, item, draft);
             });
           });
         });
@@ -798,7 +778,6 @@ export function handleOptionChanged(
             );
           });
         }
-        console.log(optionsSelected);
         break;
       case "componentOptionSelected":
         newOptionsSelected = produce(optionsSelected, (draft) => {
@@ -818,6 +797,7 @@ export function handleOptionChanged(
         });
         break;
       case "componentOptionUnselected":
+        console.log("line 819- handleOptionChanged");
         newOptionsSelected = produce(optionsSelected, (draft) => {
           //Remove the actual 'component' option selected
           removeFromOptionsSelected(
@@ -973,45 +953,44 @@ function addToOptionsAvailable(category, selection, draft) {
   const selectedOption = AllOptions[category].choices.find(
     (choice) => choice.id === selection
   );
-  draft[category].choices.push(selectedOption);
+  // Only add selectedOption if it doesn't already exist in the choices array
+  if (
+    !draft[category].choices.some((choice) => choice.id === selectedOption.id)
+  ) {
+    draft[category].choices.push(selectedOption);
+  }
 }
 
 //Removes from option from optionsAvailable
 function removeFromOptionsAvailable(category, selection, draft) {
   draft[category].choices = draft[category].choices.filter(
-    (choice) => choice.id !== selection.id
+    (choice) => choice.id !== selection
   );
 }
 
 // Callback function to reset options available when a model trim is selected
-function resetOptionsForTrimSelected(selection, optionsAvailable) {
-  return produce({}, (draft) => {
-    // Safely copy the trim object or fallback if undefined
-    draft.trim = optionsAvailable.trim || AllOptions.trim;
-
-    // Check if dependencies for the selected trim are defined and correct
-    const trimDependencies = Dependencies.trim.modelTrim[selection.id];
-    Object.keys(trimDependencies).forEach((dependencyKey) => {
-      if (Dependencies.trim && Dependencies.trim.modelTrim[selection.id]) {
-        if (Array.isArray(trimDependencies[dependencyKey])) {
-          // Filter choices based on dependency ids for arrays
-          draft[dependencyKey] = {
-            ...AllOptions[dependencyKey],
-            choices: AllOptions[dependencyKey].choices.filter((choice) =>
-              trimDependencies[dependencyKey].includes(choice.id)
-            ),
-          };
-        } else {
-          // Handle object dependencies using default configurations
-          draft[dependencyKey] = {
-            ...AllOptions[dependencyKey],
-            choices: AllOptions[dependencyKey].choices.filter((choice) =>
-              trimDependencies[dependencyKey].default.includes(choice.id)
-            ),
-          };
-        }
+function resetOptionsForTrimSelected(selection, draft) {
+  const optionsForTrimSelected = Dependencies.trim[selection.id];
+  Object.keys(optionsForTrimSelected).forEach((optionCategory) => {
+    if (Dependencies.trim && Dependencies.trim[selection.id]) {
+      if (Array.isArray(optionsForTrimSelected[optionCategory])) {
+        // Filter choices based on dependency ids for arrays
+        draft[optionCategory] = {
+          ...AllOptions[optionCategory],
+          choices: AllOptions[optionCategory].choices.filter((choice) =>
+            optionsForTrimSelected[optionCategory].includes(choice.id)
+          ),
+        };
+      } else {
+        // Handle object dependencies using default configurations
+        draft[optionCategory] = {
+          ...AllOptions[optionCategory],
+          choices: AllOptions[optionCategory].choices.filter((choice) =>
+            optionsForTrimSelected[optionCategory].default.includes(choice.id)
+          ),
+        };
       }
-    });
+    }
   });
 }
 
@@ -1027,21 +1006,30 @@ function checkOptionDependency(category, selection, optionsSelected) {
       exceptionObject.type = "trimOptionSelected";
       return exceptionObject;
     case "exteriorColor":
-      exceptionObject.status = true;
-      let selectedVehicleTrim = optionsSelected.trim.choices[0].id;
-      let auxiliaryOptions = Dependencies[category].unlock.auxiliary;
-      exceptionObject.unlock = auxiliaryOptions;
+      const { prevValue, id: selectedColor } = selection;
+      const selectedVehicleTrim = optionsSelected.trim.choices[0].id;
+      const unlockDependencies = Dependencies[category]?.unlock;
 
-      //Check if all the conditions for unlocking the 'auxiliary' options exist
-      if (
-        Dependencies[category].unlock[selection.id]?.precursor.trim.includes(
-          selectedVehicleTrim
-        )
-      ) {
+      const hasAuxiliaryOptions =
+        unlockDependencies?.[selectedColor]?.[selectedVehicleTrim];
+
+      if (hasAuxiliaryOptions) {
+        exceptionObject.status = true;
         exceptionObject.type = "addAuxiliaryOptionsAvailable";
+        exceptionObject.unlock =
+          unlockDependencies[selectedColor][selectedVehicleTrim];
       } else {
-        exceptionObject.type = "removeAuxiliaryOptionsAvailable";
+        const resetAuxiliaryOptionToDefault =
+          prevValue && unlockDependencies?.[prevValue]?.[selectedVehicleTrim];
+
+        if (resetAuxiliaryOptionToDefault) {
+          exceptionObject.status = true;
+          exceptionObject.type = "resetAuxiliaryOptionsToDefault";
+          exceptionObject.remove =
+            unlockDependencies[prevValue][selectedVehicleTrim];
+        }
       }
+
       return exceptionObject;
     case "packages":
       let rivalStatus = getRivalStatus(category, selection, optionsSelected);
@@ -1230,8 +1218,23 @@ function resetOptionsAvailableForComponentsRemoved(selection, draft) {
   }
 }
 
-function unlockOptionHandler(category, selection, draft) {
-  //If category doesn't already exists, add it
+function resetOptionsAvailable(category, choices, draft) {
+  // Create a new array to store the filtered options
+  const availableOptions = [];
+
+  choices.forEach((choice) => {
+    // Find the option in AllOptions[category].choices that matches the current choice
+    let optionAvailable = AllOptions[category].choices.find(
+      (option) => option.id === choice
+    );
+
+    // If the option is found, add it to the availableOptions array
+    if (optionAvailable) {
+      availableOptions.push(optionAvailable);
+    }
+  });
+
+  // Replace draft[category].choices with the new availableOptions array
   if (!draft[category]) {
     draft[category] = {
       displayName: AllOptions[category].displayName,
@@ -1240,21 +1243,34 @@ function unlockOptionHandler(category, selection, draft) {
     };
   }
 
-  const selectedOption = AllOptions[category].choices.find(
-    (choice) => choice.id === selection.id
-  );
-
-  if (AllOptions[category].type === "Dropdown") {
-    draft[category].choices = [selectedOption];
-  } else if (AllOptions[category].type === "CheckBoxGroup") {
-    //If selectedOption not in draft, add to draft
-    if (
-      !draft[category].choices.some((choice) => choice.id === selectedOption.id)
-    ) {
-      draft[category].choices.push(selectedOption);
-    }
-  }
+  draft[category].choices = availableOptions;
 }
+
+// function unlockOptionHandler(category, selection, draft) {
+//   //If category doesn't already exists, add it
+//   if (!draft[category]) {
+//     draft[category] = {
+//       displayName: AllOptions[category].displayName,
+//       type: AllOptions[category].type,
+//       choices: [],
+//     };
+//   }
+
+//   const selectedOption = AllOptions[category].choices.find(
+//     (choice) => choice.id === selection.id
+//   );
+
+//   if (AllOptions[category].type === "Dropdown") {
+//     draft[category].choices = [selectedOption];
+//   } else if (AllOptions[category].type === "CheckBoxGroup") {
+//     //If selectedOption not in draft, add to draft
+//     if (
+//       !draft[category].choices.some((choice) => choice.id === selectedOption.id)
+//     ) {
+//       draft[category].choices.push(selectedOption);
+//     }
+//   }
+// }
 
 function rivalSelectedPopupMessage(
   category,
