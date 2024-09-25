@@ -722,7 +722,7 @@ export function handleOptionChanged(
           resetOptionsForTrimSelected(selection, draft);
         });
         break;
-      case "rivalSelected":
+      case "rivalCurrentlySelected":
         //Generate popup notification of a rival option is currently selected
 
         let rivalsCurrentlySelected = exceptionObject.rivalsCurrentlySelected;
@@ -791,13 +791,15 @@ export function handleOptionChanged(
             draft
           );
         });
-        // Update the option 'components' in the optionsAvailable as needed
+        // Update the option 'components' in the optionsAvailable marking as part of a selected 'package' as needed
         newOptionsAvailable = produce(optionsAvailable, (draft) => {
           updateOptionsAvailableForComponentsAdded(selection, draft);
         });
+        console.log(newOptionsSelected);
+        console.log(newOptionsAvailable);
         break;
       case "componentOptionUnselected":
-        console.log("line 819- handleOptionChanged");
+        // console.log("line 819- handleOptionChanged");
         newOptionsSelected = produce(optionsSelected, (draft) => {
           //Remove the actual 'component' option selected
           removeFromOptionsSelected(
@@ -807,13 +809,21 @@ export function handleOptionChanged(
             draft
           );
           //Remove the nested'components' options
-          removePackageComponents(selection, optionsAvailable, draft);
+          removeComponentsFromOptionsSelected(
+            category,
+            selection,
+            newOptionsAvailable,
+            draft
+          );
         });
         // Update the option 'components' in the optionsAvailable as needed
         newOptionsAvailable = produce(optionsAvailable, (draft) => {
           //Reset the package 'components' in  optionsAvailable to default
-          resetOptionsAvailableForComponentsRemoved(selection, draft);
+          resetOptionsAvailableForComponentsRemoved(category, selection, draft);
         });
+        console.log(newOptionsSelected);
+        console.log(newOptionsAvailable);
+        break;
 
       default:
       // code block
@@ -1012,7 +1022,7 @@ function checkOptionDependency(category, selection, optionsSelected) {
 
       const hasAuxiliaryOptions =
         unlockDependencies?.[selectedColor]?.[selectedVehicleTrim];
-
+      //If the selected option unlocks auxiliary options
       if (hasAuxiliaryOptions) {
         exceptionObject.status = true;
         exceptionObject.type = "addAuxiliaryOptionsAvailable";
@@ -1021,7 +1031,7 @@ function checkOptionDependency(category, selection, optionsSelected) {
       } else {
         const resetAuxiliaryOptionToDefault =
           prevValue && unlockDependencies?.[prevValue]?.[selectedVehicleTrim];
-
+        //If the prevValue has auxiliary options
         if (resetAuxiliaryOptionToDefault) {
           exceptionObject.status = true;
           exceptionObject.type = "resetAuxiliaryOptionsToDefault";
@@ -1029,13 +1039,12 @@ function checkOptionDependency(category, selection, optionsSelected) {
             unlockDependencies[prevValue][selectedVehicleTrim];
         }
       }
-
       return exceptionObject;
     case "packages":
       let rivalStatus = getRivalStatus(category, selection, optionsSelected);
       if (rivalStatus.selected) {
         (exceptionObject.status = true),
-          ((exceptionObject.type = "rivalSelected"),
+          ((exceptionObject.type = "rivalCurrentlySelected"),
           (exceptionObject.rivalsCurrentlySelected =
             rivalStatus.rivalOptionsCurrentlySelected));
       } else if (selection.isChecked) {
@@ -1046,9 +1055,9 @@ function checkOptionDependency(category, selection, optionsSelected) {
       } else {
         exceptionObject.status = true;
         exceptionObject.type = "componentOptionUnselected";
+        console.log(exceptionObject);
         return exceptionObject;
       }
-
       break;
     case "exteriorAccessories":
       // code block
@@ -1112,7 +1121,7 @@ function addComponentsToOptionsSelected(
         if (choice) {
           const choiceWithComponent = {
             ...choice,
-            name: choice.name + " - Included in Package",
+            name: choice.name + " - Included in Package Selected",
             component: selection.id,
           };
           // Check if the option type is CheckBoxGroup or Dropdown
@@ -1147,23 +1156,26 @@ function addComponentsToOptionsSelected(
 
 //Removes from optionsSelected, components of an option unselected
 function removeComponentsFromOptionsSelected(
+  category,
   selection,
   optionsAvailable,
   draft
 ) {
-  const packageDependencies = Dependencies.packages.components[selection.id];
-  if (packageDependencies) {
-    Object.keys(packageDependencies).forEach((dependencyKey) => {
-      packageDependencies[dependencyKey].forEach((depId) => {
-        if (draft[dependencyKey]) {
-          if (optionsAvailable[dependencyKey].type === "Dropdown") {
+  const componentDependencies = Dependencies[category].components[selection.id];
+  if (componentDependencies) {
+    Object.keys(componentDependencies).forEach((componentCategory) => {
+      componentDependencies[componentCategory].forEach((componentID) => {
+        if (draft[componentCategory]) {
+          if (optionsAvailable[componentCategory].type === "Dropdown") {
             // For Dropdown, clear the choices array
-            draft[dependencyKey].choices = [];
-          } else if (optionsAvailable[dependencyKey].type === "CheckBoxGroup") {
+            draft[componentCategory].choices = [];
+          } else if (
+            optionsAvailable[componentCategory].type === "CheckBoxGroup"
+          ) {
             // For CheckBoxGroup, filter out the specific choice
-            draft[dependencyKey].choices = draft[dependencyKey].choices.filter(
-              (choice) => choice.id !== depId
-            );
+            draft[componentCategory].choices = draft[
+              componentCategory
+            ].choices.filter((choice) => choice.id !== componentID);
           }
         }
       });
@@ -1173,10 +1185,10 @@ function removeComponentsFromOptionsSelected(
 
 //Changes the optionsAvailable to account for being part of package selected
 function updateOptionsAvailableForComponentsAdded(selection, draft) {
-  const packageDependencies = Dependencies.packages.components[selection.id];
-  if (packageDependencies) {
-    Object.keys(packageDependencies).forEach((dependencyKey) => {
-      packageDependencies[dependencyKey].forEach((depId) => {
+  const componentDependencies = Dependencies.packages.components[selection.id];
+  if (componentDependencies) {
+    Object.keys(componentDependencies).forEach((dependencyKey) => {
+      componentDependencies[dependencyKey].forEach((depId) => {
         // Find the index of the choice in the draft
         const choiceIndex = draft[dependencyKey].choices.findIndex(
           (choice) => choice.id === depId
@@ -1185,7 +1197,7 @@ function updateOptionsAvailableForComponentsAdded(selection, draft) {
         if (choiceIndex !== -1) {
           // Directly update the properties of the found choice in the draft
           draft[dependencyKey].choices[choiceIndex].name +=
-            " - Included in Package";
+            " - Included in Package selected";
           draft[dependencyKey].choices[choiceIndex].component = selection.id;
           draft[dependencyKey].choices[choiceIndex].price = 0; // Set price to 0 or as required
         }
@@ -1195,11 +1207,11 @@ function updateOptionsAvailableForComponentsAdded(selection, draft) {
 }
 
 //Resets the optionsAvailable to default after a package is unselected
-function resetOptionsAvailableForComponentsRemoved(selection, draft) {
-  const packageDependencies = Dependencies.packages.components[selection.id];
-  if (packageDependencies) {
-    Object.keys(packageDependencies).forEach((dependencyKey) => {
-      packageDependencies[dependencyKey].forEach((depId) => {
+function resetOptionsAvailableForComponentsRemoved(category, selection, draft) {
+  const componentDependencies = Dependencies[category].components[selection.id];
+  if (componentDependencies) {
+    Object.keys(componentDependencies).forEach((dependencyKey) => {
+      componentDependencies[dependencyKey].forEach((depId) => {
         // Find the index of the choice in the draft
         const choiceIndex = draft[dependencyKey].choices.findIndex(
           (choice) => choice.id === depId
