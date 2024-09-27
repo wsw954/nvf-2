@@ -23,7 +23,7 @@ const initialState = {
 async function importModelData(make, model) {
   const formattedMake = formatName(make);
   const formattedModel = formatName(model);
-  return await import(`/oemData/${formattedMake}/${formattedModel}Test.js`);
+  return await import(`/oemData/${formattedMake}/${formattedModel}.js`);
 }
 //Utility function
 function formatName(name) {

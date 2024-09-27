@@ -44,14 +44,28 @@ const IndexPage = () => {
 
   const handleOptionChange = (category, selection) => {
     if (selectedMake && selectedModel) {
-      dispatch(
-        updateOptions({
-          make: selectedMake,
-          model: selectedModel,
-          category,
-          selection,
-        })
-      );
+      const { id, isChecked, component, dependency } = selection;
+
+      let payload = {
+        make: selectedMake,
+        model: selectedModel,
+        category,
+        selection: {
+          id,
+          isChecked,
+        },
+      };
+
+      // Add conditional properties
+      if (component) {
+        payload.selection.component = component;
+      }
+
+      if (dependency) {
+        payload.selection.dependency = dependency;
+      }
+
+      dispatch(updateOptions(payload));
     }
   };
 

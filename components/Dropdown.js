@@ -24,7 +24,14 @@ const Dropdown = ({ id, value, onChange, options, disabled }) => {
 
   const handleChange = (event) => {
     const newValue = event.target.value;
-    onChange(event, { id: newValue, isChecked: true, prevValue: prevValue });
+    const selectedOption = options.find((option) => option.id === newValue);
+    onChange(event, {
+      id: newValue,
+      isChecked: true,
+      component: selectedOption.component || null,
+      dependency: selectedOption.dependency || null,
+      prevValue: prevValue,
+    });
     setPrevValue(newValue);
   };
 
