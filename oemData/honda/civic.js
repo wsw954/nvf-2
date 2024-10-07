@@ -421,7 +421,11 @@ const Dependencies = {
       electronicAccessories: ["EngBlockHeat"],
     },
     HatchbackLX: {
-      powertrain: ["standardPowertrain"],
+      powertrain: [
+        "standardPowertrain",
+        "premiumPowertrain",
+        "turboPowertrain",
+      ],
       exteriorColor: ["BlackEC", "SilverEC", "GrayEC", "PlatinumEC"],
       interiorColor: ["BlackIC"],
       wheels: ["standard16Alloy"],
@@ -574,7 +578,7 @@ const Dependencies = {
       },
       TestPackage1: {
         exteriorAccessories: ["TestC1", "TestC2"],
-        interiorAccessories: ["ASFloorMat"],
+        powertrain: ["turboPowertrain"],
       },
     },
 
@@ -706,7 +710,6 @@ export function handleOptionChanged(
     selection,
     optionsSelected
   );
-  console.log(optionsSelected);
 
   if (!exceptionObject.status) {
     if (selection.isChecked) {
@@ -789,7 +792,7 @@ export function handleOptionChanged(
           });
         }
         break;
-      case "componentOptionSelected":
+      case "packageOptionSelected":
         newOptionsSelected = produce(optionsSelected, (draft) => {
           //First, add the main category and selection
           addToOptionsSelected(category, selection, draft);
@@ -806,7 +809,7 @@ export function handleOptionChanged(
           updateOptionsAvailableForComponentsAdded(selection, draft);
         });
         break;
-      case "componentOptionUnselected":
+      case "packageOptionUnselected":
         newOptionsSelected = produce(optionsSelected, (draft) => {
           //Remove the actual 'component' option selected
           removeFromOptionsSelected(
@@ -828,6 +831,29 @@ export function handleOptionChanged(
           //Reset the package 'components' in  optionsAvailable to default
           resetOptionsAvailableForComponentsRemoved(category, selection, draft);
         });
+        break;
+      case "componentUnselected":
+        console.log(
+          "Line 836 add code to unselect package Component unselected"
+        );
+        newOptionsSelected = produce(optionsSelected, (draft) => {
+          removeFromOptionsSelected(
+            category,
+            selection,
+            optionsAvailable,
+            draft
+          );
+        });
+        // let componentOptionUnselected = exceptionObject.rivalsCurrentlySelected;
+        // newPopup = produce(popup, (draft) => {
+        //   rivalSelectedPopupMessage(
+        //     category,
+        //     selection,
+        //     draft,
+        //     componentOptionUnselected
+        //   );
+        // });
+
         break;
 
       default:
@@ -1014,7 +1040,6 @@ function checkOptionDependency(category, selection, optionsSelected) {
     status: false,
     type: "NoExceptions",
   };
-
   switch (category) {
     case "trim":
       exceptionObject.status = true;
@@ -1054,12 +1079,12 @@ function checkOptionDependency(category, selection, optionsSelected) {
             rivalStatus.rivalOptionsCurrentlySelected));
       } else if (selection.isChecked) {
         exceptionObject.status = true;
-        exceptionObject.type = "componentOptionSelected";
+        exceptionObject.type = "packageOptionSelected";
 
         return exceptionObject;
       } else {
         exceptionObject.status = true;
-        exceptionObject.type = "componentOptionUnselected";
+        exceptionObject.type = "packageOptionUnselected";
         return exceptionObject;
       }
       break;
@@ -1073,19 +1098,26 @@ function checkOptionDependency(category, selection, optionsSelected) {
             ((exceptionObject.type = "rivalCurrentlySelected"),
             (exceptionObject.rivalsCurrentlySelected =
               rivalStatus.rivalOptionsCurrentlySelected));
-        }
-        //Handle 'parent' status
-        else {
-          let parentStatus = checkIfParentSelected(
-            category,
-            selection,
-            optionsSelected
-          );
+        } else {
+          console.log("Check for prevValue--" + selection);
+          //Add code to handle parentStatus
+          // let parentStatus = checkIfParentSelected(
+          //   category,
+          //   selection,
+          //   optionsSelected
+          // );
           //Check if the category is included in the parent dependency
         }
       }
       //Handle if option is unchecked
       else {
+        console.log(selection);
+        if (selection.component) {
+          console.log("This an unselected component option");
+          exceptionObject.status = true;
+          exceptionObject.type = "componentUnselected";
+          exceptionObject.component = selection.component;
+        }
       }
       break;
     // code block

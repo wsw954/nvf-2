@@ -1,5 +1,5 @@
 // components/Dropdown.js
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 
 const formatPlaceholder = (id) => {
   return id
@@ -10,40 +10,33 @@ const formatPlaceholder = (id) => {
 };
 
 const Dropdown = ({ id, value, onChange, options, disabled }) => {
-  const [prevValue, setPrevValue] = useState(null);
+  const [currentValue, setCurrentValue] = useState(value || null);
+  const prevValueRef = useRef(null); // Ref to store previous value
 
   useEffect(() => {
-    if (options.length === 1 && value !== options[0].id) {
-      setPrevValue(value);
-      onChange(
-        { target: { value: options[0].id } },
-        { id: options[0].id, isChecked: true, prevValue: value }
-      );
-    }
-  }, [options, value, onChange]);
-
-  useEffect(() => {
-    if (value && value !== prevValue) {
-      setPrevValue(value); // Ensure prevValue is updated whenever value changes
-    }
-  }, [value, prevValue]);
+    prevValueRef.current = currentValue; // Update ref with the current value after each render
+  }, [currentValue]);
 
   const handleChange = (event) => {
     const newValue = event.target.value;
     const selectedOption = options.find((option) => option.id === newValue);
+
     onChange(event, {
       id: newValue,
       isChecked: true,
-      component: selectedOption.component || null,
-      dependency: selectedOption.dependency || null,
-      prevValue: prevValue,
+      component: selectedOption?.component || null,
+      dependency: selectedOption?.dependency || null,
+      prevValue: prevValueRef.current, // Use the ref for the previous value
     });
-    setPrevValue(newValue);
+
+    setCurrentValue(newValue); // Update currentValue
   };
 
   return (
     <select id={id} value={value} onChange={handleChange} disabled={disabled}>
-      {value ? null : <option value="">Select {formatPlaceholder(id)}</option>}
+      {!currentValue && (
+        <option value="">Select {formatPlaceholder(id)}</option>
+      )}
       {options.map((option) => (
         <option key={option.id} value={option.id}>
           {option.name}{" "}

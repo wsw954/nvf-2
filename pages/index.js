@@ -45,25 +45,13 @@ const IndexPage = () => {
   const handleOptionChange = (category, selection) => {
     if (selectedMake && selectedModel) {
       const { id, isChecked, component, dependency } = selection;
-
+      console.log(selection);
       let payload = {
         make: selectedMake,
         model: selectedModel,
         category,
-        selection: {
-          id,
-          isChecked,
-        },
+        selection,
       };
-
-      // Add conditional properties
-      if (component) {
-        payload.selection.component = component;
-      }
-
-      if (dependency) {
-        payload.selection.dependency = dependency;
-      }
 
       dispatch(updateOptions(payload));
     }
@@ -85,31 +73,31 @@ const IndexPage = () => {
   };
 
   const renderOptions = () => {
-    const handleCheckBoxChange = (key, id, isChecked) => {
+    const handleCheckBoxChange = (category, id, isChecked) => {
       // Call handleOptionChange with the checkbox id and its new checked status
-      handleOptionChange(key, { id, isChecked });
+      handleOptionChange(category, { id, isChecked });
     };
     // Check if a model is selected before rendering additional options
     if (selectedModel && optionsAvailable) {
-      return Object.entries(optionsAvailable).map(([key, option]) => {
+      return Object.entries(optionsAvailable).map(([category, option]) => {
         switch (option.type) {
           case "Dropdown":
             const selectedOptionID =
               optionsSelected &&
-              optionsSelected[key] &&
-              optionsSelected[key].choices &&
-              optionsSelected[key].choices.length > 0
-                ? optionsSelected[key].choices[0].id
+              optionsSelected[category] &&
+              optionsSelected[category].choices &&
+              optionsSelected[category].choices.length > 0
+                ? optionsSelected[category].choices[0].id
                 : "";
 
             return (
-              <div key={key}>
-                <label htmlFor={key}>{option.displayName}:</label>
+              <div key={category}>
+                <label htmlFor={category}>{option.displayName}:</label>
                 <Dropdown
-                  id={key}
+                  id={category}
                   value={selectedOptionID} // Set the selected option here
                   onChange={(event, selection) =>
-                    handleOptionChange(key, selection)
+                    handleOptionChange(category, selection)
                   }
                   options={option.choices}
                 />
@@ -119,21 +107,21 @@ const IndexPage = () => {
           case "CheckBoxGroup":
             // Determine which options are selected
             const selectedCheckBoxes =
-              optionsSelected && optionsSelected[key]
-                ? optionsSelected[key].choices.map((c) => c.id)
+              optionsSelected && optionsSelected[category]
+                ? optionsSelected[category].choices.map((c) => c.id)
                 : [];
 
             return (
-              <div key={key}>
+              <div key={category}>
                 <label>{option.displayName}:</label>
                 <CheckBoxGroup
-                  category={key}
+                  id={category}
                   choices={option.choices.map((choice) => ({
                     ...choice,
                     checked: selectedCheckBoxes.includes(choice.id), // Set checked status
                   }))}
                   onChange={(id, isChecked) =>
-                    handleCheckBoxChange(key, id, isChecked)
+                    handleCheckBoxChange(category, id, isChecked)
                   }
                 />
                 <br></br>
