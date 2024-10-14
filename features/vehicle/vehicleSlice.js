@@ -11,8 +11,6 @@ const initialState = {
   popup: {
     show: false,
     message: "",
-    category: "",
-    selection: {},
     exception: {},
   },
   loading: false,

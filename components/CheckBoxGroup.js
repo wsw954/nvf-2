@@ -4,13 +4,15 @@ import React, { useEffect } from "react";
 const CheckBoxGroup = ({ category, choices, onChange }) => {
   const handleChange = (event) => {
     const choice = choices.find((c) => c.id === event.target.id);
-
-    // Call the parent onChange function, passing along any conditional properties
-    onChange(event.target.id, event.target.checked, {
-      component: choice.component || null,
+    onChange(event, {
+      id: event.target.value,
+      isChecked: event.target.checked,
+      componentID: choice.componentID || null,
+      componentCategory: choice.componentCategory || null,
       dependency: choice.dependency || null,
     });
   };
+
   return (
     <div>
       {choices.map((choice) => (

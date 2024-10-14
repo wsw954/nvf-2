@@ -30,11 +30,11 @@ const IndexPage = () => {
     name: item.name,
   }));
 
-  const handleMakeChange = (category, selection) => {
+  const handleMakeChange = (selection) => {
     dispatch(selectMake(selection.id));
   };
 
-  const handleModelChange = (category, selection) => {
+  const handleModelChange = (selection) => {
     const model = selection.id;
     dispatch(selectModel(model));
     if (selectedMake && model) {
@@ -45,7 +45,6 @@ const IndexPage = () => {
   const handleOptionChange = (category, selection) => {
     if (selectedMake && selectedModel) {
       const { id, isChecked, component, dependency } = selection;
-      console.log(selection);
       let payload = {
         make: selectedMake,
         model: selectedModel,
@@ -73,10 +72,6 @@ const IndexPage = () => {
   };
 
   const renderOptions = () => {
-    const handleCheckBoxChange = (category, id, isChecked) => {
-      // Call handleOptionChange with the checkbox id and its new checked status
-      handleOptionChange(category, { id, isChecked });
-    };
     // Check if a model is selected before rendering additional options
     if (selectedModel && optionsAvailable) {
       return Object.entries(optionsAvailable).map(([category, option]) => {
@@ -120,8 +115,8 @@ const IndexPage = () => {
                     ...choice,
                     checked: selectedCheckBoxes.includes(choice.id), // Set checked status
                   }))}
-                  onChange={(id, isChecked) =>
-                    handleCheckBoxChange(category, id, isChecked)
+                  onChange={(event, selection) =>
+                    handleOptionChange(category, selection)
                   }
                 />
                 <br></br>
@@ -145,7 +140,7 @@ const IndexPage = () => {
             id="make"
             value={selectedMake}
             onChange={(event) =>
-              handleMakeChange("make", {
+              handleMakeChange({
                 id: event.target.value,
                 isChecked: true, //Mark all selected options as checked
               })
@@ -160,7 +155,7 @@ const IndexPage = () => {
             id="model"
             value={selectedModel} // Adjust as needed
             onChange={(event) =>
-              handleModelChange("model", {
+              handleModelChange({
                 id: event.target.value,
                 isChecked: true, //Mark all selected options as checked
               })
