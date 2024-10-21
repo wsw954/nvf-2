@@ -7,8 +7,8 @@ const CheckBoxGroup = ({ category, choices, onChange }) => {
     onChange(event, {
       id: event.target.value,
       isChecked: event.target.checked,
-      componentID: choice.componentID || null,
-      componentCategory: choice.componentCategory || null,
+      mainComponentID: choice.mainComponentID || null,
+      mainComponentCategory: choice.mainComponentCategory || null,
       dependency: choice.dependency || null,
     });
   };

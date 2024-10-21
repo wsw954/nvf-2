@@ -835,26 +835,11 @@ export function handleOptionChanged(
       case "subComponentUnselected":
         //Generate popup notification of the component option to be unselected
         newPopup = produce(popup, (draft) => {
-          componentUnselectedPopupMessage(
+          subComponentUnselectedPopupMessage(
             category,
             selection,
             draft,
-            exceptionObject.componentCategory,
-            exceptionObject.componentID
-          );
-        });
-
-        break;
-      case "prevValueIsSubComponentUnselected":
-        //Pass the 'prevValue' option which was unselected
-        selection = exceptionObject.prevValue;
-        newPopup = produce(popup, (draft) => {
-          componentUnselectedPopupMessage(
-            category,
-            selection,
-            draft,
-            exceptionObject.componentCategory,
-            exceptionObject.componentID
+            exceptionObject
           );
         });
 
@@ -891,7 +876,6 @@ export function handlePopupConfirm(optionsAvailable, optionsSelected, popup) {
   switch (popup.exception.action) {
     case "rivalSelected":
       //Add the rival selected, unselect the currently selected rivals
-
       let categoryRivalToAdd = popup.categoryRivalToAdd;
       let selectionRivalToAdd = popup.selectionRivalToAdd;
 
@@ -931,8 +915,37 @@ export function handlePopupConfirm(optionsAvailable, optionsSelected, popup) {
 
       break;
 
-    case "componentUnselected":
-      console.log(popup);
+    case "subComponentUnselected":
+      //Get the main component option
+      let { mainComponentCategory, mainComponentID } = popup.exception;
+
+      let mainComponentOption = {
+        id: mainComponentID,
+        isChecked: false,
+      };
+
+      //Remove the main component option from optionsSelected
+      updatedState = handleOptionChanged(
+        mainComponentCategory,
+        mainComponentOption,
+        newOptionsAvailable,
+        newOptionsSelected,
+        DEFAULT_POPUP_STATE
+      );
+
+      if (popup.selection.isChecked) {
+        let selection = {
+          id: popup.selection.id,
+          isChecked: popup.selection.id,
+        };
+        updatedState = handleOptionChanged(
+          popup.category,
+          selection,
+          updatedState.optionsAvailable,
+          updatedState.optionsSelected,
+          DEFAULT_POPUP_STATE
+        );
+      }
 
       break;
 
@@ -1092,6 +1105,7 @@ function checkOptionDependency(category, selection, optionsSelected) {
       return exceptionObject;
     case "packages":
       let rivalStatus = getRivalStatus(category, selection, optionsSelected);
+      //Check if option has 'rivals'
       if (rivalStatus.selected) {
         (exceptionObject.status = true),
           ((exceptionObject.type = "rivalCurrentlySelected"),
@@ -1122,12 +1136,62 @@ function checkOptionDependency(category, selection, optionsSelected) {
             (exceptionObject.rivalsCurrentlySelected =
               rivalStatus.rivalOptionsCurrentlySelected));
         } else {
-          console.log(selection);
           //Add code to check for parent status
         }
       }
       //Handle if option is unchecked
       else {
+        //First check if the option was 'component'
+        if (selection.mainComponentID) {
+          exceptionObject.status = true;
+          exceptionObject.type = "subComponentUnselected";
+          exceptionObject.subComponent = {
+            mainComponentID: selection.mainComponentID,
+            mainComponentCategory: selection.mainComponentCategory,
+          };
+        }
+      }
+      break;
+    case "powertrain":
+      //Check for previously selected option
+      let prevOptionSelected = optionsSelected[category].choices.find(
+        (o) => o.id === selection.prevValue
+      );
+      //Check if previously selected option was a 'subComponent'
+      if (
+        prevOptionSelected &&
+        typeof prevOptionSelected.mainComponentID === "string"
+      ) {
+        exceptionObject.status = true;
+        exceptionObject.type = "subComponentUnselected";
+        exceptionObject.subComponent = {
+          prevOptionCategory: category,
+          prevOptionID: prevOptionSelected.id,
+          mainComponentID: prevOptionSelected.mainComponentID,
+          mainComponentCategory: prevOptionSelected.mainComponentCategory,
+        };
+      } else {
+        return exceptionObject;
+      }
+
+      break;
+    case "interiorAccessories":
+      //Handle if option is checked
+      if (selection.isChecked) {
+        let rivalStatus = getRivalStatus(category, selection, optionsSelected);
+        //Handle rival status
+        if (rivalStatus.selected) {
+          (exceptionObject.status = true),
+            ((exceptionObject.type = "rivalCurrentlySelected"),
+            (exceptionObject.rivalsCurrentlySelected =
+              rivalStatus.rivalOptionsCurrentlySelected));
+        } else {
+          //Add code to check for parent status
+        }
+      }
+      //Handle if option is unchecked
+      else {
+        //First check if the option was 'component'
         if (selection.componentID) {
           exceptionObject.status = true;
           exceptionObject.type = "subComponentUnselected";
@@ -1136,26 +1200,6 @@ function checkOptionDependency(category, selection, optionsSelected) {
         }
       }
       break;
-    case "powertrain":
-      let prevOptionSelected = optionsSelected[category].choices.find(
-        (o) => o.id === selection.prevValue
-      );
-      if (
-        prevOptionSelected &&
-        typeof prevOptionSelected.componentID === "string"
-      ) {
-        exceptionObject.status = true;
-        exceptionObject.type = "prevValueIsSubComponentUnselected";
-        exceptionObject.prevValue = prevOptionSelected;
-        exceptionObject.componentID = prevOptionSelected.componentID;
-        exceptionObject.componentCategory =
-          prevOptionSelected.componentCategory;
-      } else {
-        return exceptionObject;
-      }
-
-      break;
-    // code block
   }
 
   return exceptionObject;
@@ -1246,8 +1290,8 @@ function addComponentsToOptionsSelected(
           const choiceWithComponent = {
             ...choice,
             name: choice.name + " - Included in Package Selected",
-            componentID: selection.id,
-            componentCategory: category,
+            mainComponentID: selection.id,
+            mainComponentCategory: category,
           };
           // Check if the option type is CheckBoxGroup or Dropdown
           const optionType = AllOptions[dependencyKey].type;
@@ -1323,8 +1367,9 @@ function updateOptionsAvailableForComponentsAdded(category, selection, draft) {
           // Directly update the properties of the found choice in the draft
           draft[dependencyKey].choices[choiceIndex].name +=
             " - Included in Package selected";
-          draft[dependencyKey].choices[choiceIndex].componentID = selection.id;
-          draft[dependencyKey].choices[choiceIndex].componentCategory =
+          draft[dependencyKey].choices[choiceIndex].mainComponentID =
+            selection.id;
+          draft[dependencyKey].choices[choiceIndex].mainComponentCategory =
             category;
           draft[dependencyKey].choices[choiceIndex].price = 0; // Set price to 0 or as required
         }
@@ -1398,22 +1443,28 @@ function rivalSelectedPopupMessage(
   };
 }
 
-//Generate popup message for rival selected notification
-function componentUnselectedPopupMessage(
+//Generate notification in popup warning a 'subComponent' option was unselected
+function subComponentUnselectedPopupMessage(
   category,
   selection,
   draft,
-  componentCategory,
-  componentOptionID
+  exceptionObject
 ) {
-  // Extract names from the unselected component option
-  const mainComponentOption = AllOptions[componentCategory].choices.find(
-    (choice) => componentOptionID === choice.id
-  );
-
+  const { mainComponentID, mainComponentCategory } =
+    exceptionObject.subComponent;
   let subComponentOption = AllOptions[category].choices.find(
     (choice) => choice.id === selection.id
   );
+  // Extract names from the unselected component option
+  const mainComponentOption = AllOptions[mainComponentCategory].choices.find(
+    (choice) => mainComponentID === choice.id
+  );
+  if (selection.isChecked) {
+    const { prevOptionID, prevOptionCategory } = exceptionObject.subComponent;
+    subComponentOption = AllOptions[prevOptionCategory].choices.find(
+      (choice) => choice.id === prevOptionID
+    );
+  }
   let message =
     `Unselecting ${subComponentOption.name} will also unselect ` +
     mainComponentOption.name;
@@ -1421,14 +1472,12 @@ function componentUnselectedPopupMessage(
   //Set the constructed message to draft.message
   draft.show = true;
   draft.message = message;
+  draft.category = category;
   draft.selection = selection;
   draft.exception = {
-    action: "componentUnselected",
-    subComponentCategory: category,
-    subComponentOption: subComponentOption,
-    mainComponentOption: mainComponentOption,
-    mainComponentCategory: componentCategory,
+    action: "subComponentUnselected",
+    mainComponentCategory: mainComponentCategory,
+    mainComponentID: mainComponentID,
   };
 }
-
 export { AllOptions, InitialOptionsAvailable, Dependencies };
