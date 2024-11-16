@@ -8,13 +8,33 @@ const AllOptions = {
     displayName: "Trim",
     type: "Dropdown",
     choices: [
-      { id: "SedanLX", name: "Sedan LX", price: 23950 },
-      { id: "SedanSport", name: "Sedan Sport", price: 25050 },
-      { id: "SedanEX", name: "Sedan EX", price: 26950 },
-      { id: "SedanTouring", name: "Sedan Touring", price: 30550 },
-      { id: "HatchbackLX", name: "Hatchback LX", price: 24950 },
-      { id: "TypeR", name: "Type R", price: 42895 },
-      { id: "HBEXL", name: "Hatchback EX-L", price: 28650 },
+      { id: "SedanLX", name: "Sedan LX", price: 23950, dependency: ["trim"] },
+      {
+        id: "SedanSport",
+        name: "Sedan Sport",
+        price: 25050,
+        dependency: ["trim"],
+      },
+      { id: "SedanEX", name: "Sedan EX", price: 26950, dependency: ["trim"] },
+      {
+        id: "SedanTouring",
+        name: "Sedan Touring",
+        price: 30550,
+        dependency: ["trim"],
+      },
+      {
+        id: "HatchbackLX",
+        name: "Hatchback LX",
+        price: 24950,
+        dependency: ["trim"],
+      },
+      {
+        id: "ModelX",
+        name: "Model  X",
+        price: 24950,
+        dependency: ["trim"],
+      },
+
       // ... other trims
     ],
   },
@@ -99,8 +119,18 @@ const AllOptions = {
     displayName: "Packages",
     type: "CheckBoxGroup",
     choices: [
-      { id: "ASPack1", name: "All Season Protection Package I", price: 420 },
-      { id: "ASPack2", name: "All Season Protection Package II", price: 370 },
+      {
+        id: "ASPack1",
+        name: "All Season Protection Package I",
+        price: 420,
+        dependency: ["components", "rivals"],
+      },
+      {
+        id: "ASPack2",
+        name: "All Season Protection Package II",
+        price: 370,
+        dependency: ["components", "rivals"],
+      },
       { id: "HPD", name: "HPD Package", price: 1452 },
       { id: "PP", name: "Protection Package ", price: 300 },
       {
@@ -115,7 +145,13 @@ const AllOptions = {
       },
       { id: "HPDHatch", name: "HPD Package", price: 799 },
       { id: "PPHatch", name: "Protection Package ", price: 295 },
-      { id: "TestPackage1", name: "Test Package #1", price: 500 },
+      { id: "PowerPackage1", name: "Powertrain Package1", price: 500 },
+      {
+        id: "MXPack1",
+        name: "ModX Spec Pack1",
+        price: 500,
+        dependency: ["components", "rivals"],
+      },
     ],
   },
   exteriorAccessories: {
@@ -123,7 +159,8 @@ const AllOptions = {
     type: "CheckBoxGroup",
     choices: [
       { id: "Bike", name: "Bike Attachment Frame Mount", price: 216 },
-      { id: "BSMoulding", name: "Body Side Moulding", price: 247 },
+      { id: "BSMouldingA", name: "Body Side Moulding A", price: 247 },
+      { id: "BSMouldingB", name: "Body Side Moulding B", price: 247 },
       { id: "DLSpoiler", name: "Decklid Spoiler-HPD", price: 329 },
       { id: "DEdgeFilm", name: "Door Edge Film", price: 56 },
       { id: "DEdgeGuard", name: "Door Edge Guard", price: 127 },
@@ -143,21 +180,30 @@ const AllOptions = {
         name: "Emblems, Front, Rear H-Mark and Civic",
         price: 114,
       },
+      { id: "ExtMould", name: "Exterior Moulding", price: 247 },
+      { id: "FrontSpoiler", name: "Front Spoiler", price: 270 },
       { id: "Kayak", name: "Kayak Attachment", price: 270 },
       { id: "MoonRVisor", name: "Moon Roof Visor", price: 171 },
+      { id: "Visor", name: "Visor", price: 500 },
+      { id: "MXHAT", name: "MX Hood Attachment", price: 171 },
       { id: "RBumperApp", name: "Rear Bumper Applique", price: 78 },
       { id: "RBumperProt", name: "Rear Bumper Protector", price: 97 },
+      { id: "RearSpoiler", name: "Rear Spoiler", price: 270 },
       { id: "RoofBas", name: "Roof Basket", price: 412 },
       { id: "RBoxMid", name: "Roof Box-Midsize", price: 567 },
       { id: "RBoxShort", name: "Roof Box-Short", price: 534 },
+      { id: "RearSpolier", name: "Rear Spoiler", price: 125 },
       { id: "RoofRack", name: "Roof Rack", price: 407 },
+      { id: "RoofPins", name: "Roof Pins", price: 100 },
       { id: "SkiSnow", name: "Ski/Snowboard Attachment", price: 287 },
       { id: "Surf", name: "Surf/Paddleboard Attachment", price: 173 },
       { id: "SGuardSet", name: "Splash Guard Set", price: 116 },
+      { id: "SpoilerKit", name: "Spoiler Kit", price: 116 },
       { id: "TailGate", name: "Tail Gate Spoiler-HPD ", price: 407 },
-      { id: "TestC1", name: "Test Comp 1", price: 100 },
-      { id: "TestC2", name: "Test Comp 2", price: 100 },
-      { id: "TestRO1", name: "Test Rival Option 1", price: 100 },
+      { id: "TowingKit", name: "Towing Kit ", price: 500 },
+      { id: "TrailerHitch", name: "Trailing Hitch ", price: 125 },
+      { id: "PPEmblem1", name: "Power Pack Emblem1", price: 100 }, //For testing package w/ component in Dropdwown
+      { id: "PPEmblem2", name: "Power Pack Emblem2", price: 150 },
       {
         id: "UBodySpoilerFront",
         name: "Underbody Spoiler HPD-Front",
@@ -177,15 +223,6 @@ const AllOptions = {
       { id: "WheelLocksB", name: "Wheel Locks-Black", price: 94 },
       { id: "WheelLocksC", name: "Wheel Locks-Chrome", price: 65 },
       { id: "WLugNuts", name: "Wheel Lug Nuts-Black", price: 51 },
-      { id: "EAC1", name: "EA-Component1- ASP1", price: 500 },
-      { id: "EAC2", name: "EA-Component2 - ASP1", price: 500 },
-      { id: "EAC3", name: "EA-Component3 -ASP2", price: 500 },
-      { id: "KayakAtt", name: "Kayak Attachment", price: 264 },
-      { id: "EAC4", name: "Rival Acccessory 4", price: 500 },
-      { id: "EAC5", name: "Rival Acccessory 5", price: 500 },
-      { id: "HPDE", name: "HPD Emblem", price: 150 },
-      { id: "HPDT", name: "HPD Tailgate Spoiler", price: 150 },
-      { id: "RR", name: "Roof Rack", price: 399 },
     ],
   },
   interiorAccessories: {
@@ -206,8 +243,13 @@ const AllOptions = {
       { id: "DoorSillProt", name: "Door Sill Protection Film", price: 111 },
       { id: "DoorSillIllum", name: "Door Sill Illumination", price: 329 },
       { id: "IDoorSill", name: "Illuminated Door Sill Trim", price: 329 },
+      { id: "IntMould", name: "Interior Moulding", price: 247 },
+      { id: "MXInt", name: "MX Interior Rack", price: 171 },
       { id: "RPWShade", name: "Rear Passenger Window Shades", price: 192 },
       { id: "SeatBackProt", name: "Seat Back Protectors", price: 109 },
+      { id: "SpoilerController", name: "Spoiler Controller", price: 125 },
+      { id: "SpoilerLights", name: "Spoiler Lights", price: 109 },
+      { id: "TowingController", name: "Towing Controller", price: 127 },
       { id: "TTray", name: "Trunk Tray", price: 127 },
       { id: "TTDividers", name: "Trunk Tray Dividers", price: 67 },
       { id: "IAC2", name: "IA-Component2", price: 500 },
@@ -241,7 +283,6 @@ const Dependencies = {
       wheels: ["standard16WC"],
       packages: ["ASPack1", "ASPack2", "HPD", "PP"],
       exteriorAccessories: [
-        "BSMoulding",
         "DLSpoiler",
         "DEdgeFilm",
         "DEdgeGuard",
@@ -288,7 +329,6 @@ const Dependencies = {
       wheels: ["18InchGB", "18InchBA"],
       packages: ["ASPack1", "ASPack2", "HPD", "PP"],
       exteriorAccessories: [
-        "BSMoulding",
         "DLSpoiler",
         "DEdgeFilm",
         "DEdgeGuard",
@@ -337,7 +377,6 @@ const Dependencies = {
       wheels: ["17InchAW"],
       packages: ["ASPack1", "ASPack2", "HPD", "PP"],
       exteriorAccessories: [
-        "BSMoulding",
         "DLSpoiler",
         "DEdgeFilm",
         "DEdgeGuard",
@@ -386,7 +425,6 @@ const Dependencies = {
       wheels: ["18InchAW", "18InchBA"],
       packages: ["ASPack1", "ASPack2", "HPD", "PP"],
       exteriorAccessories: [
-        "BSMoulding",
         "DLSpoiler",
         "DEdgeFilm",
         "DEdgeGuard",
@@ -434,7 +472,7 @@ const Dependencies = {
         "ASPack2Hatch",
         "HPDHatch",
         "PPHatch",
-        "TestPackage1",
+        "PowerPackage1",
       ],
       exteriorAccessories: [
         "Bike",
@@ -454,11 +492,11 @@ const Dependencies = {
         "Surf",
         "SGuardSet",
         "TailGate",
-        "TestC1",
-        "TestC2",
-        "TestRO1",
-        "TestRO1",
+        "PPEmblem1",
+        "PPEmblem2",
         "UBodySpoilerFront",
+        "UBodySpoilerRear",
+        "UBodySpoilerRear",
         "ValveStem",
         "WheelLocksB",
         "WheelLocksC",
@@ -478,40 +516,60 @@ const Dependencies = {
       ],
       electronicAccessories: ["EngBlockHeat"],
     },
-    TypeR: {
-      powertrain: ["Turbo"], // Assuming only Turbo is available for Type R
-      exteriorColor: ["Red", "Black"],
-      interiorColor: ["BlackIC"],
-      packages: ["PP3"],
-      exteriorAccessories: ["BSM", "DLS", "SGS", "EAC1", "EAC2", "EAC3"],
-      interiorAccessories: ["ASFloorMat", "CH", "CN", "IAC1", "IAC2"],
-    },
-    HBEXL: {
-      powertrain: ["Turbo"], // Assuming only Turbo is available for Type R
-      exteriorColor: ["Red", "Black"],
-      interiorColor: ["BlackIC"],
-      packages: ["ASP1", "ASP2", "HPD", "PP3"],
+    ModelX: {
+      powertrain: [
+        "standardPowertrain",
+        "premiumPowertrain",
+        "turboPowertrain",
+      ],
+      exteriorColor: ["BlueEC", "BlackEC"],
+      interiorColor: ["BlackIC", "BlueIC", "BlackL", "GrayL"],
+      wheels: ["standard16Alloy", "18InchBA"],
+      packages: ["ASPack1", "ASPack2", "MXPack1", "PowerPackage1"],
       exteriorAccessories: [
         "Bike",
-        "BSM",
-        "DLS",
-        "SGS",
-        "EAC1",
-        "EAC2",
-        "EAC3",
-        "KAY",
-        "HPDE",
-        "HPDT",
-        "RR",
+        "BSMouldingB",
+        "BSMouldingA",
+        "DHandleFilm",
+        "ExtMould",
+        "FrontSpoiler",
+        "Kayak",
+        "MoonRVisor",
+        "MXHAT",
+        "RearSpoiler",
+        "RoofBas",
+        "RBoxMid",
+        "RoofPins",
+        "RBoxShort",
+        "RoofRack",
+        "SkiSnow",
+        "Surf",
+        "SGuardSet",
+        "SpoilerKit",
+        "TTray",
+        "PPEmblem1",
+        "PPEmblem2",
+        "Visor",
+        "TowingKit",
+        "TrailerHitch",
+        "WheelLocksC",
       ],
       interiorAccessories: [
         "ASFloorMat",
-        "CH",
-        "CN",
-        "IAC1",
-        "IAC2",
-        "IAC5",
-        "IAC6",
+        "CHook",
+        "CNet",
+        "CHWFloorMat",
+        "CargoTray",
+        "CargoTrayDiv",
+        "IntMould",
+        "MXInt",
+        "RPWShade",
+        "SeatBackProt",
+        "SpoilerController",
+        "SpoilerLights",
+        "TowingController",
+        "TTray",
+        "TTDividers",
       ],
     },
   },
@@ -576,121 +634,93 @@ const Dependencies = {
         exteriorAccessories: ["SGuardSet", "WheelLocksC"],
         interiorAccessories: ["CargoTray"],
       },
-      TestPackage1: {
-        exteriorAccessories: ["TestC1", "TestC2"],
+      PowerPackage1: {
+        exteriorAccessories: ["PPEmblem1", "PPEmblem2"],
         powertrain: ["turboPowertrain"],
       },
-    },
-
-    rivals: {
-      ASPack1: {
-        packages: ["ASPack2", "HPD", "PP"],
-      },
-      ASPack2: { packages: ["ASPack1", "PP"] },
-      HPD: { packages: ["ASPack1", "PP"], exteriorAccessories: ["SGuardSet"] },
-      PP: {
-        packages: ["ASPack1", "ASPack2", "HPD"],
-      },
-      ASPack1Hatch: {
-        packages: ["ASPack2Hatch", "PPHatch"],
-      },
-      ASPack2Hatch: { packages: ["ASPack1Hatch", "PPHatch"] },
-
-      PPHatch: {
-        packages: ["ASPack1Hatch", "ASPack2Hatch"],
-      },
-      TestPackage1: {
-        exteriorAccessories: ["TestRO1"],
+      MXPack1: {
+        exteriorAccessories: ["MXHAT"],
+        interiorAccessories: ["MXInt"],
       },
     },
   },
   //exteriorAccessories
-  exteriorAccessories: {
-    rivals: {
-      DEdgeFilm: { exteriorAccessories: ["DEdgeGuard"] },
-      DEdgeGuard: { exteriorAccessories: ["DEdgeFilm"] },
-      SGuardSet: {
-        exteriorAccessories: ["UBodySpoilerRear"],
-        packages: ["HPD"],
-      },
-      UBodySpoilerRear: {
-        exteriorAccessories: ["SGuardSet"],
-        packages: ["ASPack1", "PP"],
-      },
-      EAC4: {
-        exteriorAccessories: ["EAC5"],
-        interiorAccessories: ["IAC4"],
-      },
-      EAC5: {
-        exteriorAccessories: ["EAC4"],
-      },
-      //Note: RoofRack is a also a 'parent' option
-      RoofRack: { exteriorAccessories: ["SkiSnow", "Surf"] },
-      Bike: { exteriorAccessories: ["SkiSnow", "Surf"] },
-      Kayak: { exteriorAccessories: ["SkiSnow", "Surf"] },
-      RBoxMid: { exteriorAccessories: ["SkiSnow", "Surf"] },
-      RBoxShort: { exteriorAccessories: ["SkiSnow", "Surf"] },
-      SkiSnow: {
-        exteriorAccessories: [
-          "RoofRack",
-          "Bike",
-          "Kayak",
-          "RBoxMid",
-          "RBoxShort",
-        ],
-      },
-      Surf: {
-        exteriorAccessories: [
-          "RoofRack",
-          "Bike",
-          "Kayak",
-          "RBoxMid",
-          "RBoxShort",
-        ],
-      },
-      TestRO1: {
-        packages: ["TestPackage1"],
-        exteriorAccessories: ["TestC1", "TestC2"],
-      },
-    },
-    parent: {
-      RoofRack: {
-        exteriorAccessories: ["Bike", "Kayak", "RBoxMid", "RBoxShort"],
-        interiorAccessories: ["IAC6"],
-      },
-      RoofBas: {
-        exteriorAccessories: ["Bike"],
-      },
-    },
-  },
+  // exteriorAccessories: {
+  //   parent: {
+  //     RoofRack: {
+  //       exteriorAccessories: ["SkiRack", "CargoBox"],
+  //     },
+  //     RoofPins: {
+  //       exteriorAccessories: ["SkiRack", "CargoBox"],
+  //     },
+  //     TowingKit: {
+  //       exteriorAccessories: ["TrailerHitch"],
+  //       interiorAccessories: ["TowingController"],
+  //     },
+  //     SpoilerKit: {
+  //       exteriorAccessories: ["FrontSpoiler", "RearSpoiler"],
+  //       interiorAccessories: ["SpoilerLights"],
+  //     },
+  //     LightKit: {
+  //       exteriorAccessories: ["FrontSpoiler", "RearSpoiler"],
+  //       interiorAccessories: ["SpoilerLights"],
+  //     },
+  //   },
+  // },
   //interiorAccessories
-  interiorAccessories: {
-    child: {
-      IAC6: {
-        exteriorAccessories: ["RoofRack", "RoofBas"],
+  // interiorAccessories: {
+  //   child: {
+  //     SpoilerLights: {
+  //       exteriorAccessories: ["SpoilerKit"], //Two parents, two categories
+  //       interiorAccessories: ["LightKit"], //Two parents, two categories
+  //     },
+  //   },
+  // },
+  rivals: [
+    { packages: ["ASPack1", "ASPack2", "PP"] },
+    {
+      packages: ["MXPack1"],
+      exteriorAccessories: ["Visor"],
+    },
+    {
+      packages: ["ASPack1Hatch", "ASPack2Hatch", "PPHatch"],
+      exteriorAccessories: ["Visor"],
+    },
+    { exteriorAccessories: ["BSMouldingA", "BSMouldingB"] },
+    { exteriorAccessories: ["ExtMould"], interiorAccessories: ["IntMould"] },
+    // { exteriorAccessories: ["UBodySpoilerFront", "SGuardSet"] },
+    /* { exteriorAccessories: ["MoonRVisor", "RoofRack"] }, */
+  ],
+  parentToChild: [
+    {
+      parents: { exteriorAccessories: ["RoofRack", "RoofPins"] },
+      child: {
+        exteriorAccessories: [
+          "Bike",
+          "Kayak",
+          "RBoxMid",
+          "RBoxShort",
+          "SkiSnow",
+          "Surf",
+        ],
       },
     },
-  },
+    {
+      parents: {
+        exteriorAccessories: ["SpoilerKit"],
+        interiorAccessories: ["SpoilerController"],
+      },
+      child: {
+        exteriorAccessories: ["FrontSpoiler", "RearSpoiler"],
+        interiorAccessories: ["SpoilerLights"],
+      },
+    },
+  ],
 };
 
-//Initial Options represents the initial default options available once a model is selected
 const InitialOptionsAvailable = {
-  trim: {
-    displayName: "Trim",
-    type: "Dropdown",
-    choices: [
-      { id: "SedanLX", name: "Sedan LX", price: 23750 },
-      { id: "SedanSport", name: "Sedan Sport", price: 25050 },
-      { id: "SedanEX", name: "Sedan EX", price: 26950 },
-      { id: "SedanTouring", name: "Sedan Touring", price: 30550 },
-      { id: "HatchbackLX", name: "Hatchback LX", price: 24950 },
-      { id: "TypeR", name: "Type R", price: 42895 },
-      { id: "HBEXL", name: "Hatchback EX-L", price: 28650 },
-      // ... other trims
-    ],
-  },
+  trim: AllOptions.trim,
 };
-
 // ------------------------------
 // FUNCTIONS SECTION
 // ------------------------------
@@ -844,6 +874,18 @@ export function handleOptionChanged(
         });
 
         break;
+      case "parentsMustBeSelected":
+        //Generate popup notification of the component option to be unselected
+        newPopup = produce(popup, (draft) => {
+          parentsMustBeSelectedPopupMessage(
+            category,
+            selection,
+            draft,
+            exceptionObject
+          );
+        });
+
+        break;
 
       default:
       // code block
@@ -862,6 +904,7 @@ export function handlePopupConfirm(optionsAvailable, optionsSelected, popup) {
   let newOptionsAvailable = produce(optionsAvailable, (draft) => {}); // Keep optionsAvailable unchanged for now
   let newOptionsSelected = produce(optionsSelected, (draft) => {}); // Keep optionsSelected unchanged for now
 
+  //Reset popup to default
   const DEFAULT_POPUP_STATE = {
     show: false,
     message: "",
@@ -878,14 +921,13 @@ export function handlePopupConfirm(optionsAvailable, optionsSelected, popup) {
       //Add the rival selected, unselect the currently selected rivals
       let categoryRivalToAdd = popup.categoryRivalToAdd;
       let selectionRivalToAdd = popup.selectionRivalToAdd;
-
       //Find each selected rivalfrom newOptionsSelected
       popup.exception.rivalsToRemove.forEach((rivalSelected) => {
         let rivalChoice = {
           id: rivalSelected.choice.id,
           isChecked: false,
         };
-        // Step 1: Remove rivalChoice from optionsSelected. This will adjust the state
+        // Step 1: Initially remove all selected 'rivals' from optionsSelected. This will adjust the state
         // based on dependencies related to rivalChoice removal.
         newOptionsSelected = produce(newOptionsSelected, (draft) => {
           removeFromOptionsSelected(
@@ -895,7 +937,8 @@ export function handlePopupConfirm(optionsAvailable, optionsSelected, popup) {
             draft
           );
         });
-        //Step 2: Call handleOptionChange() for rivalChoice again, this will handle additional dependencies
+        //Step 2: Call handleOptionChange() to return 'updatedState' object w/ rivals unchecked
+        //This will also handle any 'dual' dependencies, these 'rivals' may have
         updatedState = handleOptionChanged(
           rivalSelected.category,
           rivalChoice,
@@ -932,7 +975,7 @@ export function handlePopupConfirm(optionsAvailable, optionsSelected, popup) {
         newOptionsSelected,
         DEFAULT_POPUP_STATE
       );
-
+      //Handles scenario where the unselected subComponent was triggered by a Dropdown change
       if (popup.selection.isChecked) {
         let selection = {
           id: popup.selection.id,
@@ -949,7 +992,29 @@ export function handlePopupConfirm(optionsAvailable, optionsSelected, popup) {
 
       break;
 
-    case "parentUnselected":
+    case "parentsMustBeSelected":
+      //For each unselected parent option
+      popup.exception.parentsToAdd.forEach((parent) => {
+        let parentChoice = {
+          id: parent.choice.id,
+          isChecked: true,
+        };
+        // Step 1: Initially add each 'parent' option to optionsSelected.
+        newOptionsSelected = produce(newOptionsSelected, (draft) => {
+          addToOptionsSelected(parent.category, parentChoice, draft);
+        });
+      });
+
+      //Step 2: Add the checked 'child' option
+      let categoryChild = popup.category;
+      let selectionChild = popup.selection;
+      updatedState = handleOptionChanged(
+        categoryChild,
+        selectionChild,
+        newOptionsAvailable,
+        newOptionsSelected,
+        DEFAULT_POPUP_STATE
+      );
       break;
 
     case "childSelected":
@@ -961,7 +1026,7 @@ export function handlePopupConfirm(optionsAvailable, optionsSelected, popup) {
   return {
     optionsAvailable: updatedState.optionsAvailable,
     optionsSelected: updatedState.optionsSelected,
-    popup: updatedState.popup,
+    popup: DEFAULT_POPUP_STATE,
   };
 }
 
@@ -1073,6 +1138,7 @@ function checkOptionDependency(category, selection, optionsSelected) {
     status: false,
     type: "NoExceptions",
   };
+
   switch (category) {
     case "trim":
       exceptionObject.status = true;
@@ -1104,54 +1170,26 @@ function checkOptionDependency(category, selection, optionsSelected) {
       }
       return exceptionObject;
     case "packages":
-      let rivalStatus = getRivalStatus(category, selection, optionsSelected);
+      let rivalStatus = checkRivalStatus(category, selection, optionsSelected);
       //Check if option has 'rivals'
       if (rivalStatus.selected) {
         (exceptionObject.status = true),
           ((exceptionObject.type = "rivalCurrentlySelected"),
           (exceptionObject.rivalsCurrentlySelected =
             rivalStatus.rivalOptionsCurrentlySelected));
-      } else if (selection.isChecked) {
-        //Check option category has a 'component' dependencies
-        if (Dependencies[category] && Dependencies[category].components) {
+      } //Check option category has a 'component' dependencies
+      else if (Dependencies[category] && Dependencies[category].components) {
+        if (selection.isChecked) {
           exceptionObject.status = true;
           exceptionObject.type = "mainComponentOptionSelected";
-        }
-
-        return exceptionObject;
-      } else {
-        exceptionObject.status = true;
-        exceptionObject.type = "mainComponentOptionUnselected";
-        return exceptionObject;
-      }
-      break;
-    case "exteriorAccessories":
-      //Handle if option is checked
-      if (selection.isChecked) {
-        let rivalStatus = getRivalStatus(category, selection, optionsSelected);
-        //Handle rival status
-        if (rivalStatus.selected) {
-          (exceptionObject.status = true),
-            ((exceptionObject.type = "rivalCurrentlySelected"),
-            (exceptionObject.rivalsCurrentlySelected =
-              rivalStatus.rivalOptionsCurrentlySelected));
+          return exceptionObject;
         } else {
-          //Add code to check for parent status
-        }
-      }
-      //Handle if option is unchecked
-      else {
-        //First check if the option was 'component'
-        if (selection.mainComponentID) {
           exceptionObject.status = true;
-          exceptionObject.type = "subComponentUnselected";
-          exceptionObject.subComponent = {
-            mainComponentID: selection.mainComponentID,
-            mainComponentCategory: selection.mainComponentCategory,
-          };
+          exceptionObject.type = "mainComponentOptionUnselected";
+          return exceptionObject;
         }
       }
-      break;
+      return exceptionObject;
     case "powertrain":
       //Check for previously selected option
       let prevOptionSelected = optionsSelected[category].choices.find(
@@ -1175,28 +1213,94 @@ function checkOptionDependency(category, selection, optionsSelected) {
       }
 
       break;
-    case "interiorAccessories":
+    case "exteriorAccessories":
       //Handle if option is checked
       if (selection.isChecked) {
-        let rivalStatus = getRivalStatus(category, selection, optionsSelected);
+        let rivalStatus = checkRivalStatus(
+          category,
+          selection,
+          optionsSelected
+        );
+
         //Handle rival status
         if (rivalStatus.selected) {
           (exceptionObject.status = true),
             ((exceptionObject.type = "rivalCurrentlySelected"),
             (exceptionObject.rivalsCurrentlySelected =
               rivalStatus.rivalOptionsCurrentlySelected));
+          return exceptionObject;
         } else {
-          //Add code to check for parent status
+          //Add code to check if this is a 'child' option
+          let parentsStatus = getParentStatus(
+            category,
+            selection,
+            optionsSelected
+          );
+          if (parentsStatus.required) {
+            exceptionObject.status = true;
+            exceptionObject.type = "parentsMustBeSelected";
+            exceptionObject.parentsMustBeSelected = parentsStatus.parentOptions;
+            return exceptionObject;
+          }
         }
       }
-      //Handle if option is unchecked
+      //Handle if option was unchecked
       else {
         //First check if the option was 'component'
-        if (selection.componentID) {
+        if (selection.mainComponentID) {
           exceptionObject.status = true;
           exceptionObject.type = "subComponentUnselected";
-          exceptionObject.componentID = selection.componentID;
-          exceptionObject.componentCategory = selection.componentCategory;
+          exceptionObject.subComponent = {
+            mainComponentID: selection.mainComponentID,
+            mainComponentCategory: selection.mainComponentCategory,
+          };
+          return exceptionObject;
+        }
+      }
+      break;
+
+    case "interiorAccessories":
+      //Handle if option is checked
+      if (selection.isChecked) {
+        let rivalStatus = checkRivalStatus(
+          category,
+          selection,
+          optionsSelected
+        );
+
+        //Handle rival status
+        if (rivalStatus.selected) {
+          (exceptionObject.status = true),
+            ((exceptionObject.type = "rivalCurrentlySelected"),
+            (exceptionObject.rivalsCurrentlySelected =
+              rivalStatus.rivalOptionsCurrentlySelected));
+          return exceptionObject;
+        } else {
+          //Add code to check if this is a 'child' option
+          let parentsStatus = getParentStatus(
+            category,
+            selection,
+            optionsSelected
+          );
+          if (parentsStatus.required) {
+            exceptionObject.status = true;
+            exceptionObject.type = "parentsMustBeSelected";
+            exceptionObject.parentsMustBeSelected = parentsStatus.parentOptions;
+            return exceptionObject;
+          }
+        }
+      }
+      //Handle if option was unchecked
+      else {
+        //First check if the option was 'component'
+        if (selection.mainComponentID) {
+          exceptionObject.status = true;
+          exceptionObject.type = "subComponentUnselected";
+          exceptionObject.subComponent = {
+            mainComponentID: selection.mainComponentID,
+            mainComponentCategory: selection.mainComponentCategory,
+          };
+          return exceptionObject;
         }
       }
       break;
@@ -1205,7 +1309,7 @@ function checkOptionDependency(category, selection, optionsSelected) {
   return exceptionObject;
 }
 
-function getRivalStatus(category, selection, optionsSelected) {
+function checkRivalStatus(category, selection, optionsSelected) {
   let rivalStatus = {
     selected: false,
     rivalOptionChecked: [
@@ -1217,59 +1321,80 @@ function getRivalStatus(category, selection, optionsSelected) {
     rivalOptionsCurrentlySelected: [],
   };
 
-  let rivalObject = Dependencies[category].rivals[selection.id];
+  // Get rival options
+  const rivalOptions = getRivals(category, selection);
+  // Iterate through optionsSelected to check for matching keys in rivalOptions
+  Object.keys(optionsSelected).forEach((key) => {
+    const optionChoices = optionsSelected[key].choices;
 
-  for (let rivalCategory in rivalObject) {
-    let rivalIDs = rivalObject[rivalCategory]; // Ensure this is an array
-    if (
-      optionsSelected[rivalCategory] &&
-      optionsSelected[rivalCategory].choices
-    ) {
-      optionsSelected[rivalCategory].choices.forEach((choice) => {
-        if (rivalIDs && rivalIDs.includes(choice.id)) {
-          rivalStatus.selected = true;
-          // Add the matching choice to optionsToRemove
-          rivalStatus.rivalOptionsCurrentlySelected.push({
-            category: rivalCategory,
-            choice: choice,
-          });
-        }
-      });
-    }
-  }
+    // Check if rivalOptions array contains an object with the matching key
+    rivalOptions.forEach((rivalObj) => {
+      if (rivalObj[key]) {
+        // Check if any choices.id matches the rival string in the rivalObj[key] array
+        rivalObj[key].forEach((rivalValue) => {
+          const matchingChoice = optionChoices.find(
+            (choice) => choice.id === rivalValue
+          );
+
+          if (matchingChoice) {
+            rivalStatus.selected = true;
+            rivalStatus.rivalOptionsCurrentlySelected.push({
+              category: key,
+              choice: matchingChoice,
+            });
+          }
+        });
+      }
+    });
+  });
 
   return rivalStatus;
 }
 
-function checkIfParentSelected(category, selection, optionsSelected) {
-  let parentStatus = {
-    selected: true,
-    parentOptions: [
-      {
-        category: "",
-        choice: "",
-      },
-    ],
-  };
-
-  let parentDependencies = Dependencies[category].parent;
-
-  return parentStatus;
+function getRivals(category, selection) {
+  return Dependencies.rivals
+    .filter((obj) => obj[category] && obj[category].includes(selection.id))
+    .map((obj) => {
+      const newObj = { ...obj };
+      newObj[category] = newObj[category].filter(
+        (item) => item !== selection.id
+      );
+      return newObj;
+    });
 }
 
 function getParentStatus(category, selection, optionsSelected) {
-  let parentStatus = {
-    selected: true,
+  let parentsStatus = {
+    required: false,
     parentOptions: [],
   };
+  const parentsExist = Dependencies.parentToChild.find(
+    (dep) => dep.child[category] && dep.child[category].includes(selection.id)
+  );
+  if (parentsExist) {
+    for (const parentCategory in parentsExist.parents) {
+      const parentOptions = parentsExist.parents[parentCategory];
+      const selectedOptions =
+        optionsSelected[parentCategory]?.choices.map((choice) => choice.id) ||
+        [];
 
-  let parentDependencies = Dependencies[category]?.parent;
+      // Find parent options not in selected options
+      const missingParents = parentOptions.filter(
+        (option) => !selectedOptions.includes(option)
+      );
 
-  // Step 1: Check if category exists in Dependencies
-  if (parentDependencies) {
+      // Add missing parent options to parentsStatus
+      if (missingParents.length > 0) {
+        parentsStatus.required = true;
+        parentsStatus.parentOptions.push({
+          category: parentCategory,
+          choicesID: missingParents,
+        });
+      }
+    }
   }
 
-  return parentStatus;
+  return parentsStatus;
 }
 
 function addComponentsToOptionsSelected(
@@ -1289,7 +1414,7 @@ function addComponentsToOptionsSelected(
         if (choice) {
           const choiceWithComponent = {
             ...choice,
-            name: choice.name + " - Included in Package Selected",
+            name: choice.name + " - Included in- " + selection.id,
             mainComponentID: selection.id,
             mainComponentCategory: category,
           };
@@ -1366,7 +1491,7 @@ function updateOptionsAvailableForComponentsAdded(category, selection, draft) {
         if (choiceIndex !== -1) {
           // Directly update the properties of the found choice in the draft
           draft[dependencyKey].choices[choiceIndex].name +=
-            " - Included in Package selected";
+            " - Included in Package- " + selection.id;
           draft[dependencyKey].choices[choiceIndex].mainComponentID =
             selection.id;
           draft[dependencyKey].choices[choiceIndex].mainComponentCategory =
@@ -1413,24 +1538,17 @@ function rivalSelectedPopupMessage(
     (choice) => choice.id === selection.id
   );
 
-  // Start constructing the draft message with the selected option name
+  // Start constructing the draft message
   let message = `Selecting ${selectedOption.name} will also unselect `;
 
-  // Extract names from the rivalsSelected array
+  // Use Intl.ListFormat for natural language list of rival names
   const rivalNames = rivalsCurrentlySelected.map((rival) => rival.choice.name);
+  const formatter = new Intl.ListFormat("en", {
+    style: "long",
+    type: "conjunction",
+  });
 
-  // Construct the message based on the number of rival names
-  if (rivalNames.length === 1) {
-    // If there's only one rival
-    message += `${rivalNames[0]}`;
-  } else if (rivalNames.length === 2) {
-    // If there are two rivals, join with ' and '
-    message += `${rivalNames[0]} and ${rivalNames[1]}`;
-  } else if (rivalNames.length > 2) {
-    // If there are more than two rivals, join with ', ' and 'and' before the last one
-    const lastRival = rivalNames.pop();
-    message += `${rivalNames.join(", ")} and ${lastRival}`;
-  }
+  message += formatter.format(rivalNames);
 
   // Set the constructed message to draft.message
   draft.show = true;
@@ -1480,4 +1598,58 @@ function subComponentUnselectedPopupMessage(
     mainComponentID: mainComponentID,
   };
 }
+
+function parentsMustBeSelectedPopupMessage(
+  category,
+  selection,
+  draft,
+  exceptionObject
+) {
+  let childOption = AllOptions[category].choices.find(
+    (choice) => choice.id === selection.id
+  );
+
+  // Start constructing the draft message
+  let message = `Selecting ${childOption.name} will require you add `;
+  let parentChoiceMap = {};
+
+  // Pre-compute and store matched choices for each parent category
+  exceptionObject.parentsMustBeSelected.forEach((parent) => {
+    const parentCategory = parent.category;
+    const parentChoicesIDs = parent.choicesID;
+
+    if (AllOptions[parentCategory]) {
+      const matchingChoices = AllOptions[parentCategory].choices.filter(
+        (choice) => parentChoicesIDs.includes(choice.id)
+      );
+
+      parentChoiceMap[parentCategory] = matchingChoices;
+    }
+  });
+
+  // Collect all parent names in a single loop
+  let parentNames = Object.values(parentChoiceMap)
+    .flat()
+    .map((choice) => choice.name);
+
+  // Use Intl.ListFormat for natural language list
+  const formatter = new Intl.ListFormat("en", {
+    style: "long",
+    type: "conjunction",
+  });
+  message += formatter.format(parentNames);
+
+  // Set the constructed message to draft.message
+  draft.show = true;
+  draft.message = message;
+  draft.category = category;
+  draft.selection = selection;
+  draft.exception = {
+    action: "parentsMustBeSelected",
+    parentsToAdd: Object.entries(parentChoiceMap).flatMap(
+      ([category, choices]) => choices.map((choice) => ({ category, choice }))
+    ),
+  };
+}
+
 export { AllOptions, InitialOptionsAvailable, Dependencies };

@@ -36,6 +36,7 @@ export const fetchModelData = createAsyncThunk(
       const modelData = await importModelData(make, model);
       // Extract only the serializable parts of the module
       const { InitialOptionsAvailable } = modelData;
+      const initialOptions = modelData;
       return { InitialOptionsAvailable };
     } catch (error) {
       return rejectWithValue(error.message);
