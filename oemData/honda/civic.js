@@ -644,38 +644,7 @@ const Dependencies = {
       },
     },
   },
-  //exteriorAccessories
-  // exteriorAccessories: {
-  //   parent: {
-  //     RoofRack: {
-  //       exteriorAccessories: ["SkiRack", "CargoBox"],
-  //     },
-  //     RoofPins: {
-  //       exteriorAccessories: ["SkiRack", "CargoBox"],
-  //     },
-  //     TowingKit: {
-  //       exteriorAccessories: ["TrailerHitch"],
-  //       interiorAccessories: ["TowingController"],
-  //     },
-  //     SpoilerKit: {
-  //       exteriorAccessories: ["FrontSpoiler", "RearSpoiler"],
-  //       interiorAccessories: ["SpoilerLights"],
-  //     },
-  //     LightKit: {
-  //       exteriorAccessories: ["FrontSpoiler", "RearSpoiler"],
-  //       interiorAccessories: ["SpoilerLights"],
-  //     },
-  //   },
-  // },
-  //interiorAccessories
-  // interiorAccessories: {
-  //   child: {
-  //     SpoilerLights: {
-  //       exteriorAccessories: ["SpoilerKit"], //Two parents, two categories
-  //       interiorAccessories: ["LightKit"], //Two parents, two categories
-  //     },
-  //   },
-  // },
+
   rivals: [
     { packages: ["ASPack1", "ASPack2", "PP"] },
     {
@@ -698,6 +667,7 @@ const Dependencies = {
         exteriorAccessories: [
           "Bike",
           "Kayak",
+          "RoofBas",
           "RBoxMid",
           "RBoxShort",
           "SkiSnow",
@@ -886,6 +856,17 @@ export function handleOptionChanged(
         });
 
         break;
+      case "parentUnselectedChildMustBeUnselected":
+        newPopup = produce(popup, (draft) => {
+          parentsMustBeUnselectedPopMessage(
+            category,
+            selection,
+            draft,
+            exceptionObject
+          );
+        });
+
+        break;
 
       default:
       // code block
@@ -947,7 +928,7 @@ export function handlePopupConfirm(optionsAvailable, optionsSelected, popup) {
           DEFAULT_POPUP_STATE
         );
       });
-      //Step 3: Add the checked rival to form state
+      //Step 3: Add the checked rival to from state
       updatedState = handleOptionChanged(
         categoryRivalToAdd,
         selectionRivalToAdd,
@@ -1017,7 +998,43 @@ export function handlePopupConfirm(optionsAvailable, optionsSelected, popup) {
       );
       break;
 
-    case "childSelected":
+    case "childMustBeUnselected":
+      //Get the parent option unselected
+      let categoryParentToRemove = popup.category;
+      let selectionParentToRemove = popup.selection;
+      popup.exception.childToRemove.forEach((child) => {
+        let childChoice = {
+          id: child.choice.id,
+          isChecked: false,
+        };
+        // Step 1: Initially remove all selected 'child' options from optionsSelected.
+        newOptionsSelected = produce(newOptionsSelected, (draft) => {
+          removeFromOptionsSelected(
+            child.category,
+            childChoice,
+            optionsAvailable,
+            draft
+          );
+        });
+        //Step 2: Call handleOptionChange() to return 'updatedState' object w/ 'child' options unchecked
+        //This will also handle any 'dual' dependencies
+        updatedState = handleOptionChanged(
+          child.category,
+          childChoice,
+          newOptionsAvailable,
+          newOptionsSelected,
+          DEFAULT_POPUP_STATE
+        );
+      });
+      //Step 3: Remove the unchecked 'parent' to from state
+      updatedState = handleOptionChanged(
+        categoryParentToRemove,
+        selectionParentToRemove,
+        updatedState.optionsAvailable,
+        updatedState.optionsSelected,
+        DEFAULT_POPUP_STATE
+      );
+
       break;
     default:
     // code block
@@ -1230,7 +1247,7 @@ function checkOptionDependency(category, selection, optionsSelected) {
               rivalStatus.rivalOptionsCurrentlySelected));
           return exceptionObject;
         } else {
-          //Add code to check if this is a 'child' option
+          //Add code to check if this is a 'child' option, and 'parent' option are unselected
           let parentsStatus = getParentStatus(
             category,
             selection,
@@ -1255,6 +1272,21 @@ function checkOptionDependency(category, selection, optionsSelected) {
             mainComponentCategory: selection.mainComponentCategory,
           };
           return exceptionObject;
+        }
+        //Check if 'parent' option, and has 'child' option selected
+        else {
+          let childStatus = getChildStatus(
+            category,
+            selection,
+            optionsSelected
+          );
+
+          if (childStatus.selected) {
+            exceptionObject.status = true;
+            exceptionObject.type = "parentUnselectedChildMustBeUnselected";
+            exceptionObject.childSelected = childStatus.childOptions;
+            return exceptionObject;
+          }
         }
       }
       break;
@@ -1276,7 +1308,7 @@ function checkOptionDependency(category, selection, optionsSelected) {
               rivalStatus.rivalOptionsCurrentlySelected));
           return exceptionObject;
         } else {
-          //Add code to check if this is a 'child' option
+          //Add code to check if this is a 'child' option, and 'parent' option are unselected
           let parentsStatus = getParentStatus(
             category,
             selection,
@@ -1301,6 +1333,21 @@ function checkOptionDependency(category, selection, optionsSelected) {
             mainComponentCategory: selection.mainComponentCategory,
           };
           return exceptionObject;
+        }
+        //Check if 'parent' option, and has 'child' option selected
+        else {
+          let childStatus = getChildStatus(
+            category,
+            selection,
+            optionsSelected
+          );
+
+          if (childStatus.selected) {
+            exceptionObject.status = true;
+            exceptionObject.type = "parentUnselectedChildMustBeUnselected";
+            exceptionObject.childSelected = childStatus.childOptions;
+            return exceptionObject;
+          }
         }
       }
       break;
@@ -1395,6 +1442,53 @@ function getParentStatus(category, selection, optionsSelected) {
   }
 
   return parentsStatus;
+}
+
+function getChildStatus(category, selection, optionsSelected) {
+  let childStatus = {
+    selected: false,
+    childOptions: [],
+  };
+
+  // Check if option has 'child' dependencies
+  const childExist = Dependencies.parentToChild.find(
+    (dep) =>
+      dep.parents[category] && dep.parents[category].includes(selection.id)
+  );
+
+  if (childExist) {
+    // Loop through child categories
+    for (const childCategory in childExist.child) {
+      const allChildOptions = childExist.child[childCategory];
+
+      // Check if there are any selected options in the category
+      if (optionsSelected[childCategory]) {
+        const selectedOptions = optionsSelected[childCategory].choices;
+
+        // Loop through all possible child options
+        allChildOptions.forEach((childOptionId) => {
+          const selectedChildOption = selectedOptions.find(
+            (choice) => choice.id === childOptionId
+          );
+
+          // If the child option is selected, add it to the childOptions array
+          if (selectedChildOption) {
+            childStatus.selected = true;
+            childStatus.childOptions.push({
+              category: childCategory,
+              id: selectedChildOption.id,
+              name: selectedChildOption.name,
+            });
+          }
+        });
+      }
+    }
+
+    // Set selected to true if any child options are found
+    childStatus.selected = childStatus.childOptions.length > 0;
+  }
+
+  return childStatus;
 }
 
 function addComponentsToOptionsSelected(
@@ -1649,6 +1743,65 @@ function parentsMustBeSelectedPopupMessage(
     parentsToAdd: Object.entries(parentChoiceMap).flatMap(
       ([category, choices]) => choices.map((choice) => ({ category, choice }))
     ),
+  };
+}
+
+function parentsMustBeUnselectedPopMessage(
+  category,
+  selection,
+  draft,
+  exceptionObject
+) {
+  let parentOption = AllOptions[category].choices.find(
+    (choice) => choice.id === selection.id
+  );
+  // Start constructing the draft message
+  let message = `Unselecting ${parentOption.name} will require you to remove `;
+  let childChoiceMap = {};
+
+  // Pre-compute and store matched choices for each parent category
+  exceptionObject.childSelected.forEach((child) => {
+    const childCategory = child.category;
+    const childID = child.id;
+    if (AllOptions[childCategory]) {
+      const matchingChoice = AllOptions[childCategory].choices.find(
+        (choice) => choice.id === childID
+      );
+
+      if (matchingChoice) {
+        if (!childChoiceMap[childCategory]) {
+          childChoiceMap[childCategory] = [];
+        }
+        childChoiceMap[childCategory].push(matchingChoice);
+      }
+    }
+  });
+
+  // Collect all child names in a single loop
+  let childNames = Object.values(childChoiceMap)
+    .flat()
+    .map((choice) => choice.name);
+
+  // Use Intl.ListFormat for natural language list
+  const formatter = new Intl.ListFormat("en", {
+    style: "long",
+    type: "conjunction",
+  });
+  message += formatter.format(childNames);
+
+  // Set the constructed message to draft.message
+  draft.show = true;
+  draft.message = message;
+  draft.category = category;
+  draft.selection = selection;
+  draft.exception = {
+    action: "childMustBeUnselected",
+    childToRemove: exceptionObject.childSelected.map((child) => ({
+      category: child.category,
+      choice: AllOptions[child.category].choices.find(
+        (choice) => choice.id === child.id
+      ),
+    })),
   };
 }
 
