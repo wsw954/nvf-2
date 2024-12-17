@@ -9,7 +9,6 @@ const CheckBoxGroup = ({ category, choices, onChange }) => {
       isChecked: event.target.checked,
       mainComponentID: choice.mainComponentID || null,
       mainComponentCategory: choice.mainComponentCategory || null,
-      dependency: choice.dependency || null,
     });
   };
 

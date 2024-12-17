@@ -13,26 +13,22 @@ const AllOptions = {
         id: "SedanSport",
         name: "Sedan Sport",
         price: 25050,
-        dependency: ["trim"],
       },
       { id: "SedanEX", name: "Sedan EX", price: 26950, dependency: ["trim"] },
       {
         id: "SedanTouring",
         name: "Sedan Touring",
         price: 30550,
-        dependency: ["trim"],
       },
       {
         id: "HatchbackLX",
         name: "Hatchback LX",
         price: 24950,
-        dependency: ["trim"],
       },
       {
         id: "ModelX",
         name: "Model  X",
         price: 24950,
-        dependency: ["trim"],
       },
 
       // ... other trims
@@ -123,13 +119,11 @@ const AllOptions = {
         id: "ASPack1",
         name: "All Season Protection Package I",
         price: 420,
-        dependency: ["components", "rivals"],
       },
       {
         id: "ASPack2",
         name: "All Season Protection Package II",
         price: 370,
-        dependency: ["components", "rivals"],
       },
       { id: "HPD", name: "HPD Package", price: 1452 },
       { id: "PP", name: "Protection Package ", price: 300 },
@@ -150,7 +144,6 @@ const AllOptions = {
         id: "MXPack1",
         name: "ModX Spec Pack1",
         price: 500,
-        dependency: ["components", "rivals"],
       },
     ],
   },
@@ -200,7 +193,7 @@ const AllOptions = {
       { id: "SGuardSet", name: "Splash Guard Set", price: 116 },
       { id: "SpoilerKit", name: "Spoiler Kit", price: 116 },
       { id: "TailGate", name: "Tail Gate Spoiler-HPD ", price: 407 },
-      { id: "TowingKit", name: "Towing Kit ", price: 500 },
+      { id: "TowingKit", name: "Towing Kit", price: 500 },
       { id: "TrailerHitch", name: "Trailing Hitch ", price: 125 },
       { id: "PPEmblem1", name: "Power Pack Emblem1", price: 100 }, //For testing package w/ component in Dropdwown
       { id: "PPEmblem2", name: "Power Pack Emblem2", price: 150 },
@@ -245,6 +238,11 @@ const AllOptions = {
       { id: "IDoorSill", name: "Illuminated Door Sill Trim", price: 329 },
       { id: "IntMould", name: "Interior Moulding", price: 247 },
       { id: "MXInt", name: "MX Interior Rack", price: 171 },
+      {
+        id: "MXIntAccAuxiliary",
+        name: "MX Auxiliary Interior Accessory",
+        price: 247,
+      },
       { id: "RPWShade", name: "Rear Passenger Window Shades", price: 192 },
       { id: "SeatBackProt", name: "Seat Back Protectors", price: 109 },
       { id: "SpoilerController", name: "Spoiler Controller", price: 125 },
@@ -522,8 +520,16 @@ const Dependencies = {
         "premiumPowertrain",
         "turboPowertrain",
       ],
-      exteriorColor: ["BlueEC", "BlackEC"],
-      interiorColor: ["BlackIC", "BlueIC", "BlackL", "GrayL"],
+      exteriorColor: [
+        "BlueEC",
+        "BlackEC",
+        "SilverEC",
+        "GrayEC",
+        "RedEC",
+        "PlatinumEC",
+        "SGrayPearl",
+      ],
+      interiorColor: ["BlackIC", "GrayIC"],
       wheels: ["standard16Alloy", "18InchBA"],
       packages: ["ASPack1", "ASPack2", "MXPack1", "PowerPackage1"],
       exteriorAccessories: [
@@ -563,6 +569,7 @@ const Dependencies = {
         "CargoTrayDiv",
         "IntMould",
         "MXInt",
+        "MXIntAccAuxiliary",
         "RPWShade",
         "SeatBackProt",
         "SpoilerController",
@@ -593,7 +600,7 @@ const Dependencies = {
       },
     },
   },
-  //..package dependencies have two types, components & rivals
+  //..package dependencies
   packages: {
     components: {
       ASPack1: {
@@ -659,6 +666,23 @@ const Dependencies = {
     { exteriorAccessories: ["ExtMould"], interiorAccessories: ["IntMould"] },
     // { exteriorAccessories: ["UBodySpoilerFront", "SGuardSet"] },
     /* { exteriorAccessories: ["MoonRVisor", "RoofRack"] }, */
+  ],
+  unlock: [
+    {
+      precursor: { trim: ["ModelX"], powertrain: ["standardPowertrain"] },
+      activator: { exteriorColor: ["PlatinumEC"] },
+      auxiliary: {
+        interiorColor: ["BlackL", "GrayL"],
+        interiorAccessories: ["MXIntAccAuxiliary"],
+      },
+    },
+    {
+      precursor: { trim: ["ModelX"] },
+      activator: { exteriorColor: ["SGrayPearl"] },
+      auxiliary: {
+        interiorColor: ["BlackL", "GrayL"],
+      },
+    },
   ],
   parentToChild: [
     {
@@ -750,21 +774,28 @@ export function handleOptionChanged(
           );
         });
         break;
-      case "addAuxiliaryOptionsAvailable":
+      case "addAuxiliaryOptions":
         newOptionsSelected = produce(optionsSelected, (draft) => {
           addToOptionsSelected(category, selection, draft);
         });
 
-        // Step 1: Iterate over the `unlock` object in exceptionObject
+        const auxiliaryOptions = exceptionObject.auxiliaryOptions;
+        // Update newOptionsAvailable with auxiliary options
         newOptionsAvailable = produce(optionsAvailable, (draft) => {
-          Object.keys(exceptionObject.unlock).forEach((unlockCategory) => {
-            // Step 2: Iterate over each array of values in the `unlock` object
-            exceptionObject.unlock[unlockCategory].forEach((item) => {
-              // Call addToOptionsAvailable for each item
-              addToOptionsAvailable(unlockCategory, item, draft);
-            });
-          });
+          Object.entries(exceptionObject.auxiliaryOptions).forEach(
+            ([auxiliaryCategory, optionIds]) => {
+              optionIds.forEach((optionId) => {
+                addAuxiliaryOptions(auxiliaryCategory, optionId, draft);
+              });
+            }
+          );
         });
+
+        //Update the 'optionsSelected' for unlock statusd
+        newOptionsSelected = produce(newOptionsSelected, (draft) => {
+          adjustOptionsForUnlock(exceptionObject, draft);
+        });
+
         break;
       case "resetAuxiliaryOptionsToDefault":
         //Remove the auxiliary options for the prior selected unlock option
@@ -772,7 +803,7 @@ export function handleOptionChanged(
           Object.keys(exceptionObject.remove).forEach((unlockCategory) => {
             // Step 2: Iterate over each array of values in the `unlock` object
             exceptionObject.remove[unlockCategory].forEach((item) => {
-              // Call addToOptionsAvailable for each item
+              // Call addAuxiliaryOptions for each item
               removeFromOptionsAvailable(unlockCategory, item, draft);
             });
           });
@@ -794,9 +825,9 @@ export function handleOptionChanged(
         break;
       case "mainComponentOptionSelected":
         newOptionsSelected = produce(optionsSelected, (draft) => {
-          //First, add the main category and selection
+          //First, add the main 'option' selected
           addToOptionsSelected(category, selection, draft);
-          //Update the 'components' of selected package
+          //Second, add the 'components' of selected option
           addComponentsToOptionsSelected(
             category,
             selection,
@@ -1097,7 +1128,7 @@ function removeFromOptionsSelected(
 }
 
 //Add to optionsAvailble a specified 'option'
-function addToOptionsAvailable(category, selection, draft) {
+function addAuxiliaryOptions(category, selection, draft) {
   //If category doesn't already exists, add it
   if (!draft[category]) {
     draft[category] = {
@@ -1106,22 +1137,58 @@ function addToOptionsAvailable(category, selection, draft) {
       choices: [],
     };
   }
-  const selectedOption = AllOptions[category].choices.find(
+  const additionalOption = AllOptions[category].choices.find(
     (choice) => choice.id === selection
   );
-  // Only add selectedOption if it doesn't already exist in the choices array
-  if (
-    !draft[category].choices.some((choice) => choice.id === selectedOption.id)
-  ) {
-    draft[category].choices.push(selectedOption);
+
+  // Only add additionalOption if it doesn't already exist in the choices array
+  if (additionalOption) {
+    // Add precursor and activator properties to the additionalOption object
+    const enhancedOption = {
+      ...additionalOption,
+      precursor: {},
+      activator: {},
+    };
+
+    // Only add enhancedOption if it doesn't already exist in the choices array
+    if (
+      !draft[category].choices.some((choice) => choice.id === enhancedOption.id)
+    ) {
+      draft[category].choices.push(enhancedOption);
+    }
   }
 }
 
-//Removes from option from optionsAvailable
-function removeFromOptionsAvailable(category, selection, draft) {
-  draft[category].choices = draft[category].choices.filter(
-    (choice) => choice.id !== selection
-  );
+function adjustOptionsForUnlock(exceptionObject, draft) {
+  const { precursor, activator } = exceptionObject;
+
+  // Process precursors
+  Object.entries(precursor).forEach(([category, ids]) => {
+    if (draft[category] && draft[category].choices) {
+      ids.forEach((id) => {
+        const choice = draft[category].choices.find(
+          (choice) => choice.id === id
+        );
+        if (choice) {
+          choice.precursor = true; // Add precursor flag
+        }
+      });
+    }
+  });
+
+  // Process activators
+  Object.entries(activator).forEach(([category, ids]) => {
+    if (draft[category] && draft[category].choices) {
+      ids.forEach((id) => {
+        const choice = draft[category].choices.find(
+          (choice) => choice.id === id
+        );
+        if (choice) {
+          choice.activator = true; // Add activator flag
+        }
+      });
+    }
+  });
 }
 
 // Callback function to reset options available when a model trim is selected
@@ -1162,29 +1229,17 @@ function checkOptionDependency(category, selection, optionsSelected) {
       exceptionObject.type = "trimOptionSelected";
       return exceptionObject;
     case "exteriorColor":
-      const { prevValue, id: selectedColor } = selection;
-      const selectedVehicleTrim = optionsSelected.trim.choices[0].id;
-      const unlockDependencies = Dependencies[category]?.unlock;
+      let unlockStatus = getUnlockStatus(category, selection, optionsSelected);
 
-      const hasAuxiliaryOptions =
-        unlockDependencies?.[selectedColor]?.[selectedVehicleTrim];
-      //If the selected option unlocks auxiliary options
-      if (hasAuxiliaryOptions) {
+      if (unlockStatus.active) {
         exceptionObject.status = true;
-        exceptionObject.type = "addAuxiliaryOptionsAvailable";
-        exceptionObject.unlock =
-          unlockDependencies[selectedColor][selectedVehicleTrim];
-      } else {
-        const resetAuxiliaryOptionToDefault =
-          prevValue && unlockDependencies?.[prevValue]?.[selectedVehicleTrim];
-        //If the prevValue has auxiliary options
-        if (resetAuxiliaryOptionToDefault) {
-          exceptionObject.status = true;
-          exceptionObject.type = "resetAuxiliaryOptionsToDefault";
-          exceptionObject.remove =
-            unlockDependencies[prevValue][selectedVehicleTrim];
-        }
+        exceptionObject.type = "addAuxiliaryOptions";
+        exceptionObject.auxiliaryOptions = unlockStatus.auxiliaryOptions;
+        exceptionObject.precursor = unlockStatus.precursor;
+        exceptionObject.activator = unlockStatus.activator;
+        return exceptionObject;
       }
+
       return exceptionObject;
     case "packages":
       let rivalStatus = checkRivalStatus(category, selection, optionsSelected);
@@ -1208,10 +1263,15 @@ function checkOptionDependency(category, selection, optionsSelected) {
       }
       return exceptionObject;
     case "powertrain":
+      //If no prior powertrain choice selected, return no exceptions
+      if (!optionsSelected[category]) {
+        return exceptionObject;
+      }
       //Check for previously selected option
       let prevOptionSelected = optionsSelected[category].choices.find(
         (o) => o.id === selection.prevValue
       );
+
       //Check if previously selected option was a 'subComponent'
       if (
         prevOptionSelected &&
@@ -1354,6 +1414,69 @@ function checkOptionDependency(category, selection, optionsSelected) {
   }
 
   return exceptionObject;
+}
+
+function getUnlockStatus(category, selection, optionsSelected) {
+  let unlockStatus = {
+    active: false,
+  };
+
+  // Loop through the Dependencies.unlock array
+  Dependencies.unlock.forEach((dependency) => {
+    // Check if the category exists in unlock Dependency and 'selection' is an activator
+    if (
+      dependency.activator[category] &&
+      dependency.activator[category].includes(selection.id)
+    ) {
+      // Check if all precursor conditions are met
+      let allPrecursorsMatch = true;
+      for (const precursorCategory in dependency.precursor) {
+        // Check if the precursorCategory exists in optionsSelected
+        if (optionsSelected[precursorCategory]) {
+          const selectedChoices = optionsSelected[
+            precursorCategory
+          ].choices.map((choice) => choice.id);
+          // Check if all IDs in precursor array match optionsSelected choices
+          const precursorMatch = dependency.precursor[precursorCategory].every(
+            (precursorID) => selectedChoices.includes(precursorID)
+          );
+
+          if (!precursorMatch) {
+            allPrecursorsMatch = false;
+            break;
+          }
+        } else {
+          allPrecursorsMatch = false;
+          break;
+        }
+      }
+
+      // If all conditions are met, update unlockStatus
+      if (allPrecursorsMatch) {
+        unlockStatus.active = true;
+        // Add auxiliary data if available
+        unlockStatus.auxiliaryOptions = {}; // Initialize as an empty object
+        for (const auxCategory in dependency.auxiliary) {
+          unlockStatus.auxiliaryOptions[auxCategory] =
+            dependency.auxiliary[auxCategory];
+        }
+        // Add precursor and activator to unlockStatus
+        unlockStatus.precursor = dependency.precursor;
+        unlockStatus.activator = dependency.activator;
+      }
+    }
+  });
+
+  return unlockStatus;
+}
+
+function checkPrecursorActivator(category, selection, optionsSelected) {
+  let precursorActivator = {
+    active: false,
+  };
+  console.log(category);
+  console.log(selection);
+  return precursorActivator;
 }
 
 function checkRivalStatus(category, selection, optionsSelected) {
