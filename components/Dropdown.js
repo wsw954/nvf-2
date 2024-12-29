@@ -34,8 +34,8 @@ const Dropdown = ({ id, value, onChange, options, disabled }) => {
     onChange(event, {
       id: newValue,
       isChecked: true,
-      mainComponentID: selectedOption.mainComponentID || null,
-      mainComponentCategory: selectedOption.mainComponentCategory || null,
+      groupID: selectedOption.groupID || null,
+      groupCategory: selectedOption.groupCategory || null,
       prevValue: prevValue,
     });
     setPrevValue(newValue);
