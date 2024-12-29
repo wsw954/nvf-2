@@ -600,18 +600,25 @@ const Dependencies = {
       },
     },
   },
-  //..package dependencies
-  packages: {
-    components: {
-      ASPack1: {
+
+  group: [
+    {
+      packages: "ASPack1",
+      components: {
         exteriorAccessories: ["SGuardSet"],
         interiorAccessories: ["ASFloorMat", "TTray"],
       },
-      ASPack2: {
+    },
+    {
+      packages: "ASPack2",
+      components: {
         exteriorAccessories: ["WheelLocksC"],
         interiorAccessories: ["ASFloorMat", "TTray"],
       },
-      HPD: {
+    },
+    {
+      packages: "HPD",
+      components: {
         exteriorAccessories: [
           "DLSpoiler",
           "EmblemHPD",
@@ -620,37 +627,49 @@ const Dependencies = {
           "UBodySpoilerSide",
         ],
       },
-
-      PP: {
+    },
+    {
+      packages: "PP",
+      components: {
         exteriorAccessories: ["SGuardSet", "WheelLocksC"],
         interiorAccessories: ["TTray"],
       },
-      ASPack1Hatch: {
+    },
+    {
+      packages: "ASPack1Hatch",
+      components: {
         exteriorAccessories: ["SGuardSet"],
         interiorAccessories: ["ASFloorMat", "CargoTray"],
       },
-      ASPack2Hatch: {
+    },
+    {
+      packages: "ASPack2Hatch",
+      components: {
         exteriorAccessories: ["WheelLocksC"],
         interiorAccessories: ["ASFloorMat", "CargoTray"],
       },
-      HPDHatch: {
+    },
+    {
+      packages: "HPDHatch",
+      components: {
         exteriorAccessories: ["EmblemHPD", "TailGate", "UBodySpoilerFront"],
       },
-
-      PPHatch: {
-        exteriorAccessories: ["SGuardSet", "WheelLocksC"],
-        interiorAccessories: ["CargoTray"],
-      },
-      PowerPackage1: {
+    },
+    {
+      packages: "PowerPackage1",
+      components: {
         exteriorAccessories: ["PPEmblem1", "PPEmblem2"],
         powertrain: ["turboPowertrain"],
       },
-      MXPack1: {
+    },
+    {
+      packages: "MXPack1",
+      components: {
         exteriorAccessories: ["MXHAT"],
         interiorAccessories: ["MXInt"],
       },
     },
-  },
+  ],
 
   rivals: [
     { packages: ["ASPack1", "ASPack2", "PP"] },
@@ -823,23 +842,32 @@ export function handleOptionChanged(
           });
         }
         break;
-      case "mainComponentOptionSelected":
+      case "groupOptionSelected":
         newOptionsSelected = produce(optionsSelected, (draft) => {
-          //First, add the main 'option' selected
+          //First, add the main 'group' 'option' selected
           addToOptionsSelected(category, selection, draft);
-          //Second, add the 'components' of selected option
+
+          //Second, add the 'components' of the 'group' option
+          let componentOptions = exceptionObject.componentOptions;
           addComponentsToOptionsSelected(
             category,
             selection,
+            componentOptions,
             newOptionsAvailable,
             draft
           );
         });
-        // Update the option 'components' in the optionsAvailable marking as part of a selected 'package' as needed
+        //Third, add code to update 'optionsAvailable' to match 'choices' as 'components
+        let componentOptions = exceptionObject.componentOptions;
         newOptionsAvailable = produce(optionsAvailable, (draft) => {
-          updateOptionsAvailableForComponentsAdded(category, selection, draft);
+          updateOptionsAvailableForGroupOptionSelected(
+            category,
+            componentOptions,
+            draft
+          );
         });
         break;
+
       case "mainComponentOptionUnselected":
         newOptionsSelected = produce(optionsSelected, (draft) => {
           //Remove the actual 'component' option selected
@@ -1249,16 +1277,18 @@ function checkOptionDependency(category, selection, optionsSelected) {
           ((exceptionObject.type = "rivalCurrentlySelected"),
           (exceptionObject.rivalsCurrentlySelected =
             rivalStatus.rivalOptionsCurrentlySelected));
-      } //Check option category has a 'component' dependencies
-      else if (Dependencies[category] && Dependencies[category].components) {
-        if (selection.isChecked) {
+      } else {
+        // Call getComponentOptions if no rivals are currently selected
+        const componentOptions = getComponentOptions(category, selection);
+
+        if (componentOptions) {
           exceptionObject.status = true;
-          exceptionObject.type = "mainComponentOptionSelected";
-          return exceptionObject;
-        } else {
-          exceptionObject.status = true;
-          exceptionObject.type = "mainComponentOptionUnselected";
-          return exceptionObject;
+          exceptionObject.componentOptions = componentOptions;
+          if (selection.isChecked) {
+            exceptionObject.type = "groupOptionSelected";
+          } else {
+            exceptionObject.type = "groupOptionUnselected";
+          }
         }
       }
       return exceptionObject;
@@ -1414,6 +1444,22 @@ function checkOptionDependency(category, selection, optionsSelected) {
   }
 
   return exceptionObject;
+}
+
+function getComponentOptions(category, selection) {
+  // Ensure Dependencies.group exists and is an array
+  if (!Array.isArray(Dependencies.group)) {
+    console.error("Dependencies.group is not defined or is not an array");
+    return null;
+  }
+
+  // Find the matching object in the group array
+  const matchingGroup = Dependencies.group.find(
+    (group) => group[category] === selection.id
+  );
+
+  // Return the components object if found, otherwise null
+  return matchingGroup ? matchingGroup.components : null;
 }
 
 function getUnlockStatus(category, selection, optionsSelected) {
@@ -1614,55 +1660,70 @@ function getChildStatus(category, selection, optionsSelected) {
   return childStatus;
 }
 
+//Helper function process 'components' of group option selected
 function addComponentsToOptionsSelected(
-  category,
-  selection,
+  groupCategory,
+  groupSelection,
+  components,
   newOptionsAvailable,
   draft
 ) {
-  const componentDependencies = Dependencies[category].components[selection.id];
-  if (componentDependencies) {
-    Object.keys(componentDependencies).forEach((dependencyKey) => {
-      componentDependencies[dependencyKey].forEach((depId) => {
-        // Corrected to use 'draft' instead of 'newOptionsAvailable'
-        const choice = newOptionsAvailable[dependencyKey]?.choices.find(
-          (choice) => choice.id === depId
-        );
-        if (choice) {
-          const choiceWithComponent = {
-            ...choice,
-            name: choice.name + " - Included in- " + selection.id,
-            mainComponentID: selection.id,
-            mainComponentCategory: category,
+  // Iterate through each category in components
+  Object.keys(components).forEach((category) => {
+    const componentIds = components[category];
+
+    // Ensure the category exists in the draft object
+    if (!draft[category]) {
+      draft[category] = {
+        displayName: newOptionsAvailable[category]?.displayName || category,
+        type: newOptionsAvailable[category]?.type || "Unknown",
+        choices: [],
+      };
+    }
+
+    // Iterate through each component ID in the current category
+    componentIds.forEach((componentId) => {
+      // Find the corresponding choice object in newOptionsAvailable
+      const matchingChoice = newOptionsAvailable[category]?.choices?.find(
+        (choice) => choice.id === componentId
+      );
+
+      if (matchingChoice) {
+        const componentChoice = {
+          ...matchingChoice,
+          name: matchingChoice.name + " - Included in- " + groupSelection.id,
+          groupID: groupSelection.id,
+          groupCategory: groupCategory,
+        };
+
+        // Check if the option type is CheckBoxGroup or Dropdown
+        const optionType = AllOptions[category].type;
+        if (!draft[category]) {
+          draft[category] = {
+            type: optionType,
+            choices: [],
           };
-          // Check if the option type is CheckBoxGroup or Dropdown
-          const optionType = AllOptions[dependencyKey].type;
-          if (!draft[dependencyKey]) {
-            draft[dependencyKey] = {
-              type: optionType,
-              choices: [],
-            };
-          }
-          if (optionType === "CheckBoxGroup") {
-            // Check if the choice already exists in the array
-            const existingIndex = draft[dependencyKey].choices.findIndex(
-              (existingChoice) => existingChoice.id === choiceWithComponent.id
-            );
-            if (existingIndex !== -1) {
-              // Replace the existing choice with the updated one
-              draft[dependencyKey].choices[existingIndex] = choiceWithComponent;
-            } else {
-              // Add new choice if it doesn't exist
-              draft[dependencyKey].choices.push(choiceWithComponent);
-            }
-          } else if (optionType === "Dropdown") {
-            // Replace choices array for Dropdown
-            draft[dependencyKey].choices = [choiceWithComponent];
-          }
         }
-      });
+
+        if (optionType === "CheckBoxGroup") {
+          // Check if the choice already exists in the array
+          const existingIndex = draft[category].choices.findIndex(
+            (existingChoice) => existingChoice.id === componentChoice.id
+          );
+          if (existingIndex !== -1) {
+            // Replace the existing choice with the updated one
+            draft[category].choices[existingIndex] = componentChoice;
+          } else {
+            // Add new choice if it doesn't exist
+            draft[category].choices.push(componentChoice);
+          }
+        } else if (optionType === "Dropdown") {
+          // Replace choices array for Dropdown
+          draft[category].choices = [componentChoice];
+        }
+      }
     });
-  }
+  });
 }
 
 //Removes from optionsSelected, components of an option unselected
@@ -1694,30 +1755,30 @@ function removeComponentsFromOptionsSelected(
   }
 }
 
-//Changes the optionsAvailable to account for being part of package selected
-function updateOptionsAvailableForComponentsAdded(category, selection, draft) {
-  const componentDependencies = Dependencies[category].components[selection.id];
-  if (componentDependencies) {
-    Object.keys(componentDependencies).forEach((dependencyKey) => {
-      componentDependencies[dependencyKey].forEach((depId) => {
-        // Find the index of the choice in the draft
-        const choiceIndex = draft[dependencyKey].choices.findIndex(
-          (choice) => choice.id === depId
+//Changes 'optionAvailable' for group option selected
+function updateOptionsAvailableForGroupOptionSelected(
+  groupCategory,
+  componentOptions,
+  draft
+) {
+  // Iterate over each key in the componentOptions object
+  Object.keys(componentOptions).forEach((key) => {
+    // Ensure the key exists in draft
+    if (draft[key]) {
+      // Iterate over the array of component IDs for the current key
+      componentOptions[key].forEach((componentId) => {
+        // Find the matching choice in the draft[key].choices array
+        const matchingChoice = draft[key].choices.find(
+          (choice) => choice.id === componentId
         );
 
-        if (choiceIndex !== -1) {
-          // Directly update the properties of the found choice in the draft
-          draft[dependencyKey].choices[choiceIndex].name +=
-            " - Included in Package- " + selection.id;
-          draft[dependencyKey].choices[choiceIndex].mainComponentID =
-            selection.id;
-          draft[dependencyKey].choices[choiceIndex].mainComponentCategory =
-            category;
-          draft[dependencyKey].choices[choiceIndex].price = 0; // Set price to 0 or as required
+        if (matchingChoice) {
+          // Update the choice name
+          matchingChoice.name = `${matchingChoice.name} - Included in ${groupCategory} selected`;
         }
       });
-    });
-  }
+    }
+  });
 }
 
 //Resets the optionsAvailable to default after a package is unselected
