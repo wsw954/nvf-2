@@ -761,7 +761,7 @@ export function handleOptionChanged(
       });
     } else {
       newOptionsSelected = produce(optionsSelected, (draft) => {
-        removeFromOptionsSelected(category, selection, optionsAvailable, draft);
+        removeFromOptionsSelected(category, selection, draft);
       });
     }
   } else {
@@ -833,12 +833,7 @@ export function handleOptionChanged(
           });
         } else {
           newOptionsSelected = produce(optionsSelected, (draft) => {
-            removeFromOptionsSelected(
-              category,
-              selection,
-              optionsAvailable,
-              draft
-            );
+            removeFromOptionsSelected(category, selection, draft);
           });
         }
         break;
@@ -867,16 +862,54 @@ export function handleOptionChanged(
           );
         });
         break;
+      case "groupOptionUnselected":
+        newOptionsSelected = produce(optionsSelected, (draft) => {
+          // First, remove the main 'group' option selected
+          removeFromOptionsSelected(category, selection, draft);
+
+          // Second, remove each component option in exceptionObject.componentOptions
+          Object.keys(exceptionObject.componentOptions).forEach(
+            (componentCategory) => {
+              exceptionObject.componentOptions[componentCategory].forEach(
+                (componentId) => {
+                  // Create a 'selection' object for the component to pass to removeFromOptionsSelected
+                  const componentSelection = { id: componentId };
+                  removeFromOptionsSelected(
+                    componentCategory,
+                    componentSelection,
+                    draft
+                  );
+                }
+              );
+            }
+          );
+        });
+        //Third reset the 'component' options to default status
+        newOptionsAvailable = produce(optionsAvailable, (draft) => {
+          // Reset each component option in exceptionObject.componentOptions to its default state
+          Object.keys(exceptionObject.componentOptions).forEach(
+            (componentCategory) => {
+              exceptionObject.componentOptions[componentCategory].forEach(
+                (componentId) => {
+                  // Create a 'selection' object for the component to pass to resetOptionsDefault
+                  const componentSelection = { id: componentId };
+                  resetOptionsDefault(
+                    componentCategory,
+                    componentSelection,
+                    draft
+                  );
+                }
+              );
+            }
+          );
+        });
+
+        break;
 
       case "mainComponentOptionUnselected":
         newOptionsSelected = produce(optionsSelected, (draft) => {
           //Remove the actual 'component' option selected
-          removeFromOptionsSelected(
-            category,
-            selection,
-            optionsAvailable,
-            draft
-          );
+          removeFromOptionsSelected(category, selection, draft);
           //Remove the nested'components' options
           removeComponentsFromOptionsSelected(
             category,
@@ -970,12 +1003,7 @@ export function handlePopupConfirm(optionsAvailable, optionsSelected, popup) {
         // Step 1: Initially remove all selected 'rivals' from optionsSelected. This will adjust the state
         // based on dependencies related to rivalChoice removal.
         newOptionsSelected = produce(newOptionsSelected, (draft) => {
-          removeFromOptionsSelected(
-            rivalSelected.category,
-            rivalChoice,
-            optionsAvailable,
-            draft
-          );
+          removeFromOptionsSelected(rivalSelected.category, rivalChoice, draft);
         });
         //Step 2: Call handleOptionChange() to return 'updatedState' object w/ rivals unchecked
         //This will also handle any 'dual' dependencies, these 'rivals' may have
@@ -1068,12 +1096,7 @@ export function handlePopupConfirm(optionsAvailable, optionsSelected, popup) {
         };
         // Step 1: Initially remove all selected 'child' options from optionsSelected.
         newOptionsSelected = produce(newOptionsSelected, (draft) => {
-          removeFromOptionsSelected(
-            child.category,
-            childChoice,
-            optionsAvailable,
-            draft
-          );
+          removeFromOptionsSelected(child.category, childChoice, draft);
         });
         //Step 2: Call handleOptionChange() to return 'updatedState' object w/ 'child' options unchecked
         //This will also handle any 'dual' dependencies
@@ -1136,22 +1159,28 @@ function addToOptionsSelected(category, selection, draft) {
 }
 
 //Removes from optionsSelected an unselected 'option'
-function removeFromOptionsSelected(
-  category,
-  selection,
-  optionsAvailable,
-  draft
-) {
-  if (draft[category]) {
-    if (optionsAvailable[category].type === "Dropdown") {
-      // For Dropdown, clear the choices array
-      draft[category].choices = [];
-    } else if (optionsAvailable[category].type === "CheckBoxGroup") {
-      // For CheckBoxGroup, filter out the specific choice
-      draft[category].choices = draft[category].choices.filter(
-        (choice) => choice.id !== selection.id
-      );
-    }
+function removeFromOptionsSelected(category, selection, draft) {
+  // Check if the category exists in draft
+  if (!draft[category]) {
+    return; // If the category does not exist, nothing to remove
+  }
+
+  // Get the option type from the universal AllOptions object
+  const optionType = AllOptions[category]?.type;
+
+  if (optionType === "Dropdown") {
+    // For Dropdown, clear the choices array
+    draft[category].choices = [];
+  } else if (optionType === "CheckBoxGroup") {
+    // For CheckBoxGroup, remove the selection from the choices array
+    draft[category].choices = draft[category].choices.filter(
+      (choice) => choice.id !== selection.id
+    );
+  }
+
+  // If the category has no remaining choices, remove the category itself
+  if (draft[category].choices.length === 0) {
+    delete draft[category];
   }
 }
 
@@ -1781,27 +1810,28 @@ function updateOptionsAvailableForGroupOptionSelected(
   });
 }
 
-//Resets the optionsAvailable to default after a package is unselected
-function resetOptionsAvailableForComponentsRemoved(category, selection, draft) {
-  const componentDependencies = Dependencies[category].components[selection.id];
-  if (componentDependencies) {
-    Object.keys(componentDependencies).forEach((dependencyKey) => {
-      componentDependencies[dependencyKey].forEach((depId) => {
-        // Find the index of the choice in the draft
-        const choiceIndex = draft[dependencyKey].choices.findIndex(
-          (choice) => choice.id === depId
-        );
-        if (choiceIndex !== -1) {
-          const defaultOption = AllOptions[dependencyKey].choices.find(
-            (choice) => choice.id === depId
-          );
-          // Reset to default
-          draft[dependencyKey].choices[choiceIndex].name = defaultOption.name;
-          draft[dependencyKey].choices[choiceIndex].price = defaultOption.price;
-          delete draft[dependencyKey].choices[choiceIndex].component;
-        }
-      });
-    });
+//Reset options to default
+function resetOptionsDefault(category, selection, draft) {
+  // Check if the category exists in draft
+  if (!draft[category]) {
+    return; // If the category does not exist, nothing to reset
+  }
+
+  // Find the default option in the universal AllOptions object
+  const defaultChoice = AllOptions[category]?.choices.find(
+    (choice) => choice.id === selection.id
+  );
+
+  if (defaultChoice) {
+    // Replace all matching choices in the draft with the default choice
+    draft[category].choices = draft[category].choices.map((choice) =>
+      choice.id === selection.id ? { ...defaultChoice } : choice
+    );
+  }
+
+  // If the category has no remaining choices, optionally remove it
+  if (draft[category].choices.length === 0) {
+    delete draft[category];
   }
 }
 
