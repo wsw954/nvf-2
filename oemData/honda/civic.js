@@ -1,5 +1,6 @@
 //oemData/honda/civic.js
 import produce from "immer";
+import { CLIENT_STATIC_FILES_RUNTIME_POLYFILLS_SYMBOL } from "next/dist/shared/lib/constants";
 // ------------------------------
 // OPTIONS AVAILABLE SECTION
 // ------------------------------
@@ -852,11 +853,14 @@ export function handleOptionChanged(
             draft
           );
         });
+
         //Third, add code to update 'optionsAvailable' to match 'choices' as 'components
         let componentOptions = exceptionObject.componentOptions;
+        let groupID = selection.id;
         newOptionsAvailable = produce(optionsAvailable, (draft) => {
           updateOptionsAvailableForGroupOptionSelected(
             category,
+            groupID,
             componentOptions,
             draft
           );
@@ -903,38 +907,18 @@ export function handleOptionChanged(
             }
           );
         });
-
         break;
 
-      case "mainComponentOptionUnselected":
-        newOptionsSelected = produce(optionsSelected, (draft) => {
-          //Remove the actual 'component' option selected
-          removeFromOptionsSelected(category, selection, draft);
-          //Remove the nested'components' options
-          removeComponentsFromOptionsSelected(
-            category,
-            selection,
-            newOptionsAvailable,
-            draft
-          );
-        });
-        // Update the option 'components' in the optionsAvailable as needed
-        newOptionsAvailable = produce(optionsAvailable, (draft) => {
-          //Reset the package 'components' in  optionsAvailable to default
-          resetOptionsAvailableForComponentsRemoved(category, selection, draft);
-        });
-        break;
-      case "subComponentUnselected":
+      case "componentUnselected":
         //Generate popup notification of the component option to be unselected
         newPopup = produce(popup, (draft) => {
-          subComponentUnselectedPopupMessage(
+          componentUnselectedPopupMessage(
             category,
             selection,
             draft,
             exceptionObject
           );
         });
-
         break;
       case "parentsMustBeSelected":
         //Generate popup notification of the component option to be unselected
@@ -1043,11 +1027,44 @@ export function handlePopupConfirm(optionsAvailable, optionsSelected, popup) {
         newOptionsSelected,
         DEFAULT_POPUP_STATE
       );
-      //Handles scenario where the unselected subComponent was triggered by a Dropdown change
+      //Handles scenario where the unselected component was triggered by a Dropdown change
       if (popup.selection.isChecked) {
         let selection = {
           id: popup.selection.id,
           isChecked: popup.selection.id,
+        };
+        updatedState = handleOptionChanged(
+          popup.category,
+          selection,
+          updatedState.optionsAvailable,
+          updatedState.optionsSelected,
+          DEFAULT_POPUP_STATE
+        );
+      }
+
+      break;
+    case "componentUnselected":
+      console.log(popup);
+      //Get the main component option
+      let { groupCategory, groupID } = popup.exception;
+
+      let groupOption = {
+        id: groupID,
+        isChecked: false,
+      };
+      //Remove the group option from optionsSelected
+      updatedState = handleOptionChanged(
+        groupCategory,
+        groupOption,
+        newOptionsAvailable,
+        newOptionsSelected,
+        DEFAULT_POPUP_STATE
+      );
+      //Add 'option' if checked, (This handles cases where the option changed was in a Dropdown)
+      if (popup.selection.isChecked) {
+        let selection = {
+          id: popup.selection.id,
+          isChecked: true,
         };
         updatedState = handleOptionChanged(
           popup.category,
@@ -1331,24 +1348,24 @@ function checkOptionDependency(category, selection, optionsSelected) {
         (o) => o.id === selection.prevValue
       );
 
-      //Check if previously selected option was a 'subComponent'
+      //Check if previously selected option was a 'component'
       if (
         prevOptionSelected &&
-        typeof prevOptionSelected.mainComponentID === "string"
+        typeof prevOptionSelected.groupID === "string"
       ) {
         exceptionObject.status = true;
-        exceptionObject.type = "subComponentUnselected";
-        exceptionObject.subComponent = {
-          prevOptionCategory: category,
-          prevOptionID: prevOptionSelected.id,
-          mainComponentID: prevOptionSelected.mainComponentID,
-          mainComponentCategory: prevOptionSelected.mainComponentCategory,
+        exceptionObject.type = "componentUnselected";
+        exceptionObject.component = {
+          componentCategory: category,
+          componentID: prevOptionSelected.id,
+          groupID: prevOptionSelected.groupID,
+          groupCategory: prevOptionSelected.groupCategory,
         };
+        return exceptionObject;
       } else {
         return exceptionObject;
       }
 
-      break;
     case "exteriorAccessories":
       //Handle if option is checked
       if (selection.isChecked) {
@@ -1383,12 +1400,14 @@ function checkOptionDependency(category, selection, optionsSelected) {
       //Handle if option was unchecked
       else {
         //First check if the option was 'component'
-        if (selection.mainComponentID) {
+        if (selection.groupID) {
           exceptionObject.status = true;
-          exceptionObject.type = "subComponentUnselected";
-          exceptionObject.subComponent = {
-            mainComponentID: selection.mainComponentID,
-            mainComponentCategory: selection.mainComponentCategory,
+          exceptionObject.type = "componentUnselected";
+          exceptionObject.component = {
+            componentCategory: category,
+            componentID: selection.id,
+            groupID: selection.groupID,
+            groupCategory: selection.groupCategory,
           };
           return exceptionObject;
         }
@@ -1444,12 +1463,14 @@ function checkOptionDependency(category, selection, optionsSelected) {
       //Handle if option was unchecked
       else {
         //First check if the option was 'component'
-        if (selection.mainComponentID) {
+        if (selection.groupID) {
           exceptionObject.status = true;
-          exceptionObject.type = "subComponentUnselected";
-          exceptionObject.subComponent = {
-            mainComponentID: selection.mainComponentID,
-            mainComponentCategory: selection.mainComponentCategory,
+          exceptionObject.type = "componentUnselected";
+          exceptionObject.component = {
+            componentCategory: category,
+            componentID: selection.id,
+            groupID: selection.groupID,
+            groupCategory: selection.groupCategory,
           };
           return exceptionObject;
         }
@@ -1543,15 +1564,6 @@ function getUnlockStatus(category, selection, optionsSelected) {
   });
 
   return unlockStatus;
-}
-
-function checkPrecursorActivator(category, selection, optionsSelected) {
-  let precursorActivator = {
-    active: false,
-  };
-  console.log(category);
-  console.log(selection);
-  return precursorActivator;
 }
 
 function checkRivalStatus(category, selection, optionsSelected) {
@@ -1787,6 +1799,7 @@ function removeComponentsFromOptionsSelected(
 //Changes 'optionAvailable' for group option selected
 function updateOptionsAvailableForGroupOptionSelected(
   groupCategory,
+  groupID,
   componentOptions,
   draft
 ) {
@@ -1804,6 +1817,11 @@ function updateOptionsAvailableForGroupOptionSelected(
         if (matchingChoice) {
           // Update the choice name
           matchingChoice.name = `${matchingChoice.name} - Included in ${groupCategory} selected`;
+          //Update the 'component' option with the group attributes
+          matchingChoice.groupID = groupID;
+          matchingChoice.groupCategory = groupCategory;
+          //Change the component price to $0
+          matchingChoice.price = 0;
         }
       });
     }
@@ -1869,41 +1887,43 @@ function rivalSelectedPopupMessage(
   };
 }
 
-//Generate notification in popup warning a 'subComponent' option was unselected
-function subComponentUnselectedPopupMessage(
+function componentUnselectedPopupMessage(
   category,
   selection,
   draft,
   exceptionObject
 ) {
-  const { mainComponentID, mainComponentCategory } =
-    exceptionObject.subComponent;
-  let subComponentOption = AllOptions[category].choices.find(
-    (choice) => choice.id === selection.id
-  );
-  // Extract names from the unselected component option
-  const mainComponentOption = AllOptions[mainComponentCategory].choices.find(
-    (choice) => mainComponentID === choice.id
-  );
-  if (selection.isChecked) {
-    const { prevOptionID, prevOptionCategory } = exceptionObject.subComponent;
-    subComponentOption = AllOptions[prevOptionCategory].choices.find(
-      (choice) => choice.id === prevOptionID
-    );
-  }
-  let message =
-    `Unselecting ${subComponentOption.name} will also unselect ` +
-    mainComponentOption.name;
+  const { groupID, groupCategory, componentID, componentCategory } =
+    exceptionObject.component;
 
-  //Set the constructed message to draft.message
+  // Determine the componentOption based on selection.isChecked
+  const componentOption = selection.isChecked
+    ? //Here the option changed is from a Dropdown
+      AllOptions[componentCategory].choices.find(
+        (choice) => choice.id === componentID
+      )
+    : //Here the option changed is from a unchecked CheckBoxGroup
+      AllOptions[category].choices.find((choice) => choice.id === selection.id);
+
+  // Extract names from the unselected component option
+  const groupOption = AllOptions[groupCategory].choices.find(
+    (choice) => groupID === choice.id
+  );
+
+  // Construct the message
+  let message =
+    `Unselecting ${componentOption.name} will also unselect ` +
+    groupOption.name;
+
+  // Set the constructed message to draft.message
   draft.show = true;
   draft.message = message;
   draft.category = category;
   draft.selection = selection;
   draft.exception = {
-    action: "subComponentUnselected",
-    mainComponentCategory: mainComponentCategory,
-    mainComponentID: mainComponentID,
+    action: "componentUnselected",
+    groupCategory: groupCategory,
+    groupID: groupID,
   };
 }
 
