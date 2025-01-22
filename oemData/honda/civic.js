@@ -72,8 +72,8 @@ const AllOptions = {
     choices: [
       { id: "BlackIC", name: "Black Cloth", price: 0 },
       { id: "GrayIC", name: "Gray Cloth", price: 0 },
-      { id: "BlackL", name: "Black Leather", price: 0 },
-      { id: "GrayL", name: "Gray Leather", price: 0 },
+      { id: "BlackL", name: "Black Leather", price: 200 },
+      { id: "GrayL", name: "Gray Leather", price: 200 },
     ],
   },
   wheels: {
@@ -570,7 +570,6 @@ const Dependencies = {
         "CargoTrayDiv",
         "IntMould",
         "MXInt",
-        "MXIntAccAuxiliary",
         "RPWShade",
         "SeatBackProt",
         "SpoilerController",
@@ -583,24 +582,24 @@ const Dependencies = {
   },
 
   //Exterior color dependencies
-  exteriorColor: {
-    unlock: {
-      PlatinumEC: {
-        SedanEX: {
-          interiorColor: ["BlackL"],
-          interiorAccessories: ["IAC5"],
-        },
-        SedanTouring: {
-          interiorColor: ["BlackL"],
-          interiorAccessories: ["IAC6"],
-        },
-        HBEXL: {
-          interiorColor: ["BlackL"],
-          interiorAccessories: ["SeatBackProt"],
-        },
-      },
-    },
-  },
+  // exteriorColor: {
+  //   unlock: {
+  //     PlatinumEC: {
+  //       SedanEX: {
+  //         interiorColor: ["BlackL"],
+  //         interiorAccessories: ["IAC5"],
+  //       },
+  //       SedanTouring: {
+  //         interiorColor: ["BlackL"],
+  //         interiorAccessories: ["IAC6"],
+  //       },
+  //       HBEXL: {
+  //         interiorColor: ["BlackL"],
+  //         interiorAccessories: ["SeatBackProt"],
+  //       },
+  //     },
+  //   },
+  // },
 
   group: [
     {
@@ -684,23 +683,29 @@ const Dependencies = {
     },
     { exteriorAccessories: ["BSMouldingA", "BSMouldingB"] },
     { exteriorAccessories: ["ExtMould"], interiorAccessories: ["IntMould"] },
-    // { exteriorAccessories: ["UBodySpoilerFront", "SGuardSet"] },
-    /* { exteriorAccessories: ["MoonRVisor", "RoofRack"] }, */
   ],
   unlock: [
     {
-      precursor: { trim: ["ModelX"], powertrain: ["standardPowertrain"] },
-      activator: { exteriorColor: ["PlatinumEC"] },
+      precursor: [{ trim: ["ModelX"] }],
+      activator: { exteriorColor: ["RedEC"] },
       auxiliary: {
         interiorColor: ["BlackL", "GrayL"],
         interiorAccessories: ["MXIntAccAuxiliary"],
       },
     },
     {
-      precursor: { trim: ["ModelX"] },
+      precursor: [{ trim: ["ModelX"] }],
+      activator: { exteriorColor: ["PlatinumEC"] },
+      auxiliary: {
+        interiorColor: ["GrayL"],
+        interiorAccessories: ["MXIntAccAuxiliary"],
+      },
+    },
+    {
+      precursor: [{ trim: ["ModelX"] }],
       activator: { exteriorColor: ["SGrayPearl"] },
       auxiliary: {
-        interiorColor: ["BlackL", "GrayL"],
+        interiorColor: ["BlackL"],
       },
     },
   ],
@@ -794,50 +799,52 @@ export function handleOptionChanged(
           );
         });
         break;
-      case "addAuxiliaryOptions":
+      case "adjustAuxOptions":
+        // First, add the selected option to newOptionsSelected
         newOptionsSelected = produce(optionsSelected, (draft) => {
           addToOptionsSelected(category, selection, draft);
         });
 
-        const auxiliaryOptions = exceptionObject.auxiliaryOptions;
-        // Update newOptionsAvailable with auxiliary options
-        newOptionsAvailable = produce(optionsAvailable, (draft) => {
-          Object.entries(exceptionObject.auxiliaryOptions).forEach(
-            ([auxiliaryCategory, optionIds]) => {
-              optionIds.forEach((optionId) => {
-                addAuxiliaryOptions(auxiliaryCategory, optionId, draft);
+        // Handle auxiliary additions and removals
+        if (
+          exceptionObject.removeAux &&
+          Object.keys(exceptionObject.removeAux).length > 0
+        ) {
+          // Process removal for both newOptionsAvailable and newOptionsSelected
+          Object.keys(exceptionObject.removeAux).forEach((auxCategory) => {
+            exceptionObject.removeAux[auxCategory].forEach((auxId) => {
+              const auxSelection = { id: auxId };
+
+              // Update newOptionsAvailable
+              newOptionsAvailable = produce(newOptionsAvailable, (draft) => {
+                removeFromOptionsAvailable(auxCategory, auxSelection, draft);
               });
-            }
-          );
-        });
 
-        //Update the 'optionsSelected' for unlock statusd
-        newOptionsSelected = produce(newOptionsSelected, (draft) => {
-          adjustOptionsForUnlock(exceptionObject, draft);
-        });
-
-        break;
-      case "resetAuxiliaryOptionsToDefault":
-        //Remove the auxiliary options for the prior selected unlock option
-        newOptionsAvailable = produce(optionsAvailable, (draft) => {
-          Object.keys(exceptionObject.remove).forEach((unlockCategory) => {
-            // Step 2: Iterate over each array of values in the `unlock` object
-            exceptionObject.remove[unlockCategory].forEach((item) => {
-              // Call addAuxiliaryOptions for each item
-              removeFromOptionsAvailable(unlockCategory, item, draft);
+              // Update newOptionsSelected
+              newOptionsSelected = produce(newOptionsSelected, (draft) => {
+                removeFromOptionsSelected(auxCategory, auxSelection, draft);
+              });
             });
           });
-        });
-        if (selection.isChecked) {
-          newOptionsSelected = produce(optionsSelected, (draft) => {
-            addToOptionsSelected(category, selection, draft);
-          });
-        } else {
-          newOptionsSelected = produce(optionsSelected, (draft) => {
-            removeFromOptionsSelected(category, selection, draft);
+        }
+
+        // Add auxiliary options to newOptionsAvailable
+        if (
+          exceptionObject.addAux &&
+          Object.keys(exceptionObject.addAux).length > 0
+        ) {
+          newOptionsAvailable = produce(newOptionsAvailable, (draft) => {
+            Object.keys(exceptionObject.addAux).forEach((auxCategory) => {
+              exceptionObject.addAux[auxCategory].forEach((auxId) => {
+                const auxSelection = { id: auxId };
+                addToOptionsAvailable(auxCategory, auxSelection, draft);
+              });
+            });
           });
         }
+
         break;
+
       case "groupOptionSelected":
         newOptionsSelected = produce(optionsSelected, (draft) => {
           //First, add the main 'group' 'option' selected
@@ -932,9 +939,9 @@ export function handleOptionChanged(
         });
 
         break;
-      case "parentUnselectedChildMustBeUnselected":
+      case "childMustBeUnselected":
         newPopup = produce(popup, (draft) => {
-          parentsMustBeUnselectedPopMessage(
+          childMustBeUnselectedPopMessage(
             category,
             selection,
             draft,
@@ -1010,39 +1017,6 @@ export function handlePopupConfirm(optionsAvailable, optionsSelected, popup) {
 
       break;
 
-    case "subComponentUnselected":
-      //Get the main component option
-      let { mainComponentCategory, mainComponentID } = popup.exception;
-
-      let mainComponentOption = {
-        id: mainComponentID,
-        isChecked: false,
-      };
-
-      //Remove the main component option from optionsSelected
-      updatedState = handleOptionChanged(
-        mainComponentCategory,
-        mainComponentOption,
-        newOptionsAvailable,
-        newOptionsSelected,
-        DEFAULT_POPUP_STATE
-      );
-      //Handles scenario where the unselected component was triggered by a Dropdown change
-      if (popup.selection.isChecked) {
-        let selection = {
-          id: popup.selection.id,
-          isChecked: popup.selection.id,
-        };
-        updatedState = handleOptionChanged(
-          popup.category,
-          selection,
-          updatedState.optionsAvailable,
-          updatedState.optionsSelected,
-          DEFAULT_POPUP_STATE
-        );
-      }
-
-      break;
     case "componentUnselected":
       console.log(popup);
       //Get the main component option
@@ -1186,8 +1160,13 @@ function removeFromOptionsSelected(category, selection, draft) {
   const optionType = AllOptions[category]?.type;
 
   if (optionType === "Dropdown") {
-    // For Dropdown, clear the choices array
-    draft[category].choices = [];
+    // For Dropdown, only clear the choices array if the selection exists
+    const choiceExists = draft[category].choices.find(
+      (choice) => choice.id === selection.id
+    );
+    if (choiceExists) {
+      draft[category].choices = [];
+    }
   } else if (optionType === "CheckBoxGroup") {
     // For CheckBoxGroup, remove the selection from the choices array
     draft[category].choices = draft[category].choices.filter(
@@ -1201,8 +1180,7 @@ function removeFromOptionsSelected(category, selection, draft) {
   }
 }
 
-//Add to optionsAvailble a specified 'option'
-function addAuxiliaryOptions(category, selection, draft) {
+function addToOptionsAvailable(category, selection, draft) {
   //If category doesn't already exists, add it
   if (!draft[category]) {
     draft[category] = {
@@ -1211,58 +1189,34 @@ function addAuxiliaryOptions(category, selection, draft) {
       choices: [],
     };
   }
-  const additionalOption = AllOptions[category].choices.find(
-    (choice) => choice.id === selection
+
+  const selectedOption = AllOptions[category].choices.find(
+    (choice) => choice.id === selection.id
   );
 
-  // Only add additionalOption if it doesn't already exist in the choices array
-  if (additionalOption) {
-    // Add precursor and activator properties to the additionalOption object
-    const enhancedOption = {
-      ...additionalOption,
-      precursor: {},
-      activator: {},
-    };
-
-    // Only add enhancedOption if it doesn't already exist in the choices array
-    if (
-      !draft[category].choices.some((choice) => choice.id === enhancedOption.id)
-    ) {
-      draft[category].choices.push(enhancedOption);
-    }
+  if (
+    !draft[category].choices.some((choice) => choice.id === selectedOption.id)
+  ) {
+    draft[category].choices.push(selectedOption);
   }
 }
 
-function adjustOptionsForUnlock(exceptionObject, draft) {
-  const { precursor, activator } = exceptionObject;
+//Removes from optionsSelected an unselected 'option'
+function removeFromOptionsAvailable(category, selection, draft) {
+  // Check if the category exists in draft
+  if (!draft[category]) {
+    return; // If the category does not exist, nothing to remove
+  }
 
-  // Process precursors
-  Object.entries(precursor).forEach(([category, ids]) => {
-    if (draft[category] && draft[category].choices) {
-      ids.forEach((id) => {
-        const choice = draft[category].choices.find(
-          (choice) => choice.id === id
-        );
-        if (choice) {
-          choice.precursor = true; // Add precursor flag
-        }
-      });
-    }
-  });
+  // Remove the option from optionsAvailable object
+  draft[category].choices = draft[category].choices.filter(
+    (choice) => choice.id !== selection.id
+  );
 
-  // Process activators
-  Object.entries(activator).forEach(([category, ids]) => {
-    if (draft[category] && draft[category].choices) {
-      ids.forEach((id) => {
-        const choice = draft[category].choices.find(
-          (choice) => choice.id === id
-        );
-        if (choice) {
-          choice.activator = true; // Add activator flag
-        }
-      });
-    }
-  });
+  // If the category has no remaining choices, remove the category itself
+  if (draft[category].choices.length === 0) {
+    delete draft[category];
+  }
 }
 
 // Callback function to reset options available when a model trim is selected
@@ -1305,12 +1259,11 @@ function checkOptionDependency(category, selection, optionsSelected) {
     case "exteriorColor":
       let unlockStatus = getUnlockStatus(category, selection, optionsSelected);
 
-      if (unlockStatus.active) {
+      if (unlockStatus.addAux || unlockStatus.removeAux) {
         exceptionObject.status = true;
-        exceptionObject.type = "addAuxiliaryOptions";
-        exceptionObject.auxiliaryOptions = unlockStatus.auxiliaryOptions;
-        exceptionObject.precursor = unlockStatus.precursor;
-        exceptionObject.activator = unlockStatus.activator;
+        exceptionObject.type = "adjustAuxOptions";
+        exceptionObject.addAux = unlockStatus.addAuxOptions;
+        exceptionObject.removeAux = unlockStatus.removeAuxOptions;
         return exceptionObject;
       }
 
@@ -1392,14 +1345,14 @@ function checkOptionDependency(category, selection, optionsSelected) {
           if (parentsStatus.required) {
             exceptionObject.status = true;
             exceptionObject.type = "parentsMustBeSelected";
-            exceptionObject.parentsMustBeSelected = parentsStatus.parentOptions;
+            exceptionObject.parentOptions = parentsStatus.parentOptions;
             return exceptionObject;
           }
         }
       }
       //Handle if option was unchecked
       else {
-        //First check if the option was 'component'
+        //First check if the unselected option is a 'component' option
         if (selection.groupID) {
           exceptionObject.status = true;
           exceptionObject.type = "componentUnselected";
@@ -1411,7 +1364,7 @@ function checkOptionDependency(category, selection, optionsSelected) {
           };
           return exceptionObject;
         }
-        //Check if 'parent' option, and has 'child' option selected
+        //Next, check if the unselected is a 'child' option
         else {
           let childStatus = getChildStatus(
             category,
@@ -1421,7 +1374,7 @@ function checkOptionDependency(category, selection, optionsSelected) {
 
           if (childStatus.selected) {
             exceptionObject.status = true;
-            exceptionObject.type = "parentUnselectedChildMustBeUnselected";
+            exceptionObject.type = "childMustBeUnselected";
             exceptionObject.childSelected = childStatus.childOptions;
             return exceptionObject;
           }
@@ -1484,7 +1437,7 @@ function checkOptionDependency(category, selection, optionsSelected) {
 
           if (childStatus.selected) {
             exceptionObject.status = true;
-            exceptionObject.type = "parentUnselectedChildMustBeUnselected";
+            exceptionObject.type = "childMustBeUnselected";
             exceptionObject.childSelected = childStatus.childOptions;
             return exceptionObject;
           }
@@ -1513,57 +1466,69 @@ function getComponentOptions(category, selection) {
 }
 
 function getUnlockStatus(category, selection, optionsSelected) {
-  let unlockStatus = {
-    active: false,
+  let lockStatus = {
+    addAux: false,
+    addAuxOptions: {},
+    removeAux: false,
+    removeAuxOptions: {},
   };
+  //Verify if current selection is an 'unlock' type option
+  const unlockObject = Dependencies.unlock.find(
+    (entry) =>
+      entry.activator &&
+      entry.activator[category] &&
+      entry.activator[category].includes(selection.id)
+  );
 
-  // Loop through the Dependencies.unlock array
-  Dependencies.unlock.forEach((dependency) => {
-    // Check if the category exists in unlock Dependency and 'selection' is an activator
-    if (
-      dependency.activator[category] &&
-      dependency.activator[category].includes(selection.id)
-    ) {
-      // Check if all precursor conditions are met
-      let allPrecursorsMatch = true;
-      for (const precursorCategory in dependency.precursor) {
-        // Check if the precursorCategory exists in optionsSelected
-        if (optionsSelected[precursorCategory]) {
-          const selectedChoices = optionsSelected[
-            precursorCategory
-          ].choices.map((choice) => choice.id);
-          // Check if all IDs in precursor array match optionsSelected choices
-          const precursorMatch = dependency.precursor[precursorCategory].every(
-            (precursorID) => selectedChoices.includes(precursorID)
-          );
+  //Verify if the previously selected option was an unlock 'type option
+  const lockObject = Dependencies.unlock.find(
+    (entry) =>
+      entry.activator &&
+      entry.activator[category] &&
+      entry.activator[category].includes(selection.prevValue)
+  );
+  //If the prevValue was an unlock type option, remove the auxOptions
+  if (lockObject) {
+    lockStatus.removeAux = true;
+    lockStatus.removeAuxOptions = lockObject.auxiliary;
+  }
+  //If the current selected option is an 'unlock' type, check precursors
+  if (unlockObject) {
+    if (checkPrecursors(unlockObject, optionsSelected)) {
+      lockStatus.addAux = true;
+      lockStatus.addAuxOptions = unlockObject.auxiliary;
+    }
+  }
 
-          if (!precursorMatch) {
-            allPrecursorsMatch = false;
-            break;
-          }
-        } else {
-          allPrecursorsMatch = false;
-          break;
-        }
+  return lockStatus;
+}
+
+function checkPrecursors(unlockObject, optionsSelected) {
+  const { precursor } = unlockObject;
+
+  // Iterate through each precursor object in the precursor array
+  return precursor.every((categoryObject) => {
+    // Extract the category (e.g., 'trim') and its associated array of IDs
+    for (const category in categoryObject) {
+      const requiredIds = categoryObject[category];
+
+      // Check if the category exists in optionsSelected
+      if (!optionsSelected[category] || !optionsSelected[category].choices) {
+        return false; // If the category or choices array is missing
       }
 
-      // If all conditions are met, update unlockStatus
-      if (allPrecursorsMatch) {
-        unlockStatus.active = true;
-        // Add auxiliary data if available
-        unlockStatus.auxiliaryOptions = {}; // Initialize as an empty object
-        for (const auxCategory in dependency.auxiliary) {
-          unlockStatus.auxiliaryOptions[auxCategory] =
-            dependency.auxiliary[auxCategory];
-        }
-        // Add precursor and activator to unlockStatus
-        unlockStatus.precursor = dependency.precursor;
-        unlockStatus.activator = dependency.activator;
+      // Extract all selected IDs for the category
+      const selectedIds = optionsSelected[category].choices.map(
+        (choice) => choice.id
+      );
+
+      // Verify that all required IDs are found in the selected IDs
+      if (!requiredIds.every((id) => selectedIds.includes(id))) {
+        return false; // Return false if any ID is missing
       }
     }
+    return true; // All IDs in this category are satisfied
   });
-
-  return unlockStatus;
 }
 
 function checkRivalStatus(category, selection, optionsSelected) {
@@ -1942,7 +1907,7 @@ function parentsMustBeSelectedPopupMessage(
   let parentChoiceMap = {};
 
   // Pre-compute and store matched choices for each parent category
-  exceptionObject.parentsMustBeSelected.forEach((parent) => {
+  exceptionObject.parentOptions.forEach((parent) => {
     const parentCategory = parent.category;
     const parentChoicesIDs = parent.choicesID;
 
@@ -1980,7 +1945,7 @@ function parentsMustBeSelectedPopupMessage(
   };
 }
 
-function parentsMustBeUnselectedPopMessage(
+function childMustBeUnselectedPopMessage(
   category,
   selection,
   draft,
