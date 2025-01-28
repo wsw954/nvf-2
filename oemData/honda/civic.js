@@ -1,6 +1,6 @@
 //oemData/honda/civic.js
-import produce from "immer";
-import { CLIENT_STATIC_FILES_RUNTIME_POLYFILLS_SYMBOL } from "next/dist/shared/lib/constants";
+import { produce } from "immer";
+
 // ------------------------------
 // OPTIONS AVAILABLE SECTION
 // ------------------------------
@@ -178,7 +178,6 @@ const AllOptions = {
       { id: "FrontSpoiler", name: "Front Spoiler", price: 270 },
       { id: "Kayak", name: "Kayak Attachment", price: 270 },
       { id: "MoonRVisor", name: "Moon Roof Visor", price: 171 },
-      { id: "Visor", name: "Visor", price: 500 },
       { id: "MXHAT", name: "MX Hood Attachment", price: 171 },
       { id: "RBumperApp", name: "Rear Bumper Applique", price: 78 },
       { id: "RBumperProt", name: "Rear Bumper Protector", price: 97 },
@@ -214,6 +213,7 @@ const AllOptions = {
         price: 417,
       },
       { id: "ValveStem", name: "Valve Stem Caps", price: 24 },
+      { id: "Visor", name: "Visor", price: 500 },
       { id: "WheelLocksB", name: "Wheel Locks-Black", price: 94 },
       { id: "WheelLocksC", name: "Wheel Locks-Chrome", price: 65 },
       { id: "WLugNuts", name: "Wheel Lug Nuts-Black", price: 51 },
@@ -553,13 +553,13 @@ const Dependencies = {
         "Surf",
         "SGuardSet",
         "SpoilerKit",
+        "TowingKit",
         "TTray",
         "PPEmblem1",
         "PPEmblem2",
-        "Visor",
-        "TowingKit",
         "TrailerHitch",
         "WheelLocksC",
+        "Visor",
       ],
       interiorAccessories: [
         "ASFloorMat",
@@ -580,26 +580,6 @@ const Dependencies = {
       ],
     },
   },
-
-  //Exterior color dependencies
-  // exteriorColor: {
-  //   unlock: {
-  //     PlatinumEC: {
-  //       SedanEX: {
-  //         interiorColor: ["BlackL"],
-  //         interiorAccessories: ["IAC5"],
-  //       },
-  //       SedanTouring: {
-  //         interiorColor: ["BlackL"],
-  //         interiorAccessories: ["IAC6"],
-  //       },
-  //       HBEXL: {
-  //         interiorColor: ["BlackL"],
-  //         interiorAccessories: ["SeatBackProt"],
-  //       },
-  //     },
-  //   },
-  // },
 
   group: [
     {
@@ -679,7 +659,6 @@ const Dependencies = {
     },
     {
       packages: ["ASPack1Hatch", "ASPack2Hatch", "PPHatch"],
-      exteriorAccessories: ["Visor"],
     },
     { exteriorAccessories: ["BSMouldingA", "BSMouldingB"] },
     { exteriorAccessories: ["ExtMould"], interiorAccessories: ["IntMould"] },
@@ -750,9 +729,9 @@ export function handleOptionChanged(
   optionsSelected,
   popup
 ) {
-  let newPopup = produce(popup, (draft) => {});
-  let newOptionsAvailable = produce(optionsAvailable, (draft) => {}); // Keep optionsAvailable unchanged for now
-  let newOptionsSelected = produce(optionsSelected, (draft) => {}); // Keep optionsSelected unchanged for now
+  let newPopup = { ...popup }; // Shallow clone
+  let newOptionsAvailable = { ...optionsAvailable }; // Shallow clone
+  let newOptionsSelected = { ...optionsSelected }; // Shallow clone
 
   let exceptionObject = checkOptionDependency(
     category,
@@ -774,11 +753,8 @@ export function handleOptionChanged(
     //Add switch statement to handle all Exceptions
     switch (exceptionObject.type) {
       case "trimOptionSelected":
-        // Reset all prior selected options
-        newOptionsSelected = produce({}, (draft) => {});
-
-        // Add only selected trim to the newly reset optionsSelected
-        newOptionsSelected = produce(newOptionsSelected, (draft) => {
+        //Add the trim selected
+        newOptionsSelected = produce(optionsSelected, (draft) => {
           addToOptionsSelected(category, selection, draft);
         });
 
@@ -1018,7 +994,6 @@ export function handlePopupConfirm(optionsAvailable, optionsSelected, popup) {
       break;
 
     case "componentUnselected":
-      console.log(popup);
       //Get the main component option
       let { groupCategory, groupID } = popup.exception;
 
@@ -1408,14 +1383,14 @@ function checkOptionDependency(category, selection, optionsSelected) {
           if (parentsStatus.required) {
             exceptionObject.status = true;
             exceptionObject.type = "parentsMustBeSelected";
-            exceptionObject.parentsMustBeSelected = parentsStatus.parentOptions;
+            exceptionObject.parentOptions = parentsStatus.parentOptions;
             return exceptionObject;
           }
         }
       }
       //Handle if option was unchecked
       else {
-        //First check if the option was 'component'
+        //First check if the unselected option is a 'component' option
         if (selection.groupID) {
           exceptionObject.status = true;
           exceptionObject.type = "componentUnselected";
@@ -1427,7 +1402,7 @@ function checkOptionDependency(category, selection, optionsSelected) {
           };
           return exceptionObject;
         }
-        //Check if 'parent' option, and has 'child' option selected
+        //Next, check if the unselected is a 'child' option
         else {
           let childStatus = getChildStatus(
             category,
@@ -1443,6 +1418,7 @@ function checkOptionDependency(category, selection, optionsSelected) {
           }
         }
       }
+
       break;
   }
 
@@ -1545,6 +1521,7 @@ function checkRivalStatus(category, selection, optionsSelected) {
 
   // Get rival options
   const rivalOptions = getRivals(category, selection);
+
   // Iterate through optionsSelected to check for matching keys in rivalOptions
   Object.keys(optionsSelected).forEach((key) => {
     const optionChoices = optionsSelected[key].choices;
